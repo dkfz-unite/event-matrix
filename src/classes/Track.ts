@@ -1,218 +1,187 @@
-import TrackGroup from './TrackGroup';
-import {OncoTrackParams} from "../interfaces/main-grid.interfaces";
+import EventEmitter from 'eventemitter3'
+import {IComputedProps, OncoTrackParams} from '../interfaces/main-grid.interface'
+import TrackGroup from './TrackGroup'
 
-class Track {
-    emit: any;
-    padding: number;
-    offset: any;
-    params: OncoTrackParams;
-    prefix: string;
-    svg: any;
-    rotated: boolean;
-    updateCallback: any;
-    resizeCallback: any;
-    expandableGroups: any[];
-    isFullscreen: boolean;
-    trackLegendLabel: any;
-    margin: {
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
-    };
-    domain: any[];
-    width: number;
-    cellHeight: number;
-    numDomain: number;
-    cellWidth: number;
-    availableTracks: any[];
-    opacityFunc: any;
-    fillFunc: any;
-    drawGridLines: boolean;
-    nullSentinel: number;
-    groupMap: any;
-    groups: TrackGroup[];
-    container: any;
-    height: number;
+class Track extends EventEmitter {
+  params: OncoTrackParams
+  computedProps: IComputedProps
+  offset: any
+  svg: any
+  rotated: boolean
+  domain: any[]
+  width: number
+  cellHeight: number
+  cellWidth: number
+  availableTracks: any[]
+  drawGridLines: boolean
+  nullSentinel: number
+  groupMap: any
+  groups: TrackGroup[]
+  container: any
+  height: number
 
-    constructor(
-        params: OncoTrackParams,
-        s: any,
-        rotated: boolean,
-        tracks: any[],
-        opacityFunc: any,
-        fillFunc: any,
-        updateCallback: any,
-        offset: any,
-        resizeCallback: any,
-        isFullscreen: boolean
-    ) {
-        const _self = this;
-        _self.emit = params.emit;
-        _self.padding = params.trackPadding || 20;
-        _self.offset = offset;
-        _self.params = params;
-        _self.prefix = params.prefix || 'og-';
-        _self.svg = s;
-        _self.rotated = rotated || false;
-        _self.updateCallback = updateCallback;
-        _self.resizeCallback = resizeCallback;
-        _self.expandableGroups = params.expandableGroups || [];
+  constructor(
+    params: OncoTrackParams,
+    computedProps: IComputedProps,
+    svg: any,
+    rotated: boolean,
+    tracks: any[],
+    offset: any
+  ) {
+    super()
+    this.computedProps = computedProps
+    this.offset = offset
+    this.params = params
+    this.svg = svg
+    this.rotated = rotated || false
 
-        _self.isFullscreen = isFullscreen;
+    this.domain = (this.rotated ? params.genes : params.donors) || []
 
-        _self.trackLegendLabel = params.trackLegendLabel;
+    this.width = (this.rotated ? params.height : params.width) || 500
 
-        _self.margin = params.margin || { top: 30, right: 15, bottom: 15, left: 80 };
+    this.cellHeight = params.trackHeight || 10
+    this.cellWidth = this.domain.length > 0 ? this.width / this.domain.length : 0
 
-        _self.domain = (_self.rotated ? params.genes : params.donors) || [];
+    this.availableTracks = tracks || []
+    this.drawGridLines = params.grid || false
 
-        _self.width = (_self.rotated ? params.height : params.width) || 500;
+    this.nullSentinel = params.nullSentinel || -777
 
-        _self.cellHeight = params.trackHeight || 10;
-        _self.numDomain = _self.domain.length;
-        _self.cellWidth = _self.width / _self.numDomain;
+    this.parseGroups()
+  }
 
-        _self.availableTracks = tracks || [];
-        _self.opacityFunc = opacityFunc;
-        _self.fillFunc = fillFunc;
-        _self.drawGridLines = params.grid || false;
+  private getPrefix() {
+    return this.params.prefix ?? 'og-'
+  }
 
-        _self.nullSentinel = params.nullSentinel || -777;
+  private getDimensions() {
+    return {
+      padding: this.params.trackPadding ?? 20,
+      margin: this.params.margin || {top: 30, right: 15, bottom: 15, left: 80},
+    }
+  }
 
-        _self.parseGroups();
+  private isGroupExpandable(group: string) {
+    return this.params.expandableGroups?.includes(group) ?? false
+  }
+
+  private getTrackGroupParams(groupType) {
+    return {
+      cellHeight: this.cellHeight,
+      width: this.width,
+      grid: this.drawGridLines,
+      nullSentinel: this.nullSentinel,
+      domain: this.domain,
+      trackLegendLabel: this.params.trackLegendLabel,
+      expandable: this.isGroupExpandable(groupType),
+      wrapper: this.params.wrapper,
+    }
+  }
+
+  /**
+   * Parses track groups out of input.
+   */
+  parseGroups(): void {
+    this.groupMap = {} // Nice for lookups and existence checks
+    this.groups = [] // Nice for direct iteration
+    this.availableTracks.forEach((track) => {
+      const groupType = track.group || 'Tracks'
+      if (this.groupMap[groupType] !== undefined) {
+        const trackGroup = new TrackGroup(
+          this.getTrackGroupParams(groupType),
+          this.computedProps,
+          groupType,
+          this.rotated
+        )
+        trackGroup.on('resize', this.emit)
+        trackGroup.on('update', this.emit)
+        this.groupMap[groupType] = trackGroup
+        this.groups.push(trackGroup)
+      }
+
+      this.groupMap[groupType].addTrack(track)
+    })
+  }
+
+  /**
+   * Initializes the track group data and places container for each group in spaced
+   * intervals.
+   */
+  init(): void {
+    this.container = this.svg.append('g')
+
+    const labelHeight = this.rotated ? 16.5 : 0
+    this.height = 0
+    const {padding} = this.getDimensions()
+
+    for (const group of this.groups) {
+      const trackContainer = this.container.append('g').attr('transform', 'translate(0,' + this.height + ')')
+      group.init(trackContainer)
+      this.height += Number(group.totalHeight) + padding
     }
 
-    /**
-     * Parses track groups out of input.
-     */
-    parseGroups(): void {
-        const _self = this;
+    const translateDown = this.rotated ? -(this.offset + this.height) : padding + this.offset
 
-        _self.groupMap = {}; // Nice for lookups and existence checks
-        _self.groups = []; // Nice for direct iteration
-        _self.availableTracks.forEach(function (track) {
-            const group = track.group || 'Tracks';
-            if (_self.groupMap.hasOwnProperty(group)) {
-                _self.groupMap[group].addTrack(track);
-            } else {
-                const trackGroup = new TrackGroup(
-                    {
-                        emit: _self.emit,
-                        cellHeight: _self.cellHeight,
-                        width: _self.width,
-                        grid: _self.drawGridLines,
-                        nullSentinel: _self.nullSentinel,
-                        domain: _self.domain,
-                        trackLegendLabel: _self.trackLegendLabel,
-                        expandable: _self.expandableGroups.indexOf(group) >= 0,
-                        wrapper: _self.params.wrapper,
-                    },
-                    group,
-                    _self.rotated,
-                    _self.opacityFunc,
-                    _self.fillFunc,
-                    _self.updateCallback,
-                    _self.resizeCallback,
-                    _self.isFullscreen
-                );
-                trackGroup.addTrack(track);
-                _self.groupMap[group] = trackGroup;
-                _self.groups.push(trackGroup);
-            }
-        });
+    this.container
+      .attr('width', this.width)
+      .attr('height', this.height)
+      .attr('class', this.getPrefix() + 'track')
+      .attr('transform', function () {
+        return (this.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')'
+      })
+
+    this.height += labelHeight
+  }
+
+  /** Calls render on all track groups */
+  render(): void {
+    for (const group of this.groups) {
+      group.render()
+    }
+  }
+
+  /** Resizes all the track groups */
+  resize(width: number, height: number, offset: any): void {
+    this.offset = offset || this.offset
+    this.width = this.rotated ? height : width
+    this.height = 0
+    const labelHeight = this.rotated ? 16.5 : 0
+    const {padding} = this.getDimensions()
+
+    for (const group of this.groups) {
+      group.container.attr('transform', 'translate(0,' + this.height + ')')
+      group.resize(this.width)
+      this.height += Number(group.totalHeight) + padding
     }
 
-    /**
-     * Initializes the track group data and places container for each group in spaced
-     * intervals.
-     */
-    init(): void {
-        const _self = this;
-        _self.container = _self.svg.append('g');
+    const translateDown = this.rotated ? -(this.offset + this.height) : padding + this.offset
 
-        const labelHeight = _self.rotated ? 16.5 : 0;
-        _self.height = 0;
-        for (let k = 0; k < _self.groups.length; k++) {
-            const g = _self.groups[k];
-            const trackContainer = _self.container.append('g').attr('transform', 'translate(0,' + _self.height + ')');
-            g.init(trackContainer);
-            _self.height += Number(g.totalHeight) + _self.padding;
-        }
+    this.container
+      .attr('width', this.width)
+      .attr('height', this.height)
+      .attr('transform', function () {
+        return (this.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')'
+      })
 
-        const translateDown = _self.rotated ? -(_self.offset + _self.height) : _self.padding + _self.offset;
+    this.height += labelHeight
+  }
 
-        _self.container
-            .attr('width', _self.width)
-            .attr('height', _self.height)
-            .attr('class', _self.prefix + 'track')
-            .attr('transform', function () {
-                return (_self.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')';
-            });
+  /**
+   * Updates the rendering of the tracks.
+   */
+  update(domain: any[]): void {
+    this.domain = domain
 
-        _self.height += labelHeight;
+    for (const group of this.groups) {
+      group.update(domain)
     }
+  }
 
-    /** Calls render on all track groups */
-    render(): void {
-        const _self = this;
-
-        for (let i = 0; i < _self.groups.length; i++) {
-            const g = _self.groups[i];
-            g.render();
-        }
+  setGridLines(active: boolean): void {
+    for (const group of this.groups) {
+      group.setGridLines(active)
     }
-
-    /** Resizes all the track groups */
-    resize(width: number, height: number, offset: any): void {
-        const _self = this;
-
-        _self.offset = offset || _self.offset;
-        _self.width = _self.rotated ? height : width;
-        _self.height = 0;
-        const labelHeight = _self.rotated ? 16.5 : 0;
-
-        for (let k = 0; k < _self.groups.length; k++) {
-            const g = _self.groups[k];
-            g.container.attr('transform', 'translate(0,' + _self.height + ')');
-            g.resize(_self.width);
-            _self.height += Number(g.totalHeight) + _self.padding;
-        }
-
-        const translateDown = _self.rotated ? -(_self.offset + _self.height) : _self.padding + _self.offset;
-
-        _self.container
-            .attr('width', _self.width)
-            .attr('height', _self.height)
-            .attr('transform', function () {
-                return (_self.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')';
-            });
-
-        _self.height += labelHeight;
-    }
-
-    /**
-     * Updates the rendering of the tracks.
-     */
-    update(domain: any[]): void {
-        const _self = this;
-
-        _self.domain = domain;
-
-        for (let i = 0; i < _self.groups.length; i++) {
-            const g = _self.groups[i];
-            g.update(domain);
-        }
-    }
-
-    setGridLines(active: boolean): void {
-        const _self = this;
-
-        for (let i = 0; i < _self.groups.length; i++) {
-            const g = _self.groups[i];
-            g.setGridLines(active);
-        }
-    }
+  }
 }
 
-export default Track;
+export default Track
