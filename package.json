@@ -1,0 +1,26 @@
+{
+  "name": "event-matrix",
+  "version": "1.0.0",
+  "description": "A TypeScript project built with Vite for frontend usage",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkfz-unite/event-matrix.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dkfz-unite/event-matrix/issues"
+  },
+  "homepage": "https://github.com/dkfz-unite/event-matrix#readme",
+  "devDependencies": {
+    "ts-migrate": "^0.1.35",
+    "typescript": "5.3.3",
+    "vite": "5.0.11"
+  }
+}

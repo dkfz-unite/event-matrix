@@ -1,935 +1,939 @@
-/*
- * Copyright 2016(c) The Ontario Institute for Cancer Research. All rights reserved.
- *
- * This program and the accompanying materials are made available under the terms of the GNU Public
- * License v3.0. You should have received a copy of the GNU General Public License along with this
- * program. If not, see <http://www.gnu.org/licenses/>.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
- * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-'use strict';
-var d3 = require('d3');
+import * as d3 from 'd3';
 
-var OncoHistogram = require('./Histogram');
-var OncoTrack = require('./Track');
+import Histogram from './Histogram';
+import Track from './Track';
+import {MainGridParams} from "../interfaces/main-grid.interfaces";
 
-var MainGrid;
+class MainGrid {
+    private emit: Function;
+    private x: any;
+    private y: any;
+    private lookupTable: any;
+    private updateCallback: Function;
+    private resizeCallback: Function;
+    private loadParams: Function;
+    private createGeneMap: Function;
+    private init: Function;
+    private donorHistogram: any;
+    private histogramHeight: any;
+    private cnvDonorHistogram: any;
+    private donorTrack: any;
+    private geneHistogram: any;
+    private geneTrack: any;
+    private cnvGeneHistogram: any;
+    private scaleToFit: boolean;
+    private leftTextWidth: number;
+    private prefix: string;
+    private minCellHeight: number;
+    private donors: any[];
+    private genes: any[];
+    private types: any[];
+    private ssmObservations: any[];
+    private cnvObservations: any[];
+    private observations: any[];
+    private wrapper: any;
+    private colorMap: any;
+    private numDonors: number;
+    private numGenes: number;
+    private numTypes: number;
+    private fullscreen: boolean;
+    private isFullscreen: Function;
+    private width: number;
+    private height: number;
+    private inputWidth: number;
+    private inputHeight: number;
+    private cellWidth: number;
+    private cellHeight: number;
+    private margin: { top: number, right: number, bottom: number, left: number };
+    private heatMap: boolean;
+    private drawGridLines: boolean;
+    private crosshair: boolean;
+    private heatMapColor: string;
+    private svg: any;
+    private container: any;
+    private background: any;
+    private gridContainer: any;
+    private verticalCross: any;
+    private horizontalCross: any;
+    private selectionRegion: any;
+    private column: any;
+    private row: any;
+    private geneMap: any;
 
-MainGrid = function (params, lookupTable, updateCallback, resizeCallback, x, y) {
-    var _self = this;
-    _self.emit = params.emit;
-    _self.x = x;
-    _self.y = y;
-    _self.lookupTable = lookupTable;
-    _self.updateCallback = updateCallback;
-    _self.resizeCallback = resizeCallback;
-    _self.loadParams(params);
-    _self.createGeneMap();
-    _self.init();
-    // Histograms and tracks.
-    _self.donorHistogram = new OncoHistogram(params, _self.container, false);
-    _self.histogramHeight = _self.donorHistogram.totalHeight;
-    _self.cnvDonorHistogram = new OncoHistogram(params, _self.container, false, 'cnv');
+    constructor(params: MainGridParams, lookupTable: any, updateCallback: Function, resizeCallback: Function, x: any, y: any) {
+        this.emit = params.emit;
+        this.x = x;
+        this.y = y;
+        this.lookupTable = lookupTable;
+        this.updateCallback = updateCallback;
+        this.resizeCallback = resizeCallback;
+        this.loadParams(params);
+        this.createGeneMap();
+        this.init();
+        // Histograms and tracks.
+        this.donorHistogram = new Histogram(params, this.container, false);
+        this.histogramHeight = this.donorHistogram.totalHeight;
+        this.cnvDonorHistogram = new Histogram(params, this.container, false, 'cnv');
 
-    _self.donorTrack =
-        new OncoTrack(params, _self.container, false, params.donorTracks, params.donorOpacityFunc,
-            params.donorFillFunc, updateCallback, _self.height, _self.resizeCallback, _self.isFullscreen);
-    _self.donorTrack.init();
+        this.donorTrack =
+            new Track(params, this.container, false, params.donorTracks, params.donorOpacityFunc,
+                params.donorFillFunc, updateCallback, this.height, this.resizeCallback, this.isFullscreen);
+        this.donorTrack.init();
 
-    _self.geneHistogram = new OncoHistogram(params, _self.container, true);
-    _self.geneTrack =
-        new OncoTrack(params, _self.container, true, params.geneTracks, params.geneOpacityFunc,
-            params.geneFillFunc, updateCallback, _self.width + (_self.histogramHeight * _self.numTypes), _self.resizeCallback, _self.isFullscreen);
-    _self.geneTrack.init();
+        this.geneHistogram = new Histogram(params, this.container, true);
+        this.geneTrack =
+            new Track(params, this.container, true, params.geneTracks, params.geneOpacityFunc,
+                params.geneFillFunc, updateCallback, this.width + (this.histogramHeight * this.numTypes), this.resizeCallback, this.isFullscreen);
+        this.geneTrack.init();
 
-    _self.cnvGeneHistogram = new OncoHistogram(params, _self.container, true, 'cnv');
-};
-
-/**
- * Responsible for initializing instance fields of MainGrid from the provided params object.
- * @param params
- */
-MainGrid.prototype.loadParams = function (params) {
-    var _self = this;
-    _self.scaleToFit = typeof params.scaleToFit === 'boolean' ? params.scaleToFit : true;
-    _self.leftTextWidth = params.leftTextWidth || 80;
-    _self.prefix = params.prefix || 'og-';
-
-    _self.minCellHeight = params.minCellHeight || 10;
-    _self.donors = params.donors || [];
-    _self.genes = params.genes || [];
-    _self.types = [];
-    _self.ssmObservations = params.ssmObservations || [];
-    _self.cnvObservations = params.cnvObservations || [];
-    _self.observations = _self.cnvObservations.concat(_self.ssmObservations) || [];
-    if (_self.cnvObservations.length) { _self.types.push('cnv'); }
-    if (_self.ssmObservations.length) { _self.types.push('mutation'); }
-
-    _self.wrapper = d3.select(params.wrapper || 'body');
-
-    _self.colorMap = params.colorMap || {
-        'missense_variant': '#ff9b6c',
-        'frameshift_variant': '#57dba4',
-        'stop_gained': '#af57db',
-        'start_lost': '#ff2323',
-        'stop_lost': '#d3ec00',
-        'initiator_codon_variant': '#5abaff'
-    };
-
-    _self.numDonors = _self.donors.length;
-    _self.numGenes = _self.genes.length;
-    _self.numTypes = _self.types.length;
-
-    _self.fullscreen = false;
-
-    _self.isFullscreen = function () {
-        return _self.fullscreen;
-    };
-
-    _self.width = params.width || 500;
-    _self.height = params.height || 500;
-    _self.inputWidth = params.width || 500;
-    _self.inputHeight = params.height || 500;
-
-    _self.cellWidth = _self.width / _self.donors.length;
-
-    _self.cellHeight = _self.height / _self.numGenes;
-
-    if (_self.cellHeight < _self.minCellHeight) {
-        _self.cellHeight = _self.minCellHeight;
-        params.height = _self.numGenes * _self.minCellHeight;
-        _self.height = params.height;
+        this.cnvGeneHistogram = new Histogram(params, this.container, true, 'cnv');
     }
 
-    _self.margin = params.margin || { top: 30, right: 100, bottom: 15, left: 80 };
-    _self.heatMap = params.heatMap;
+    /**
+     * Responsible for initializing instance fields of MainGrid from the provided params object.
+     * @param params
+     */
+    private loadParams(params: MainGridParams) {
+        this.scaleToFit = typeof params.scaleToFit === 'boolean' ? params.scaleToFit : true;
+        this.leftTextWidth = params.leftTextWidth || 80;
+        this.prefix = params.prefix || 'og-';
 
-    _self.drawGridLines = params.grid || false;
-    _self.crosshair = false;
-    _self.heatMapColor = params.heatMapColor || '#D33682';
-};
+        this.minCellHeight = params.minCellHeight || 10;
+        this.donors = params.donors || [];
+        this.genes = params.genes || [];
+        this.types = [];
+        this.ssmObservations = params.ssmObservations || [];
+        this.cnvObservations = params.cnvObservations || [];
+        this.observations = this.cnvObservations.concat(this.ssmObservations) || [];
+        if (this.cnvObservations.length) { this.types.push('cnv'); }
+        if (this.ssmObservations.length) { this.types.push('mutation'); }
 
-/**
- * Creates main svg element, background, and tooltip.
- */
-MainGrid.prototype.init = function () {
-    var _self = this;
+        this.wrapper = d3.select(params.wrapper || 'body');
 
-    _self.canvas = _self.wrapper.append('canvas') // forces size of container to prevent default height in IE
-        .attr('class', _self.prefix + 'canvas');
+        this.colorMap = params.colorMap || {
+            'missense_variant': '#ff9b6c',
+            'frameshift_variant': '#57dba4',
+            'stop_gained': '#af57db',
+            'start_lost': '#ff2323',
+            'stop_lost': '#d3ec00',
+            'initiator_codon_variant': '#5abaff'
+        };
 
-    _self.svg = _self.wrapper.append('svg')
-        .attr('class', _self.prefix + 'maingrid-svg')
-        .attr('id', _self.prefix + 'maingrid-svg')
-        .attr('width', '100%')
-        .style('position', 'absolute')
-        .style('top', 0)
-        .style('left', 0);
+        this.numDonors = this.donors.length;
+        this.numGenes = this.genes.length;
+        this.numTypes = this.types.length;
 
-    _self.container = _self.svg
-        .append('g');
+        this.fullscreen = false;
 
-    _self.background = _self.container.append('rect')
-        .attr('class', 'background')
-        .attr('width', _self.width)
-        .attr('height', _self.height);
+        this.isFullscreen = () => {
+            return this.fullscreen;
+        };
 
-    _self.gridContainer = _self.container.append('g');
-};
+        this.width = params.width || 500;
+        this.height = params.height || 500;
+        this.inputWidth = params.width || 500;
+        this.inputHeight = params.height || 500;
 
-/**
- * Only to be called the first time the OncoGrid is rendered. It creates the rects representing the
- * mutation occurrences.
- */
-MainGrid.prototype.render = function () {
-    var _self = this;
+        this.cellWidth = this.width / this.donors.length;
 
-    _self.emit('render:mainGrid:start');
-    _self.computeCoordinates();
+        this.cellHeight = this.height / this.numGenes;
 
-    _self.svg.on('mouseover', function (d) {
-        var target = d3.event.target;
-        var coord = d3.mouse(target);
+        if (this.cellHeight < this.minCellHeight) {
+            this.cellHeight = this.minCellHeight;
+            params.height = this.numGenes * this.minCellHeight;
+            this.height = params.height;
+        }
 
-        var xIndex = _self.rangeToDomain(_self.x, coord[0]);
-        var yIndex = _self.rangeToDomain(_self.y, coord[1]);
+        this.margin = params.margin || { top: 30, right: 100, bottom: 15, left: 80 };
+        this.heatMap = params.heatMap;
 
-        if (!target.dataset.obsIndex || _self.crosshair) { return; }
-        var obsIds = target.dataset.obsIndex.split(' ');
-        var obs = _self.observations.filter(function (o) {
-          return o.donorId === obsIds[0] && o.geneId === obsIds[1];
-        });
+        this.drawGridLines = params.grid || false;
+        this.crosshair = false;
+        this.heatMapColor = params.heatMapColor || '#D33682';
+    }
 
-        _self.emit('gridMouseOver', {
-            observation: obs,
-            donor: _self.donors[xIndex],
-            gene: _self.genes[yIndex],
-        });
-    });
+    /**
+     * Creates main svg element, background, and tooltip.
+     */
+    private init() {
+        this.svg = this.wrapper.append('svg')
+            .attr('class', this.prefix + 'maingrid-svg')
+            .attr('id', this.prefix + 'maingrid-svg')
+            .attr('width', '100%')
+            .style('position', 'absolute')
+            .style('top', 0)
+            .style('left', 0);
 
-    _self.svg.on('mouseout', function () {
-        _self.emit('gridMouseOut');
-    });
+        this.container = this.svg
+            .append('g');
 
-    _self.svg.on('click', function () {
-        var obsIds = d3.event.target.dataset.obsIndex && d3.event.target.dataset.obsIndex.split(' ');
-        if (!obsIds) { return; }
+        this.background = this.container.append('rect')
+            .attr('class', 'background')
+            .attr('width', this.width)
+            .attr('height', this.height);
 
-        var observation = _self.observations.filter(function (o) {
-            return o.donorId === obsIds[0] && o.geneId === obsIds[1];
-        });
-        if (!observation) { return; }
-        _self.emit('gridClick', { donorId: obsIds[0], geneId: obsIds[1] });
-    });
+        this.gridContainer = this.container.append('g');
+    }
 
-    _self.container.selectAll('.' + _self.prefix + 'maingrid-svg')
-        .data(_self.observations).enter()
-        .append('path')
-        .attr('data-obs-index', function (d, i) {
-            return d.donorId + ' ' + d.geneId;
-        })
-        .attr('class', function (d) {
-            return _self.prefix + 'sortable-rect-' + d.type + ' ' + _self.prefix + d.donorId + '-cell ' + _self.prefix + d.geneId + '-cell';
-        })
-        .attr('cons', function (d) {
-            return _self.getValueByType(d);
-        })
-        .attr('d', function (d) {
-            if (d.type === 'cnv' || _self.heatMap) {
-              return _self.getRectangularPath(d);
+    /**
+     * Only to be called the first time the OncoGrid is rendered. It creates the rects representing the
+     * mutation occurrences.
+     */
+    public render() {
+        this.emit('render:mainGrid:start');
+        this.computeCoordinates();
+
+        this.svg.on('mouseover', (d: any) => {
+            const target = d3.event.target;
+            const coord = d3.mouse(target);
+
+            const xIndex = this.rangeToDomain(this.x, coord[0]);
+            const yIndex = this.rangeToDomain(this.y, coord[1]);
+
+            if (!target.dataset.obsIndex || this.crosshair) {
+                return;
             }
-            return _self.getCircularPath(d);
-        })
-        .attr('fill', function (d) {
-            return _self.getColor(d);
-        })
-        .attr('opacity', function (d) {
-            return _self.getOpacity(d);
-        })
+            const obsIds = target.dataset.obsIndex.split(' ');
+            const obs = this.observations.filter((o: any) => {
+                return o.donorId === obsIds[0] && o.geneId === obsIds[1];
+            });
 
+            this.emit('gridMouseOver', {
+                observation: obs,
+                donor: this.donors[xIndex],
+                gene: this.genes[yIndex],
+            });
+        });
 
-    _self.emit('render:mainGrid:end');
+        this.svg.on('mouseout', () => {
+            this.emit('gridMouseOut');
+        });
 
-    if (_self.cnvObservations.length) {
-      _self.emit('render:cnvDonorHistogram:start');
-      _self.cnvDonorHistogram.render();
-      _self.emit('render:cnvDonorHistogram:end');
-
-      _self.emit('render:cnvGeneHistogram:start');
-      _self.cnvGeneHistogram.render();
-      _self.emit('render:cnvGeneHistogram:end');
-    }
-
-    if (_self.ssmObservations.length) {
-      _self.emit('render:donorHistogram:start');
-      _self.donorHistogram.render();
-      _self.emit('render:donorHistogram:end');
-
-      _self.emit('render:geneHistogram:start');
-      _self.geneHistogram.render();
-      _self.emit('render:geneHistogram:end');
-    }
-
-    _self.emit('render:donorTrack:start');
-    _self.donorTrack.render();
-    _self.emit('render:donorTrack:end');
-
-    _self.emit('render:geneTrack:start');
-    _self.geneTrack.render();
-    _self.emit('render:geneTrack:end');
-
-    _self.defineCrosshairBehaviour();
-
-    _self.resizeSvg();
-};
-
-/**
- * Render function ensures presentation matches the data. Called after modifying data.
- */
-MainGrid.prototype.update = function (x, y) {
-    var _self = this;
-    _self.createGeneMap();
-
-    _self.x = x;
-    _self.y = y;
-
-    // Recalculate positions and dimensions of cells only on change in number of elements
-    if (_self.numDonors !== _self.donors.length || _self.numGenes !== _self.genes.length) {
-        _self.numDonors = _self.donors.length;
-        _self.numGenes = _self.genes.length;
-        _self.cellWidth = _self.width / _self.donors.length;
-        _self.cellHeight = _self.height / _self.genes.length;
-        _self.computeCoordinates();
-    } else {
-        _self.row.selectAll('text').attr('style', function () {
-            if (_self.cellHeight < _self.minCellHeight) {
-                return 'display: none;';
-            } else {
-                return '';
+        this.svg.on('click', () => {
+            const obsIds = d3.event.target.dataset.obsIndex && d3.event.target.dataset.obsIndex.split(' ');
+            if (!obsIds) {
+                return;
             }
+
+            const observation = this.observations.filter((o: any) => {
+                return o.donorId === obsIds[0] && o.geneId === obsIds[1];
+            });
+            if (!observation) {
+                return;
+            }
+            this.emit('gridClick', { donorId: obsIds[0], geneId: obsIds[1] });
         });
-    }
 
-    _self.row
-        .transition()
-        .attr('transform', function (d) {
-            return 'translate( 0, ' + d.y + ')';
-        });
-
-    for (var i = 0; i < _self.numTypes; i++) {
-        _self.container.selectAll('.' + _self.prefix + 'sortable-rect-' + _self.types[i])
-            .transition()
-            .attr('d', function (d) {
-              if (d.type === 'cnv' || _self.heatMap) {
-                return _self.getRectangularPath(d);
-              }
-              return _self.getCircularPath(d);
-            })
-    }
-
-    if (_self.ssmObservations.length) {
-      _self.donorHistogram.update(_self.donors);
-      _self.geneHistogram.update(_self.genes);
-    }
-
-    if (_self.cnvObservations.length) {
-      _self.cnvDonorHistogram.update(_self.donors);
-      _self.cnvGeneHistogram.update(_self.genes);
-    }
-
-    _self.donorTrack.update(_self.donors);
-    _self.geneTrack.update(_self.genes);
-};
-
-
-/**
- * Updates coordinate system and renders the lines of the grid.
- */
-MainGrid.prototype.computeCoordinates = function () {
-    var _self = this;
-
-    _self.cellWidth = _self.width / _self.donors.length;
-
-    if (typeof _self.column !== 'undefined') {
-        _self.column.remove();
-    }
-
-    if (_self.drawGridLines) {
-        _self.column = _self.gridContainer.selectAll('.' + _self.prefix + 'donor-column')
-            .data(_self.donors)
+        this.container
+            .selectAll(`.${this.prefix}maingrid-svg`)
+            .data(this.observations)
             .enter()
-            .append('line')
-            .attr({
-                x1: function (d) { return d.x; },
-                x2: function (d) { return d.x; },
-                y2: _self.height,
-                'class': _self.prefix + 'donor-column',
+            .append('path')
+            .attr('data-obs-index', (d: any, i: number) => {
+                return `${d.donorId} ${d.geneId}`;
             })
-            .style('pointer-events', 'none');
+            .attr('class', (d: any) => {
+                return `${this.prefix}sortable-rect-${d.type} ${this.prefix}${d.donorId}-cell ${this.prefix}${d.geneId}-cell`;
+            })
+            .attr('cons', (d: any) => {
+                return this.getValueByType(d);
+            })
+            .attr('d', (d: any) => {
+                if (d.type === 'cnv' || this.heatMap) {
+                    return this.getRectangularPath(d);
+                }
+                return this.getCircularPath(d);
+            })
+            .attr('fill', (d: any) => {
+                return this.getColor(d);
+            })
+            .attr('opacity', (d: any) => {
+                return this.getOpacity(d);
+            });
+
+        this.emit('render:mainGrid:end');
+
+        if (this.cnvObservations.length) {
+            this.emit('render:cnvDonorHistogram:start');
+            this.cnvDonorHistogram.render();
+            this.emit('render:cnvDonorHistogram:end');
+
+            this.emit('render:cnvGeneHistogram:start');
+            this.cnvGeneHistogram.render();
+            this.emit('render:cnvGeneHistogram:end');
+        }
+
+        if (this.ssmObservations.length) {
+            this.emit('render:donorHistogram:start');
+            this.donorHistogram.render();
+            this.emit('render:donorHistogram:end');
+
+            this.emit('render:geneHistogram:start');
+            this.geneHistogram.render();
+            this.emit('render:geneHistogram:end');
+        }
+
+        this.emit('render:donorTrack:start');
+        this.donorTrack.render();
+        this.emit('render:donorTrack:end');
+
+        this.emit('render:geneTrack:start');
+        this.geneTrack.render();
+        this.emit('render:geneTrack:end');
+
+        this.defineCrosshairBehaviour();
+
+        this.resizeSvg();
     }
 
-    _self.cellHeight = _self.height / _self.genes.length;
+    /**
+     * Render function ensures presentation matches the data. Called after modifying data.
+     */
+    public update(x: number, y: number) {
+        this.createGeneMap();
 
-    if (typeof _self.row !== 'undefined') {
-        _self.row.remove();
-    }
+        this.x = x;
+        this.y = y;
 
-    _self.row = _self.gridContainer.selectAll('.' + _self.prefix + 'gene-row')
-        .data(_self.genes)
-        .enter().append('g')
-        .attr('class', _self.prefix + 'gene-row')
-        .attr('transform', function (d) {
-            return 'translate(0,' + d.y + ')';
-        });
-
-    if (_self.drawGridLines) {
-        _self.row.append('line')
-            .attr('x2', _self.width)
-            .style('pointer-events', 'none');
-    }
-
-    _self.row.append('text')
-        .attr('class', function (g) {
-            return _self.prefix + g.id + '-label ' + _self.prefix + 'gene-label ' + _self.prefix + 'label-text-font';
-        })
-        .attr('x', -8)
-        .attr('y', _self.cellHeight / 2)
-        .attr('dy', '.32em')
-        .attr('text-anchor', 'end')
-        .attr('style', function () {
-            if (_self.cellHeight < _self.minCellHeight) {
-                return 'display: none;';
-            } else {
-                return '';
-            }
-        })
-        .text(function (d, i) {
-            return _self.genes[i].symbol;
-        })
-
-    _self.defineRowDragBehaviour();
-};
-
-MainGrid.prototype.resize = function (width, height, x, y) {
-    var _self = this;
-
-    _self.createGeneMap();
-
-    _self.x = x;
-    _self.y = y;
-    _self.width = width;
-    _self.height = height;
-
-    _self.cellWidth = _self.width / _self.donors.length;
-    _self.cellHeight = _self.height / _self.genes.length;
-
-    if (_self.cellHeight < _self.minCellHeight) {
-        _self.cellHeight = _self.minCellHeight;
-        _self.height = _self.genes.length * _self.minCellHeight;
-    }
-
-    _self.background
-        .attr('width', _self.width)
-        .attr('height', _self.height);
-
-    _self.computeCoordinates();
-
-    if (_self.ssmObservations.length) {
-      _self.donorHistogram.resize(width, _self.height);
-      _self.geneHistogram.resize(width, _self.height);
-    }
-
-    if (_self.cnvObservations.length) {
-      _self.cnvDonorHistogram.resize(width, _self.height);
-      _self.cnvGeneHistogram.resize(width, _self.height);
-    }
-
-    _self.donorTrack.resize(width, _self.height, _self.height);
-    _self.geneTrack.resize(width, _self.height, _self.width + _self.histogramHeight + 120);
-
-    _self.resizeSvg();
-    _self.update(_self.x, _self.x);
-
-    _self.verticalCross.attr('y2', _self.height + _self.donorTrack.height);
-    _self.horizontalCross.attr('x2', _self.width + (_self.histogramHeight * _self.numTypes) + _self.geneTrack.height);
-};
-
-MainGrid.prototype.resizeSvg = function () {
-    var _self = this;
-    var width = _self.margin.left + _self.leftTextWidth + _self.width + (_self.histogramHeight * _self.numTypes) + _self.geneTrack.height + _self.margin.right;
-
-    var height = _self.margin.top + (_self.histogramHeight * _self.numTypes) + _self.height + _self.donorTrack.height + _self.margin.bottom;
-
-    _self.canvas
-        .attr('width', width)
-        .attr('height', height);
-
-    if (_self.scaleToFit) {
-        _self.canvas.style('width', '100%');
-        _self.svg.attr('viewBox', '0 0 ' + width + ' ' + height);
-    } else {
-        _self.canvas.style('width', width + 'px');
-        _self.svg.attr('width', width).attr('height', height);
-    }
-
-    _self.container
-        .attr('transform', 'translate(' +
-            (_self.margin.left + _self.leftTextWidth) + ',' +
-            (_self.margin.top + (_self.histogramHeight * _self.numTypes)) +
-            ')');
-};
-
-MainGrid.prototype.defineCrosshairBehaviour = function () {
-    var _self = this;
-
-    var moveCrossHair = function (eventType, target) {
-        if (_self.crosshair) {
-            var coord = d3.mouse(target);
-
-            _self.verticalCross.attr('x1', coord[0]).attr('opacity', 1);
-            _self.verticalCross.attr('x2', coord[0]).attr('opacity', 1);
-            _self.horizontalCross.attr('y1', coord[1]).attr('opacity', 1);
-            _self.horizontalCross.attr('y2', coord[1]).attr('opacity', 1);
-
-            if (eventType === 'mousemove' && typeof _self.selectionRegion !== 'undefined') {
-                _self.changeSelection(coord);
-            }
-
-            var xIndex = _self.width < coord[0] ? -1 : _self.rangeToDomain(_self.x, coord[0]);
-            var yIndex = _self.height < coord[1] ? -1 : _self.rangeToDomain(_self.y, coord[1]);
-
-            var donor = _self.donors[xIndex];
-            var gene = _self.genes[yIndex];
-
-            if (!donor || !gene) { return; }
-
-            _self.emit('gridCrosshairMouseOver', {
-                donor: donor,
-                gene: gene,
+        // Recalculate positions and dimensions of cells only on change in number of elements
+        if (this.numDonors !== this.donors.length || this.numGenes !== this.genes.length) {
+            this.numDonors = this.donors.length;
+            this.numGenes = this.genes.length;
+            this.cellWidth = this.width / this.donors.length;
+            this.cellHeight = this.height / this.genes.length;
+            this.computeCoordinates();
+        } else {
+            this.row.selectAll('text').attr('style', () => {
+                if (this.cellHeight < this.minCellHeight) {
+                    return 'display: none;';
+                } else {
+                    return '';
+                }
             });
         }
-    };
 
-    _self.verticalCross = _self.container.append('line')
-        .attr('class', _self.prefix + 'vertical-cross')
-        .attr('y1', -_self.histogramHeight)
-        .attr('y2', _self.height + _self.donorTrack.height)
-        .attr('opacity', 0)
-        .attr('style', 'pointer-events: none');
+        this.row
+            .transition()
+            .attr('transform', (d: any) => {
+                return 'translate( 0, ' + d.y + ')';
+            });
 
-    _self.horizontalCross = _self.container.append('line')
-        .attr('class', _self.prefix + 'horizontal-cross')
-        .attr('x1', 0)
-        .attr('x2', _self.width + _self.histogramHeight + _self.geneTrack.height)
-        .attr('opacity', 0)
-        .attr('style', 'pointer-events: none');
+        for (let i = 0; i < this.numTypes; i++) {
+            this.container
+                .selectAll('.' + this.prefix + 'sortable-rect-' + this.types[i])
+                .transition()
+                .attr('d', (d: any) => {
+                    if (d.type === 'cnv' || this.heatMap) {
+                        return this.getRectangularPath(d);
+                    }
+                    return this.getCircularPath(d);
+                });
+        }
 
-    _self.container
-        .on('mousedown', function () { _self.startSelection(this); })
-        .on('mouseover', function () { moveCrossHair('mouseover', this); })
-        .on('mousemove', function () { moveCrossHair('mousemove', this); })
-        .on('mouseout', function () {
-            if (_self.crosshair) {
-                _self.verticalCross.attr('opacity', 0);
-                _self.horizontalCross.attr('opacity', 0);
-                _self.emit('gridCrosshairMouseOut');
+        if (this.ssmObservations.length) {
+            this.donorHistogram.update(this.donors);
+            this.geneHistogram.update(this.genes);
+        }
+
+        if (this.cnvObservations.length) {
+            this.cnvDonorHistogram.update(this.donors);
+            this.cnvGeneHistogram.update(this.genes);
+        }
+
+        this.donorTrack.update(this.donors);
+        this.geneTrack.update(this.genes);
+    }
+
+
+    /**
+     * Updates coordinate system and renders the lines of the grid.
+     */
+    private computeCoordinates() {
+        this.cellWidth = this.width / this.donors.length;
+
+        if (typeof this.column !== 'undefined') {
+            this.column.remove();
+        }
+
+        if (this.drawGridLines) {
+            this.column = this.gridContainer.selectAll('.' + this.prefix + 'donor-column')
+                .data(this.donors)
+                .enter()
+                .append('line')
+                .attr({
+                    x1: (d: any) => d.x,
+                    x2: (d: any) => d.x,
+                    y2: this.height,
+                    'class': this.prefix + 'donor-column',
+                })
+                .style('pointer-events', 'none');
+        }
+
+        this.cellHeight = this.height / this.genes.length;
+
+        if (typeof this.row !== 'undefined') {
+            this.row.remove();
+        }
+
+        this.row = this.gridContainer.selectAll('.' + this.prefix + 'gene-row')
+            .data(this.genes)
+            .enter().append('g')
+            .attr('class', this.prefix + 'gene-row')
+            .attr('transform', (d: any) => {
+                return 'translate(0,' + d.y + ')';
+            });
+
+        if (this.drawGridLines) {
+            this.row.append('line')
+                .attr('x2', this.width)
+                .style('pointer-events', 'none');
+        }
+
+        this.row.append('text')
+            .attr('class', (g: any) => {
+                return this.prefix + g.id + '-label ' + this.prefix + 'gene-label ' + this.prefix + 'label-text-font';
+            })
+            .attr('x', -8)
+            .attr('y', this.cellHeight / 2)
+            .attr('dy', '.32em')
+            .attr('text-anchor', 'end')
+            .attr('style', () => {
+                if (this.cellHeight < this.minCellHeight) {
+                    return 'display: none;';
+                } else {
+                    return '';
+                }
+            })
+            .text((d: any, i: number) => {
+                return this.genes[i].symbol;
+            })
+
+        this.defineRowDragBehaviour();
+    }
+
+    public resize(width: number, height: number, x: any, y: any) {
+        this.createGeneMap();
+
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+
+        this.cellWidth = this.width / this.donors.length;
+        this.cellHeight = this.height / this.genes.length;
+
+        if (this.cellHeight < this.minCellHeight) {
+            this.cellHeight = this.minCellHeight;
+            this.height = this.genes.length * this.minCellHeight;
+        }
+
+        this.background
+            .attr('width', this.width)
+            .attr('height', this.height);
+
+        this.computeCoordinates();
+
+        if (this.ssmObservations.length) {
+            this.donorHistogram.resize(width, this.height);
+            this.geneHistogram.resize(width, this.height);
+        }
+
+        if (this.cnvObservations.length) {
+            this.cnvDonorHistogram.resize(width, this.height);
+            this.cnvGeneHistogram.resize(width, this.height);
+        }
+
+        this.donorTrack.resize(width, this.height, this.height);
+        this.geneTrack.resize(width, this.height, this.width + this.histogramHeight + 120);
+
+        this.resizeSvg();
+        this.update(this.x, this.x);
+
+        this.verticalCross.attr('y2', this.height + this.donorTrack.height);
+        this.horizontalCross.attr('x2', this.width + (this.histogramHeight * this.numTypes) + this.geneTrack.height);
+    }
+
+    private resizeSvg() {
+        var width = this.margin.left + this.leftTextWidth + this.width + (this.histogramHeight * this.numTypes) + this.geneTrack.height + this.margin.right;
+
+        var height = this.margin.top + (this.histogramHeight * this.numTypes) + this.height + this.donorTrack.height + this.margin.bottom;
+
+        this.svg
+            .attr('width', width).attr('height', height);
+
+        this.container
+            .attr('transform', 'translate(' +
+                (this.margin.left + this.leftTextWidth) + ',' +
+                (this.margin.top + (this.histogramHeight * this.numTypes)) +
+                ')');
+    }
+
+    private defineCrosshairBehaviour() {
+        var moveCrossHair = (eventType: string, target: any) => {
+            if (this.crosshair) {
+                var coord = d3.mouse(target);
+
+                this.verticalCross.attr('x1', coord[0]).attr('opacity', 1);
+                this.verticalCross.attr('x2', coord[0]).attr('opacity', 1);
+                this.horizontalCross.attr('y1', coord[1]).attr('opacity', 1);
+                this.horizontalCross.attr('y2', coord[1]).attr('opacity', 1);
+
+                if (eventType === 'mousemove' && typeof this.selectionRegion !== 'undefined') {
+                    this.changeSelection(coord);
+                }
+
+                var xIndex = this.width < coord[0] ? -1 : this.rangeToDomain(this.x, coord[0]);
+                var yIndex = this.height < coord[1] ? -1 : this.rangeToDomain(this.y, coord[1]);
+
+                var donor = this.donors[xIndex];
+                var gene = this.genes[yIndex];
+
+                if (!donor || !gene) { return; }
+
+                this.emit('gridCrosshairMouseOver', {
+                    donor: donor,
+                    gene: gene,
+                });
             }
-        })
-        .on('mouseup', function () { _self.finishSelection(); });
-};
+        };
 
-/**
- * Event behavior when pressing down on the mouse to make a selection
- */
-MainGrid.prototype.startSelection = function (e) {
-    var _self = this;
+        this.verticalCross = this.container.append('line')
+            .attr('class', this.prefix + 'vertical-cross')
+            .attr('y1', -this.histogramHeight)
+            .attr('y2', this.height + this.donorTrack.height)
+            .attr('opacity', 0)
+            .attr('style', 'pointer-events: none');
 
-    if (_self.crosshair && typeof _self.selectionRegion === 'undefined') {
-        d3.event.stopPropagation();
-        var coord = d3.mouse(e);
+        this.horizontalCross = this.container.append('line')
+            .attr('class', this.prefix + 'horizontal-cross')
+            .attr('x1', 0)
+            .attr('x2', this.width + this.histogramHeight + this.geneTrack.height)
+            .attr('opacity', 0)
+            .attr('style', 'pointer-events: none');
 
-        _self.selectionRegion = _self.container.append('rect')
-            .attr('x', coord[0])
-            .attr('y', coord[1])
-            .attr('width', 1)
-            .attr('height', 1)
-            .attr('class', _self.prefix + 'selection-region')
-            .attr('stroke', 'black')
-            .attr('stroke-width', '2')
-            .attr('opacity', 0.2);
-    }
-};
-
-/**
- * Event behavior as you drag selected region around
- */
-MainGrid.prototype.changeSelection = function (coord) {
-    var _self = this;
-
-    var rect = {
-        x: parseInt(_self.selectionRegion.attr('x'), 10),
-        y: parseInt(_self.selectionRegion.attr('y'), 10),
-        width: parseInt(_self.selectionRegion.attr('width'), 10),
-        height: parseInt(_self.selectionRegion.attr('height'), 10)
-    };
-
-    var move = {
-        x: coord[0] - Number(_self.selectionRegion.attr('x')),
-        y: coord[1] - Number(_self.selectionRegion.attr('y'))
-    };
-
-    if (move.x < 1 || (move.x * 2 < rect.width)) {
-        rect.x = coord[0];
-        rect.width -= move.x;
-    } else {
-        rect.width = move.x;
+        this.container
+            .on('mousedown', () => { this.startSelection(this); })
+            .on('mouseover', () => { moveCrossHair('mouseover', this); })
+            .on('mousemove', () => { moveCrossHair('mousemove', this); })
+            .on('mouseout', () => {
+                if (this.crosshair) {
+                    this.verticalCross.attr('opacity', 0);
+                    this.horizontalCross.attr('opacity', 0);
+                    this.emit('gridCrosshairMouseOut');
+                }
+            })
+            .on('mouseup', () => { this.finishSelection(); });
     }
 
-    if (move.y < 1 || (move.y * 2 < rect.height)) {
-        rect.y = coord[1];
-        rect.height -= move.y;
-    } else {
-        rect.height = move.y;
-    }
+    /**
+     * Event behavior when pressing down on the mouse to make a selection
+     */
+    private startSelection(e: any) {
+        if (this.crosshair && typeof this.selectionRegion === 'undefined') {
+            d3.event.stopPropagation();
+            var coord = d3.mouse(e);
 
-    _self.selectionRegion.attr(rect);
-};
-
-/**
- * Event behavior when releasing mouse when finishing with a selection
- */
-MainGrid.prototype.finishSelection = function () {
-    var _self = this;
-
-    if (_self.crosshair && typeof _self.selectionRegion !== 'undefined') {
-        d3.event.stopPropagation();
-
-        var x1 = Number(_self.selectionRegion.attr('x'));
-        var x2 = x1 + Number(_self.selectionRegion.attr('width'));
-
-        var y1 = Number(_self.selectionRegion.attr('y'));
-        var y2 = y1 + Number(_self.selectionRegion.attr('height'));
-
-        var xStart = _self.rangeToDomain(_self.x, x1);
-        var xStop = _self.rangeToDomain(_self.x, x2);
-
-        var yStart = _self.rangeToDomain(_self.y, y1);
-        var yStop = _self.rangeToDomain(_self.y, y2);
-
-        _self.sliceDonors(xStart, xStop);
-        _self.sliceGenes(yStart, yStop);
-
-        _self.selectionRegion.remove();
-        delete _self.selectionRegion;
-        _self.updateCallback(true);
-
-        // _self.crosshair = false; // this needs to be updated in frontend state
-        // emit event to ui
-
-    }
-};
-
-/**
- * Used when resizing grid
- * @param start - start index of the selection
- * @param stop - end index of the selection
- */
-MainGrid.prototype.sliceGenes = function (start, stop) {
-    var _self = this;
-
-    for (var i = 0; i < _self.genes.length; i++) {
-        var gene = _self.genes[i];
-        if (i < start || i > stop) {
-            d3.selectAll('.' + _self.prefix + gene.id + '-cell').remove();
-            d3.selectAll('.' + _self.prefix + gene.id + '-bar').remove();
-            _self.genes.splice(i, 1);
-            i--; start--; stop--;
+            this.selectionRegion = this.container.append('rect')
+                .attr('x', coord[0])
+                .attr('y', coord[1])
+                .attr('width', 1)
+                .attr('height', 1)
+                .attr('class', this.prefix + 'selection-region')
+                .attr('stroke', 'black')
+                .attr('stroke-width', '2')
+                .attr('opacity', 0.2);
         }
     }
-};
 
-/**
- * Used when resizing grid
- * @param start - start index of the selection
- * @param stop - end index of the selection
- */
-MainGrid.prototype.sliceDonors = function (start, stop) {
-    var _self = this;
+    /**
+     * Event behavior as you drag selected region around
+     */
+    private changeSelection(coord: any) {
+        var rect = {
+            x: parseInt(this.selectionRegion.attr('x'), 10),
+            y: parseInt(this.selectionRegion.attr('y'), 10),
+            width: parseInt(this.selectionRegion.attr('width'), 10),
+            height: parseInt(this.selectionRegion.attr('height'), 10)
+        };
 
-    for (var i = 0; i < _self.donors.length; i++) {
-        var donor = _self.donors[i];
-        if (i < start || i > stop) {
-            d3.selectAll('.' + _self.prefix + donor.id + '-cell').remove();
-            d3.selectAll('.' + _self.prefix + donor.id + '-bar').remove();
-            _self.donors.splice(i, 1);
-            i--; start--; stop--;
-        }
-    }
-};
+        var move = {
+            x: coord[0] - Number(this.selectionRegion.attr('x')),
+            y: coord[1] - Number(this.selectionRegion.attr('y'))
+        };
 
-/**
- * Defines the row drag behaviour for moving genes and binds it to the row elements.
- */
-MainGrid.prototype.defineRowDragBehaviour = function () {
-    var _self = this;
-
-    var drag = d3.behavior.drag();
-    drag.on('dragstart', function () {
-        d3.event.sourceEvent.stopPropagation(); // silence other listeners
-    });
-    drag.on('drag', function () {
-        var trans = d3.event.dy;
-        var selection = d3.select(this);
-
-        selection.attr('transform', function () {
-            var transform = d3.transform(d3.select(this).attr('transform'));
-            return 'translate( 0, ' + (parseInt(transform.translate[1]) + trans) + ')';
-        });
-    });
-
-    drag.on('dragend', function (d) {
-        var coord = d3.mouse(_self.container.node());
-        var dragged = _self.genes.indexOf(d);
-        var yIndex = _self.rangeToDomain(_self.y, coord[1]);
-
-        _self.genes.splice(dragged, 1);
-        _self.genes.splice(yIndex, 0, d);
-
-        _self.updateCallback(true);
-    });
-
-    var dragSelection = _self.row.call(drag);
-    dragSelection.on('click', function () {
-        if (d3.event.defaultPrevented) {
-        }
-    });
-
-    _self.row.on('mouseover', function () {
-        var curElement = this;
-        if (typeof curElement.timeout !== 'undefined') {
-            clearTimeout(curElement.timeout);
-        }
-
-        d3.select(this)
-            .select('.' + _self.prefix + 'remove-gene')
-            .attr('style', 'display: block');
-    });
-
-    _self.row.on('mouseout', function () {
-        var curElement = this;
-        curElement.timeout = setTimeout(function () {
-            d3.select(curElement).select('.' + _self.prefix + 'remove-gene')
-                .attr('style', 'display: none');
-        }, 500);
-    });
-};
-
-MainGrid.prototype.createGeneMap = function () {
-    var _self = this;
-    var geneMap = {};
-    for (var i = 0; i < _self.genes.length; i += 1) {
-        var gene = _self.genes[i];
-        geneMap[gene.id] = gene;
-    }
-    _self.geneMap = geneMap;
-};
-/**
- * Function that determines the y position of a mutation within a cell
- */
-MainGrid.prototype.getY = function (d) {
-    var _self = this;
-
-    var y = _self.geneMap[d.geneId].y;
-
-    if (!_self.heatMap && d.type === 'mutation') {
-      var yPosition = y + _self.cellHeight/2;
-      if (yPosition < 0) {
-        return 0;
-      }
-      return yPosition;
-    }
-    return y;
-};
-
-/**
- * Function that determines the x position of a mutation or cnv within a cell
- */
-MainGrid.prototype.getCellX = function (d) {
-  var _self = this;
-
-  var x = _self.lookupTable[d.type][d.donorId].x;
-
-  if (!_self.heatMap && d.type === 'mutation') {
-    return x + (_self.cellWidth/4);
-  }
-  return x;
-};
-
-/**
- * Returns the color for the given observation.
- * @param d observation.
- */
-MainGrid.prototype.getColor = function (d) {
-    var _self = this;
-    var colorKey = d.type === 'cnv' ? d.cnvChange : d.consequence;
-    if (_self.heatMap === true) {
-        return _self.heatMapColor;
-    } else {
-      return _self.colorMap[d.type][colorKey];
-    }
-};
-
-/**
- * Returns the desired opacity of observation rects. This changes between heatmap and regular mode.
- * @returns {number}
- */
-MainGrid.prototype.getOpacity = function (d) {
-    var _self = this;
-
-    if (_self.heatMap === true) {
-        return 0.25;
-    } else {
-        return 1;
-    }
-};
-
-/**
- * Returns the height of an observation cell.
- * @returns {number}
- */
-MainGrid.prototype.getHeight = function (d) {
-    var _self = this;
-
-    if (typeof d !== 'undefined') {
-        if (!_self.heatMap === true && d.type === 'mutation') {
-          if (_self.cellWidth > _self.cellHeight) {
-            return _self.cellHeight/2;
-          }
-          return (_self.cellWidth/2);
+        if (move.x < 1 || (move.x * 2 < rect.width)) {
+            rect.x = coord[0];
+            rect.width -= move.x;
         } else {
-          return _self.cellHeight;
+            rect.width = move.x;
         }
-    } else {
-        return 0;
-    }
-};
 
-MainGrid.prototype.getCellWidth = function (d) {
-    var _self = this;
-    if (_self.heatMap || d.type === 'cnv') {
-      return _self.cellWidth;
-    }
-    if (_self.cellWidth > _self.cellHeight) {
-      return _self.cellHeight/4;
-    }
-    return _self.cellWidth/4;
-};
-
-/**
- * Returns the correct observation value based on the data type.
-*/
-MainGrid.prototype.getValueByType = function (d) {
-  var _self = this;
-  if (d.type === 'cnv') {
-    return d.cnvChange;
-  }
-  return d.consequence;
-};
-
-/**
-* Returns circular path based on cell dimensions
-*/
-MainGrid.prototype.getCircularPath = function (d) {
-  var _self = this;
-  var x1 = _self.getCellX(d);
-  var y1 = _self.getY(d);
-  return 'M ' + (x1 + _self.cellWidth/4) + ', ' + y1 + ' m ' + (-1 * _self.getCellWidth(d)) + ', 0 ' + 'a ' + _self.getCellWidth(d) + ', ' + _self.getCellWidth(d) + ' 0 1,0 ' + (2 * _self.getCellWidth(d)) + ',0 a ' + _self.getCellWidth(d) + ',' + _self.getCellWidth(d) + ' 0 1,0 ' + (-1 * (2 *_self.getCellWidth(d))) + ',0';
-};
-
-/**
-* Returns rectangular path based on cell dimensions
-*/
-MainGrid.prototype.getRectangularPath = function (d) {
-  var _self = this;
-  var x1 = _self.getCellX(d);
-  var y1 = _self.getY(d);
-  return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + _self.cellWidth) + ' V ' + (y1 + _self.getHeight(d)) + ' H ' + x1 + 'Z';
-};
-
-/**
- * set the observation rects between heatmap and regular mode.
- */
-MainGrid.prototype.setHeatmap = function (active) {
-    var _self = this;
-    if (active === _self.heatMap) return _self.heatMap;
-    _self.heatMap = active;
-
-    for (var i = 0; i < _self.numTypes; i++) {
-      d3.selectAll('.' + _self.prefix + 'sortable-rect-' + _self.types[i])
-        .transition()
-      .attr('d', function (d) {
-        if (d.type === 'cnv' || _self.heatMap) {
-            return _self.getRectangularPath(d);
+        if (move.y < 1 || (move.y * 2 < rect.height)) {
+            rect.y = coord[1];
+            rect.height -= move.y;
+        } else {
+            rect.height = move.y;
         }
-        return _self.getCircularPath(d);
-      })
-      .attr('fill', function (d) {
-          return _self.getColor(d);
-      })
-      .attr('opacity', function (d) {
-          return _self.getOpacity(d);
-      })
+
+        this.selectionRegion.attr(rect);
     }
 
+    /**
+     * Event behavior when releasing mouse when finishing with a selection
+     */
+    private finishSelection() {
+        if (this.crosshair && typeof this.selectionRegion !== 'undefined') {
+            d3.event.stopPropagation();
 
-    return _self.heatMap;
-};
+            var x1 = Number(this.selectionRegion.attr('x'));
+            var x2 = x1 + Number(this.selectionRegion.attr('width'));
 
-MainGrid.prototype.setGridLines = function (active) {
-    var _self = this;
-    if (_self.drawGridLines === active) return _self.drawGridLines;
-    _self.drawGridLines = active;
+            var y1 = Number(this.selectionRegion.attr('y'));
+            var y2 = y1 + Number(this.selectionRegion.attr('height'));
 
-    _self.geneTrack.setGridLines(_self.drawGridLines);
-    _self.donorTrack.setGridLines(_self.drawGridLines);
+            var xStart = this.rangeToDomain(this.x, x1);
+            var xStop = this.rangeToDomain(this.x, x2);
 
-    _self.computeCoordinates();
+            var yStart = this.rangeToDomain(this.y, y1);
+            var yStop = this.rangeToDomain(this.y, y2);
 
-    return _self.drawGridLines;
-};
+            this.sliceDonors(xStart, xStop);
+            this.sliceGenes(yStart, yStop);
 
-MainGrid.prototype.setCrosshair = function (active) {
-    var _self = this;
-    _self.crosshair = active;
+            this.selectionRegion.remove();
+            delete this.selectionRegion;
+            this.updateCallback(true);
 
-    return _self.crosshair;
-};
+            // this.crosshair = false; // this needs to be updated in frontend state
+            // emit event to ui
 
-/**
- * Helper for getting donor index position
- */
-MainGrid.prototype.getDonorIndex = function (donors, donorId) {
-    for (var i = 0; i < donors.length; i++) {
-        var donor = donors[i];
-        if (donor.id === donorId) {
-            return i;
         }
     }
 
-    return -1;
-};
-
-/**
- * Removes all elements corresponding to the given gene and then removes it from the gene list.
- * @param i index of the gene to remove.
- */
-MainGrid.prototype.removeGene = function (i) {
-    var _self = this;
-
-    var gene = _self.genes[i];
-    if (gene) {
-        d3.selectAll('.' + _self.prefix + gene.id + '-cell').remove();
-        d3.selectAll('.' + _self.prefix + gene.id + '-bar').remove();
-        _self.genes.splice(i, 1);
+    /**
+     * Used when resizing grid
+     * @param start - start index of the selection
+     * @param stop - end index of the selection
+     */
+    private sliceGenes(start: number, stop: number) {
+        for (var i = 0; i < this.genes.length; i++) {
+            var gene = this.genes[i];
+            if (i < start || i > stop) {
+                d3.selectAll('.' + this.prefix + gene.id + '-cell').remove();
+                d3.selectAll('.' + this.prefix + gene.id + '-bar').remove();
+                this.genes.splice(i, 1);
+                i--; start--; stop--;
+            }
+        }
     }
 
-    _self.updateCallback(true);
-};
-
-
-MainGrid.prototype.rangeToDomain = function (scale, value) {
-    return scale.domain()[d3.bisect(scale.range(), value) - 1];
-};
-
-
-MainGrid.prototype.nullableObsLookup = function (donor, gene) {
-    var _self = this;
-
-    if (!donor || typeof donor !== 'object') return null;
-    if (!gene || typeof gene !== 'object') return null;
-
-    if (_self.lookupTable.hasOwnProperty(donor.id) && _self.lookupTable[donor.id].hasOwnProperty(gene.id)) {
-        return _self.lookupTable[donor.id][gene.id].join(', '); // Table stores arrays and we want to return a string;
-    } else {
-        return null;
+    /**
+     * Used when resizing grid
+     * @param start - start index of the selection
+     * @param stop - end index of the selection
+     */
+    private sliceDonors(start: number, stop: number) {
+        for (var i = 0; i < this.donors.length; i++) {
+            var donor = this.donors[i];
+            if (i < start || i > stop) {
+                d3.selectAll('.' + this.prefix + donor.id + '-cell').remove();
+                d3.selectAll('.' + this.prefix + donor.id + '-bar').remove();
+                this.donors.splice(i, 1);
+                i--; start--; stop--;
+            }
+        }
     }
-};
 
-/**
- * Removes all svg elements for this grid.
- */
-MainGrid.prototype.destroy = function () {
-    var _self = this;
+    /**
+     * Defines the row drag behaviour for moving genes and binds it to the row elements.
+     */
+    private defineRowDragBehaviour() {
+        var drag = d3.behavior.drag();
+        drag.on('dragstart', () => {
+            d3.event.sourceEvent.stopPropagation(); // silence other listeners
+        });
+        drag.on('drag', () => {
+            var trans = d3.event.dy;
+            var selection = d3.select(this);
 
-    _self.wrapper.select('.' + _self.prefix + 'maingrid-svg').remove();
-    _self.wrapper.select('.' + _self.prefix + 'canvas').remove();
-};
+            selection.attr('transform', () => {
+                var transform = d3.transform(d3.select(this).attr('transform'));
+                return 'translate( 0, ' + (parseInt(transform.translate[1]) + trans) + ')';
+            });
+        });
 
-module.exports = MainGrid;
+        drag.on('dragend', (d: any) => {
+            var coord = d3.mouse(this.container.node());
+            var dragged = this.genes.indexOf(d);
+            var yIndex = this.rangeToDomain(this.y, coord[1]);
+
+            this.genes.splice(dragged, 1);
+            this.genes.splice(yIndex, 0, d);
+
+            this.updateCallback(true);
+        });
+
+        var dragSelection = this.row.call(drag);
+        dragSelection.on('click', () => {
+            if (d3.event.defaultPrevented) {
+            }
+        });
+
+        this.row.on('mouseover', () => {
+            var curElement = this;
+            if (typeof curElement.timeout !== 'undefined') {
+                clearTimeout(curElement.timeout);
+            }
+
+            d3.select(this)
+                .select('.' + this.prefix + 'remove-gene')
+                .attr('style', 'display: block');
+        });
+
+        this.row.on('mouseout', () => {
+            var curElement = this;
+            curElement.timeout = setTimeout(() => {
+                d3.select(curElement).select('.' + this.prefix + 'remove-gene')
+                    .attr('style', 'display: none');
+            }, 500);
+        });
+    }
+
+    private createGeneMap() {
+        var geneMap = {};
+        for (var i = 0; i < this.genes.length; i += 1) {
+            var gene = this.genes[i];
+            geneMap[gene.id] = gene;
+        }
+        this.geneMap = geneMap;
+    }
+
+    /**
+     * Function that determines the y position of a mutation within a cell
+     */
+    private getY(d: any) {
+        var y = this.geneMap[d.geneId].y;
+
+        if (!this.heatMap && d.type === 'mutation') {
+            var yPosition = y + this.cellHeight / 2;
+            if (yPosition < 0) {
+                return 0;
+            }
+            return yPosition;
+        }
+        return y;
+    }
+
+    /**
+     * Function that determines the x position of a mutation or cnv within a cell
+     */
+    private getCellX(d: any) {
+        var x = this.lookupTable[d.type][d.donorId].x;
+
+        if (!this.heatMap && d.type === 'mutation') {
+            return x + (this.cellWidth / 4);
+        }
+        return x;
+    }
+
+    /**
+     * Returns the color for the given observation.
+     * @param d observation.
+     */
+    private getColor(d: any) {
+        var colorKey = d.type === 'cnv' ? d.cnvChange : d.consequence;
+        if (this.heatMap === true) {
+            return this.heatMapColor;
+        } else {
+            return this.colorMap[d.type][colorKey];
+        }
+    }
+
+    /**
+     * Returns the desired opacity of observation rects. This changes between heatmap and regular mode.
+     * @returns {number}
+     */
+    private getOpacity(d: any) {
+        if (this.heatMap === true) {
+            return 0.25;
+        } else {
+            return 1;
+        }
+    }
+
+    /**
+     * Returns the height of an observation cell.
+     * @returns {number}
+     */
+    private getHeight(d: any) {
+        if (typeof d !== 'undefined') {
+            if (!this.heatMap === true && d.type === 'mutation') {
+                if (this.cellWidth > this.cellHeight) {
+                    return this.cellHeight / 2;
+                }
+                return (this.cellWidth / 2);
+            } else {
+                return this.cellHeight;
+            }
+        } else {
+            return 0;
+        }
+    }
+
+    private getCellWidth(d: any) {
+        if (this.heatMap || d.type === 'cnv') {
+            return this.cellWidth;
+        }
+        if (this.cellWidth > this.cellHeight) {
+            return this.cellHeight / 4;
+        }
+        return this.cellWidth / 4;
+    }
+
+    /**
+     * Returns the correct observation value based on the data type.
+     */
+    private getValueByType(d: any) {
+        if (d.type === 'cnv') {
+            return d.cnvChange;
+        }
+        return d.consequence;
+    }
+
+    /**
+     * Returns circular path based on cell dimensions
+     */
+    private getCircularPath(d: any) {
+        var x1 = this.getCellX(d);
+        var y1 = this.getY(d);
+        return 'M ' + (x1 + this.cellWidth / 4) + ', ' + y1 + ' m ' + (-1 * this.getCellWidth(d)) + ', 0 ' + 'a ' + this.getCellWidth(d) + ', ' + this.getCellWidth(d) + ' 0 1,0 ' + (2 * this.getCellWidth(d)) + ',0 a ' + this.getCellWidth(d) + ',' + this.getCellWidth(d) + ' 0 1,0 ' + (-1 * (2 * this.getCellWidth(d))) + ',0';
+    }
+
+    /**
+     * Returns rectangular path based on cell dimensions
+     */
+    private getRectangularPath(d: any) {
+        var x1 = this.getCellX(d);
+        var y1 = this.getY(d);
+        return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(d)) + ' H ' + x1 + 'Z';
+    }
+
+    /**
+     * set the observation rects between heatmap and regular mode.
+     */
+    public setHeatmap(active: boolean) {
+        if (active === this.heatMap) return this.heatMap;
+        this.heatMap = active;
+
+        for (var i = 0; i < this.numTypes; i++) {
+            d3.selectAll('.' + this.prefix + 'sortable-rect-' + this.types[i])
+                .transition()
+                .attr('d', (d: any) => {
+                    if (d.type === 'cnv' || this.heatMap) {
+                        return this.getRectangularPath(d);
+                    }
+                    return this.getCircularPath(d);
+                })
+                .attr('fill', (d: any) => {
+                    return this.getColor(d);
+                })
+                .attr('opacity', (d: any) => {
+                    return this.getOpacity(d);
+                })
+        }
+
+
+        return this.heatMap;
+    }
+
+    public setGridLines(active: boolean) {
+        if (this.drawGridLines === active) return this.drawGridLines;
+        this.drawGridLines = active;
+
+        this.geneTrack.setGridLines(this.drawGridLines);
+        this.donorTrack.setGridLines(this.drawGridLines);
+
+        this.computeCoordinates();
+
+        return this.drawGridLines;
+    }
+
+    public setCrosshair(active: boolean) {
+        this.crosshair = active;
+
+        return this.crosshair;
+    }
+
+    /**
+     * Helper for getting donor index position
+     */
+    private getDonorIndex(donors: any[], donorId: any) {
+        for (var i = 0; i < donors.length; i++) {
+            var donor = donors[i];
+            if (donor.id === donorId) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Removes all elements corresponding to the given gene and then removes it from the gene list.
+     * @param i index of the gene to remove.
+     */
+    public removeGene(i: number) {
+        var gene = this.genes[i];
+        if (gene) {
+            d3.selectAll('.' + this.prefix + gene.id + '-cell').remove();
+            d3.selectAll('.' + this.prefix + gene.id + '-bar').remove();
+            this.genes.splice(i, 1);
+        }
+
+        this.updateCallback(true);
+    }
+
+
+    private rangeToDomain(scale: any, value: any) {
+        return scale.domain()[d3.bisect(scale.range(), value) - 1];
+    }
+
+
+    private nullableObsLookup(donor: any, gene: any) {
+        if (!donor || typeof donor !== 'object') return null;
+        if (!gene || typeof gene !== 'object') return null;
+
+        if (this.lookupTable.hasOwnProperty(donor.id) && this.lookupTable[donor.id].hasOwnProperty(gene.id)) {
+            return this.lookupTable[donor.id][gene.id].join(', '); // Table stores arrays and we want to return a string;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Removes all svg elements for this grid.
+     */
+    public destroy() {
+        this.wrapper.select('.' + this.prefix + 'maingrid-svg').remove();
+    }
+}
+
+export default MainGrid;
+
+
+// interface MainGridParams {
+//     emit: any;
+//     donorTracks: any;
+//     donorOpacityFunc: any;
+//     donorFillFunc: any;
+//     geneTracks: any;
+//     geneOpacityFunc: any;
+//     geneFillFunc: any;
+// }
+//
+// interface LookupTable {
+//     [key: string]: any;
+// }
+//
+// type UpdateCallback = (x: number, y: number) => void;
+// type ResizeCallback = () => void;

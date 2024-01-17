@@ -1,265 +1,256 @@
-/*
- * Copyright 2016(c) The Ontario Institute for Cancer Research. All rights reserved.
- *
- * This program and the accompanying materials are made available under the terms of the GNU Public
- * License v3.0. You should have received a copy of the GNU General Public License along with this
- * program. If not, see <http://www.gnu.org/licenses/>.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
- * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-'use strict';
+import * as d3 from 'd3';
+import {Domain, HistogramParams} from "../interfaces/main-grid.interfaces";
 
-var d3 = require('d3');
+class Histogram {
+    private lineWidthOffset: number;
+    private lineHeightOffset: number;
+    private padding: number;
+    private centerText: number;
+    private prefix: string;
+    private emit: Function;
+    private svg: any;
+    private rotated: boolean;
+    private type: string;
+    private domain: Domain[];
+    private margin: {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
+    };
+    private width: number;
+    private height: number;
+    private histogramWidth: number;
+    private histogramHeight: number;
+    private numDomain: number;
+    private barWidth: number;
+    private totalHeight: number;
+    private wrapper: any;
+    private topCount: number;
+    private container: any;
+    private histogram: any;
+    private bottomAxis: any;
+    private leftAxis: any;
+    private topText: any;
+    private middleText: any;
+    private leftLabel: any;
 
-/**
- * Want to find the maximum value so we can label the axis and scale the bars accordingly.
- * No need to make this function public.
- * @returns {number}
- */
-function getLargestCount(domain, type) {
-    var retVal = 1;
-
-    for (var i = 0; i < domain.length; i++) {
-        retVal = Math.max(retVal, type === 'cnv' ? domain[i].cnv : domain[i].count);
+    constructor(params: HistogramParams, s: any, rotated?: boolean, type?: string) {
+        this.lineWidthOffset = params.histogramBorderPadding?.left || 10;
+        this.lineHeightOffset = params.histogramBorderPadding?.bottom || 5;
+        this.padding = 20;
+        this.centerText = -6;
+        this.prefix = params.prefix || 'og-';
+        this.emit = params.emit;
+        this.svg = s;
+        this.rotated = rotated || false;
+        this.type = type || 'mutation';
+        this.domain = (this.rotated ? params.genes : params.donors) || [];
+        this.margin = params.margin || { top: 30, right: 15, bottom: 15, left: 80 };
+        this.width = params.width || 500;
+        this.height = params.height || 500;
+        this.histogramWidth = this.rotated ? this.height : this.width;
+        this.histogramHeight = 80;
+        this.numDomain = this.domain.length;
+        this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length;
+        this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding + (this.type === 'cnv' ? 120 : 0);
+        this.wrapper = d3.select(params.wrapper || 'body');
     }
 
-    return retVal;
+    public render(): void {
+        const topCount = this.getLargestCount(this.domain, this.type);
+        this.topCount = topCount;
+
+        this.container = this.svg.append('g')
+            .attr('class', this.prefix + 'histogram')
+            .attr('width', () => {
+                if (this.rotated) {
+                    return this.height;
+                } else {
+                    return this.width + this.margin.left + this.margin.right;
+                }
+            })
+            .attr('height', this.histogramHeight)
+            .style('margin-left', this.margin.left + 'px')
+            .attr('transform', () => {
+                if (this.rotated) {
+                    return 'rotate(90)translate(0,-' + (this.width) + ')';
+                } else {
+                    return '';
+                }
+            });
+
+        this.histogram = this.container.append('g')
+            .attr('transform', 'translate(0,-' + (this.totalHeight + this.centerText) + ')');
+
+        this.renderAxis(topCount);
+
+        this.histogram
+            .on('mouseover', () => {
+                const target = d3.event.target;
+                const domain = this.domain[target.dataset.domainIndex];
+                if (!domain) return;
+                this.emit((this.type === 'cnv' ? 'cnvHistogramMouseOver' : 'histogramMouseOver'), { domain: domain });
+            })
+            .on('mouseout', () => {
+                this.emit('histogramMouseOut');
+            })
+            .on('click', () => {
+                const target = d3.event.target;
+                const domain = this.domain[target.dataset.domainIndex];
+                if (!domain) return;
+                this.emit('histogramClick', {
+                    type: this.rotated ? 'gene' : 'donor',
+                    domain: domain,
+                });
+            });
+
+        this.histogram.selectAll('rect')
+            .data(this.domain)
+            .enter()
+            .append('rect')
+            .attr('class', (d: Domain) => {
+                return this.prefix + 'sortable-bar ' + this.prefix + d.id + '-bar';
+            })
+            .attr('data-domain-index', (d: Domain, i: number) => i)
+            .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
+            .attr('height', (d: Domain) => {
+                return this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount;
+            })
+            .attr('x', (d: Domain) => {
+                return this.rotated ? d.y : d.x;
+            })
+            .attr('y', (d: Domain) => {
+                return this.histogramHeight - this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount;
+            })
+            .attr('fill', '#1693C0');
+    }
+
+    public update(domain: Domain[]): void {
+        this.domain = domain;
+        this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length;
+
+        const topCount = this.topCount || this.getLargestCount(this.domain);
+
+        this.updateAxis(topCount);
+
+        this.histogram.selectAll('rect')
+            .data(this.domain)
+            .attr('data-domain-index', (d: Domain, i: number) => i)
+            .transition()
+            .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
+            .attr('height', (d: Domain) => {
+                return this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount;
+            })
+            .attr('y', (d: Domain) => {
+                return this.histogramHeight - this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount;
+            })
+            .attr('x', (d: Domain) => {
+                return this.rotated ? d.y : d.x;
+            });
+    }
+
+    public resize(width: number, height: number): void {
+        this.width = width;
+        this.height = height;
+
+        this.histogramWidth = this.rotated ? this.height : this.width;
+        this.container
+            .attr('width', () => {
+                if (this.rotated) {
+                    return this.height;
+                } else {
+                    return this.width + this.margin.left + this.margin.right;
+                }
+            })
+            .attr('transform', () => {
+                if (this.rotated) {
+                    return 'rotate(90)translate(0,-' + (this.width) + ')';
+                } else {
+                    return '';
+                }
+            });
+
+        this.histogram
+            .attr('transform', 'translate(0,-' + (this.totalHeight + this.centerText) + ')');
+
+        this.bottomAxis.attr('x2', this.histogramWidth + 10);
+    }
+
+    private renderAxis(topCount: number): void {
+        this.bottomAxis = this.histogram.append('line')
+            .attr('class', this.prefix + 'histogram-axis');
+
+        this.leftAxis = this.histogram.append('line')
+            .attr('class', this.prefix + 'histogram-axis');
+
+        this.topText = this.histogram.append('text')
+            .attr('class', this.prefix + 'label-text-font')
+            .attr('dy', '.32em')
+            .attr('text-anchor', 'end');
+
+        this.middleText = this.histogram.append('text')
+            .attr('class', this.prefix + 'label-text-font')
+            .attr('dy', '.32em')
+            .attr('text-anchor', 'end');
+
+        this.leftLabel = this.histogram.append('text')
+            .text(this.type === 'cnv' ? "CNV freq." : "Mutation freq.")
+            .attr({
+                'class': this.prefix + 'label-text-font',
+                'text-anchor': 'middle',
+                transform: 'rotate(-90)',
+            });
+
+        this.updateAxis(topCount);
+    }
+
+    private updateAxis(topCount: number): void {
+        this.bottomAxis
+            .attr('y1', this.histogramHeight + this.lineHeightOffset)
+            .attr('y2', this.histogramHeight + this.lineHeightOffset)
+            .attr('x2', this.histogramWidth + this.lineWidthOffset)
+            .attr('transform', 'translate(-' + this.lineHeightOffset + ',0)');
+
+        this.leftAxis
+            .attr('y1', 0)
+            .attr('y2', this.histogramHeight + this.lineHeightOffset)
+            .attr('transform', 'translate(-' + this.lineHeightOffset + ',0)');
+
+        this.topText
+            .attr('x', this.centerText)
+            .text(topCount);
+
+        // Round to a nice round number and then adjust position accordingly
+        const halfInt = parseInt(String(topCount / 2));
+        const secondHeight = this.histogramHeight - this.histogramHeight / (topCount / halfInt);
+
+        this.middleText
+            .attr('x', this.centerText)
+            .attr('y', secondHeight)
+            .text(halfInt);
+
+        this.leftLabel
+            .attr({
+                x: -this.histogramHeight / 2,
+                y: -this.lineHeightOffset - this.padding,
+            });
+    }
+
+    private getLargestCount(domain: Domain[], type?: string): number {
+        let retVal = 1;
+
+        for (let i = 0; i < domain.length; i++) {
+            retVal = Math.max(retVal, type === 'cnv' ? domain[i].cnv : domain[i].count);
+        }
+
+        return retVal;
+    }
+
+    public destroy(): void {
+        this.histogram.remove();
+        this.container.remove();
+    }
 }
 
-var OncoHistogram = function (params, s, rotated, type) {
-    var _self = this;
-
-    var histogramBorderPadding = params.histogramBorderPadding || {};
-    _self.lineWidthOffset = histogramBorderPadding.left || 10;
-    _self.lineHeightOffset = histogramBorderPadding.bottom || 5;
-    _self.padding = 20;
-    _self.centerText = -6;
-
-    _self.prefix = params.prefix || 'og-';
-    _self.emit = params.emit;
-    _self.svg = s;
-    _self.rotated = rotated || false;
-    _self.type = type || 'mutation';
-    _self.domain = (_self.rotated ? params.genes : params.donors) || [];
-    _self.margin = params.margin || {top: 30, right: 15, bottom: 15, left: 80};
-
-    _self.width = params.width || 500;
-    _self.height = params.height || 500;
-
-    _self.histogramWidth = (_self.rotated ? _self.height : _self.width);
-    _self.histogramHeight = 80;
-
-    _self.numDomain = _self.domain.length;
-    _self.barWidth = (_self.rotated ? _self.height : _self.width) / _self.domain.length;
-
-    _self.totalHeight = _self.histogramHeight + _self.lineHeightOffset + _self.padding +(_self.type === 'cnv'? 120: 0);
-    _self.wrapper = d3.select(params.wrapper || 'body');
-};
-
-OncoHistogram.prototype.render = function () {
-    var _self = this;
-
-    var topCount = getLargestCount(_self.domain, _self.type);
-    _self.topCount = topCount;
-
-    _self.container = _self.svg.append('g')
-        .attr('class', _self.prefix + 'histogram')
-        .attr('width', function () {
-            if (_self.rotated) {
-                return _self.height;
-            } else {
-                return _self.width + _self.margin.left + _self.margin.right;
-            }
-        })
-        .attr('height', _self.histogramHeight)
-        .style('margin-left', _self.margin.left + 'px')
-        .attr('transform', function () {
-            if (_self.rotated) {
-                return 'rotate(90)translate(0,-' + (_self.width) + ')';
-            } else {
-                return '';
-            }
-        });
-
-    _self.histogram = _self.container.append('g')
-        .attr('transform', 'translate(0,-' + (_self.totalHeight + _self.centerText) + ')');
-
-    _self.renderAxis(topCount);
-
-    _self.histogram
-        .on('mouseover', function () {
-            var target = d3.event.target;
-            var domain = _self.domain[target.dataset.domainIndex];
-            if(!domain) return;
-            _self.emit((_self.type === 'cnv'? 'cnvHistogramMouseOver' : 'histogramMouseOver'), { domain: domain });
-        })
-        .on('mouseout', function () {
-            _self.emit('histogramMouseOut');
-        })
-        .on('click', function() {
-            var target = d3.event.target;
-            var domain = _self.domain[target.dataset.domainIndex];
-            if(!domain) return;
-            _self.emit('histogramClick', {
-                type: _self.rotated ? 'gene' : 'donor',
-                domain: domain,
-            });
-        });
-
-    _self.histogram.selectAll('rect')
-        .data(_self.domain)
-        .enter()
-        .append('rect')
-        .attr('class', function (d) {
-            return _self.prefix + 'sortable-bar ' + _self.prefix + d.id + '-bar';
-        })
-        .attr('data-domain-index', function(d, i) { return i; })
-        .attr('width', _self.barWidth - (_self.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-        .attr('height', function (d) {
-            return _self.histogramHeight * (_self.type === 'cnv'? d.cnv : d.count) / topCount;
-        })
-        .attr('x', function (d) {
-            return _self.rotated ? d.y : d.x;
-        })
-        .attr('y', function (d) {
-            return _self.histogramHeight - _self.histogramHeight * (_self.type === 'cnv'? d.cnv : d.count) / topCount;
-        })
-        .attr('fill', '#1693C0');
-};
-
-OncoHistogram.prototype.update = function (domain) {
-    var _self = this;
-    _self.domain = domain;
-    _self.barWidth = (_self.rotated ? _self.height : _self.width) / _self.domain.length;
-
-    var topCount = _self.topCount || getLargestCount(_self.domain);
-
-    _self.updateAxis(topCount);
-
-    _self.histogram.selectAll('rect')
-        .data(_self.domain)
-        .attr('data-domain-index', function(d, i) { return i; })
-        .transition()
-        .attr('width', _self.barWidth - (_self.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-        .attr('height', function (d) {
-            return _self.histogramHeight * (_self.type === 'cnv'? d.cnv : d.count) / topCount;
-        })
-        .attr('y', function (d) {
-            return _self.histogramHeight - _self.histogramHeight * (_self.type === 'cnv'? d.cnv : d.count) / topCount;
-        })
-        .attr('x', function (d) {
-            return _self.rotated ? d.y : d.x;
-        });
-};
-
-OncoHistogram.prototype.resize = function (width, height) {
-    var _self = this;
-
-    _self.width = width;
-    _self.height = height;
-
-    _self.histogramWidth = (_self.rotated ? _self.height : _self.width);
-    _self.container
-        .attr('width', function () {
-            if (_self.rotated) {
-                return _self.height;
-            } else {
-                return _self.width + _self.margin.left + _self.margin.right;
-            }
-        })
-        .attr('transform', function () {
-            if (_self.rotated) {
-                return 'rotate(90)translate(0,-' + (_self.width) + ')';
-            } else {
-                return '';
-            }
-        });
-
-    _self.histogram
-        .attr('transform', 'translate(0,-' + (_self.totalHeight + _self.centerText) + ')');
-
-    _self.bottomAxis.attr('x2', _self.histogramWidth + 10);
-};
-
-/**
- * Draws Axis for Histogram
- * @param topCount Maximum value
- */
-OncoHistogram.prototype.renderAxis = function (topCount) {
-    var _self = this;
-
-    _self.bottomAxis = _self.histogram.append('line')
-        .attr('class', _self.prefix + 'histogram-axis');
-
-    _self.leftAxis = _self.histogram.append('line')
-        .attr('class', _self.prefix + 'histogram-axis');
-
-    _self.topText = _self.histogram.append('text')
-        .attr('class', _self.prefix + 'label-text-font')
-        .attr('dy', '.32em')
-        .attr('text-anchor', 'end');
-
-    _self.middleText = _self.histogram.append('text')
-        .attr('class', _self.prefix + 'label-text-font')
-        .attr('dy', '.32em')
-        .attr('text-anchor', 'end');
-
-    _self.leftLabel = _self.histogram.append('text')
-        .text(_self.type === 'cnv'? "CNV freq." : "Mutation freq.")
-        .attr({
-            'class': _self.prefix + 'label-text-font',
-            'text-anchor': 'middle',
-            transform: 'rotate(-90)',
-        });
-
-    _self.updateAxis(topCount);
-};
-
-OncoHistogram.prototype.updateAxis = function (topCount) {
-    var _self = this;
-
-    _self.bottomAxis
-        .attr('y1', _self.histogramHeight + _self.lineHeightOffset)
-        .attr('y2', _self.histogramHeight + _self.lineHeightOffset)
-        .attr('x2', _self.histogramWidth + _self.lineWidthOffset)
-        .attr('transform', 'translate(-' + _self.lineHeightOffset + ',0)');
-
-    _self.leftAxis
-        .attr('y1', 0)
-        .attr('y2', _self.histogramHeight + _self.lineHeightOffset)
-        .attr('transform', 'translate(-' + _self.lineHeightOffset + ',0)');
-
-    _self.topText
-        .attr('x', _self.centerText)
-        .text(topCount);
-
-    // Round to a nice round number and then adjust position accordingly
-    var halfInt = parseInt(topCount / 2);
-    var secondHeight = _self.histogramHeight - _self.histogramHeight / (topCount / halfInt);
-
-    _self.middleText
-        .attr('x', _self.centerText)
-        .attr('y', secondHeight)
-        .text(halfInt);
-
-    _self.leftLabel
-        .attr({
-            x: -_self.histogramHeight / 2,
-            y: -_self.lineHeightOffset - _self.padding,
-        });
-};
-
-OncoHistogram.prototype.destroy = function() {
-    var _self = this;
-    _self.histogram.remove();
-    _self.container.remove();
-};
-
-module.exports = OncoHistogram;
+export default Histogram;
