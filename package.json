@@ -1,8 +1,8 @@
 {
   "name": "event-matrix",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A TypeScript project built with Vite for frontend usage",
-  "main": "dist/main.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +12,29 @@
     "type": "git",
     "url": "git+https://github.com/dkfz-unite/event-matrix.git"
   },
-  "author": "",
+  "author": {
+    "name": "Valentin Vlasov",
+    "url": "https://github.com/vulasau"
+  },
+  "maintainers": [
+    {
+      "name": "Valentin Vlasov",
+      "url": "https://github.com/vulasau"
+    },
+    {
+      "name": "Vadim Bannov",
+      "email": "deflopian@gmail.com",
+      "url": "https://github.com/deflopian"
+    },
+    {
+      "name": "Alex P",
+      "url": "https://github.com/sfuerte"
+    },
+    {
+      "name": "Anton Nazyrov",
+      "url": "https://github.com/4toc"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dkfz-unite/event-matrix/issues"
