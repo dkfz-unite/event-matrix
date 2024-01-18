@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import {ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {EventMatrixParams, LookupTable, Observation} from '../interfaces/main-grid.interface'
 import MainGrid from './MainGrid'
@@ -19,8 +20,8 @@ class EventMatrix extends EventEmitter {
   private drawGridLines: boolean
   private crosshairMode: boolean
   private charts: any[]
-  private x: any
-  private y: any
+  private x: ScaleBand<string>
+  private y: ScaleBand<string>
   private fullscreen = false
 
   constructor(params: EventMatrixParams) {
@@ -79,26 +80,27 @@ class EventMatrix extends EventEmitter {
   }
 
   private calculatePositions() {
-    const getX = d3.scale.ordinal()
-      .domain(d3.range(this.donors.length))
-      .rangeBands([0, this.width])
-    for (let t = 0, type; t < this.types.length; t++) {
-      type = this.types[t]
-      for (let i = 0, donor, donorId, x; i < this.donors.length; i += 1) {
-        donor = this.donors[i]
-        donorId = donor.id
-        x = getX(i)
-        donor.x = x
-        this.lookupTable[donorId] = this.lookupTable[donorId] || {}
-        this.lookupTable[donorId].x = x
-      }
+    const getX = d3.scaleBand()
+      .domain(d3.range(this.donors.length).map(String))
+      .range([0, this.width])
+
+    const getY = d3.scaleBand()
+      .domain(d3.range(this.genes.length).map(String))
+      .range([0, this.height])
+
+    for (let i = 0; i < this.donors.length; i++) {
+      const donor = this.donors[i]
+      const donorId = donor.id
+      const positionX = getX(String(i))
+      donor.x = positionX
+      this.lookupTable[donorId] = this.lookupTable[donorId] || {}
+      this.lookupTable[donorId].x = positionX
     }
-    const getY = d3.scale.ordinal()
-      .domain(d3.range(this.genes.length))
-      .rangeBands([0, this.height])
-    for (let i = 0; i < this.genes.length; i += 1) {
-      this.genes[i].y = getY(i)
+
+    for (let i = 0; i < this.genes.length; i++) {
+      this.genes[i].y = getY(String(i))
     }
+
     this.y = getY
     this.x = getX
   }
