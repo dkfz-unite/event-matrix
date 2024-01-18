@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
 import EventEmitter from 'eventemitter3'
-import _uniq from 'lodash.uniq'
 import {Domain, IComputedProps, OncoTrackGroupParams} from '../interfaces/main-grid.interface'
 import Track from './Track'
 
@@ -77,11 +76,11 @@ class TrackGroup extends EventEmitter {
 
     this.collapsedTracks = this.collapsedTracks.filter((collapsedTrack) => {
       return !this.tracks.some((track) => {
-        return _.isEqual(collapsedTrack, track)
+        return collapsedTrack.fieldName === track.fieldName
       })
     })
 
-    this.tracks = _uniq(this.tracks, 'fieldName')
+    this.tracks = [...new Set(this.tracks)]
 
     // const { height: cellHeight, length } = this.getDimensions()
 
