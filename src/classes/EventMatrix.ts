@@ -1,20 +1,19 @@
 import * as d3 from 'd3'
 import {ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
-import {EventMatrixParams, LookupTable, Observation} from '../interfaces/main-grid.interface'
+import {EventMatrixParams, ILookupTable, Observation} from '../interfaces/main-grid.interface'
+import Storage from '../utils/storage'
 import MainGrid from './MainGrid'
 
 class EventMatrix extends EventEmitter {
   private params: EventMatrixParams
   private width: number
   private height: number
-  private prefix: string
   private container: any
   private donors: any[]
   private genes: any[]
   private observations: Observation[]
   private types: string[]
-  private lookupTable: LookupTable
   private mainGrid: any
   private heatMapMode: boolean
   private drawGridLines: boolean
@@ -23,22 +22,25 @@ class EventMatrix extends EventEmitter {
   private x: ScaleBand<string>
   private y: ScaleBand<string>
   private fullscreen = false
+  private storage: Storage = Storage.getInstance()
 
   constructor(params: EventMatrixParams) {
     super()
+
+    this.storage.setOptions(params)
     this.params = params
     this.width = params.width ?? 500
     this.height = params.height ?? 500
     const genes = params.genes ?? []
-    const minCellHeight = params.minCellHeight ?? 10
-    if (this.height / genes.length < minCellHeight) {
-      this.height = genes.length * minCellHeight
+
+    if (this.height / genes.length < this.storage.minCellHeight) {
+      this.height = genes.length * this.storage.minCellHeight
     }
-    this.prefix = params.prefix ?? 'og-'
-    params.wrapper = '.' + this.prefix + 'container'
+
+    params.wrapper = `.${this.storage.prefix}container`
     this.container = d3.select(params.element || 'body')
       .append('div')
-      .attr('class', this.prefix + 'container')
+      .attr('class', `${this.storage.prefix}container`)
       .style('position', 'relative')
     this.initCharts()
   }
@@ -67,7 +69,7 @@ class EventMatrix extends EventEmitter {
       this.params.width = this.width
       this.params.height = this.height
     }
-    this.mainGrid = new MainGrid(this.params, this.lookupTable, this.x, this.y)
+    this.mainGrid = new MainGrid(this.params, this.x, this.y)
 
     this.mainGrid.on('resize', () => {
       this.resize(this.width, this.height, this.fullscreen)
@@ -97,8 +99,8 @@ class EventMatrix extends EventEmitter {
       const donorId = donor.id
       const positionX = getX(String(i))
       donor.x = positionX
-      this.lookupTable[donorId] = this.lookupTable[donorId] || {}
-      this.lookupTable[donorId].x = positionX
+      this.storage.lookupTable[donorId] = this.storage.lookupTable[donorId] || {}
+      this.storage.lookupTable[donorId].x = positionX
     }
 
     for (let i = 0; i < this.genes.length; i++) {
@@ -113,7 +115,7 @@ class EventMatrix extends EventEmitter {
    * Creates a for constant time checks if an observation exists for a given donor, gene coordinate.
    */
   private createLookupTable() {
-    const lookupTable: LookupTable = {}
+    const lookupTable: ILookupTable = {}
     this.observations.forEach((obs) => {
       const donorId = obs.donorId
       const geneId = obs.geneId
@@ -125,7 +127,7 @@ class EventMatrix extends EventEmitter {
       }
       lookupTable[donorId][geneId].push(obs.id)
     })
-    this.lookupTable = lookupTable
+    this.storage.setLookupTable(lookupTable)
   }
 
   /**
@@ -164,9 +166,8 @@ class EventMatrix extends EventEmitter {
     this.width = Number(width)
     this.height = Number(height)
 
-    const minCellHeight = this.params.minCellHeight ?? 10
-    if (this.height / this.genes.length < minCellHeight) {
-      this.height = this.genes.length * minCellHeight
+    if (this.height / this.genes.length < this.storage.minCellHeight) {
+      this.height = this.genes.length * this.storage.minCellHeight
     }
     this.calculatePositions()
     this.charts.forEach((chart) => {
@@ -204,8 +205,8 @@ class EventMatrix extends EventEmitter {
       const donor = this.donors[i]
       if (func(donor)) {
         removedList.push(donor.id)
-        d3.selectAll('.' + this.prefix + donor.id + '-cell').remove()
-        d3.selectAll('.' + this.prefix + donor.id + '-bar').remove()
+        d3.selectAll(`.${this.storage.prefix}${donor.id}-cell`).remove()
+        d3.selectAll(`.${this.storage.prefix}${donor.id}-bar`).remove()
         this.donors.splice(i, 1)
         i--
       }
@@ -233,8 +234,8 @@ class EventMatrix extends EventEmitter {
       const gene = this.genes[i]
       if (func(gene)) {
         removedList.push(gene.id)
-        d3.selectAll('.' + this.prefix + gene.id + '-cell').remove()
-        d3.selectAll('.' + this.prefix + gene.id + '-bar').remove()
+        d3.selectAll(`.${this.storage.prefix}${gene.id}-cell`).remove()
+        d3.selectAll(`.${this.storage.prefix}${gene.id}-bar`).remove()
         this.genes.splice(i, 1)
         i--
       }
@@ -300,7 +301,7 @@ class EventMatrix extends EventEmitter {
    * Returns 1 if at least one mutation, 0 otherwise.
    */
   private mutationScore(donor, gene) {
-    if (this.lookupTable?.[donor]?.[gene] !== undefined) {
+    if (this.storage.lookupTable?.[donor]?.[gene] !== undefined) {
       return 1
     } else {
       return 0
@@ -311,9 +312,9 @@ class EventMatrix extends EventEmitter {
    * Returns # of mutations a gene has as it's score
    */
   private mutationGeneScore(donor, gene) {
-    if (this.lookupTable?.[donor]?.[gene] !== undefined) {
+    if (this.storage.lookupTable?.[donor]?.[gene] !== undefined) {
       // genes are in nested arrays in the lookup table, need to flatten to get the correct count
-      const totalGenes = this.lookupTable[donor][gene]
+      const totalGenes = this.storage.lookupTable[donor][gene]
       return totalGenes.length
     } else {
       return 0
@@ -351,7 +352,7 @@ class EventMatrix extends EventEmitter {
    */
   private computeDonorCounts() {
     for (const donor of this.donors) {
-      const genes = Object.values(this.lookupTable[donor.id] ?? {})
+      const genes = Object.values(this.storage.lookupTable[donor.id] ?? {})
       donor.count = 0
       for (const item of genes) {
         donor.count += item.length

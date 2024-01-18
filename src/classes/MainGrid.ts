@@ -7,6 +7,7 @@ import {
   IEnhancedEvent,
   MainGridParams
 } from '../interfaces/main-grid.interface'
+import Storage from '../utils/storage'
 import {parseTransform} from '../utils/utils'
 import DescriptionBlock from './DescriptionBlock'
 
@@ -24,8 +25,6 @@ class MainGrid extends EventEmitter {
   private geneDescriptionBlock: DescriptionBlock
   private scaleToFit: boolean
   private leftTextWidth: number
-  private prefix: string
-  private minCellHeight: number
   private donors: any[]
   private genes: any[]
   private types: any[]
@@ -56,13 +55,13 @@ class MainGrid extends EventEmitter {
   private column: any
   private row: any
   private geneMap: any
+  private storage: Storage = Storage.getInstance()
 
-  constructor(params: MainGridParams, lookupTable: any, x: ScaleBand<string>, y: ScaleBand<string>) {
+  constructor(params: MainGridParams, x: ScaleBand<string>, y: ScaleBand<string>) {
     super()
     this.params = params
     this.x = x
     this.y = y
-    this.lookupTable = lookupTable
 
     this.loadParams(params)
     this.createGeneMap()
@@ -73,10 +72,7 @@ class MainGrid extends EventEmitter {
     this.donorHistogram = new Histogram(histogramParams, this.container, false)
     this.donorDescriptionBlock = new DescriptionBlock(
       descriptionBlockParams,
-      {
-        opacity: params.donorOpacityFunc,
-        fill: params.donorFillFunc,
-      },
+      'donor',
       this.container,
       false,
       params.donorTracks ?? [],
@@ -90,10 +86,7 @@ class MainGrid extends EventEmitter {
     this.geneDescriptionBlock =
       new DescriptionBlock(
         descriptionBlockParams,
-        {
-          opacity: params.geneOpacityFunc,
-          fill: params.geneFillFunc,
-        },
+        'gene',
         this.container,
         true,
         params.geneTracks ?? [],
@@ -108,7 +101,6 @@ class MainGrid extends EventEmitter {
     return {
       padding: this.params.trackPadding,
       offset: this.params.offset,
-      prefix: this.params.prefix,
       label: this.params.trackLegendLabel,
       margin: this.params.margin,
       genes: this.params.genes,
@@ -126,7 +118,6 @@ class MainGrid extends EventEmitter {
   private getHistogramParams(): HistogramParams {
     return {
       histogramBorderPadding: this.params.histogramBorderPadding,
-      prefix: this.params.prefix,
       type: this.params.type,
       genes: this.params.genes,
       donors: this.params.donors,
@@ -144,9 +135,7 @@ class MainGrid extends EventEmitter {
   private loadParams(params: MainGridParams) {
     this.scaleToFit = typeof params.scaleToFit === 'boolean' ? params.scaleToFit : true
     this.leftTextWidth = params.leftTextWidth || 80
-    this.prefix = params.prefix || 'og-'
 
-    this.minCellHeight = params.minCellHeight || 10
     this.donors = params.donors || []
     this.genes = params.genes || []
     this.types = []
@@ -178,9 +167,9 @@ class MainGrid extends EventEmitter {
 
     this.cellHeight = this.height / this.numGenes
 
-    if (this.cellHeight < this.minCellHeight) {
-      this.cellHeight = this.minCellHeight
-      params.height = this.numGenes * this.minCellHeight
+    if (this.cellHeight < this.storage.minCellHeight) {
+      this.cellHeight = this.storage.minCellHeight
+      params.height = this.numGenes * this.storage.minCellHeight
       this.height = params.height
     }
 
@@ -197,8 +186,8 @@ class MainGrid extends EventEmitter {
    */
   private init() {
     this.svg = this.wrapper.append('svg')
-      .attr('class', this.prefix + 'maingrid-svg')
-      .attr('id', this.prefix + 'maingrid-svg')
+      .attr('class', `${this.storage.prefix}maingrid-svg`)
+      .attr('id', `${this.storage.prefix}maingrid-svg`)
       .attr('width', '100%')
       .style('position', 'absolute')
       .style('top', 0)
@@ -265,7 +254,7 @@ class MainGrid extends EventEmitter {
     })
 
     this.container
-      .selectAll(`.${this.prefix}maingrid-svg`)
+      .selectAll(`.${this.storage.prefix}maingrid-svg`)
       .data(this.observations)
       .enter()
       .append('path')
@@ -273,7 +262,7 @@ class MainGrid extends EventEmitter {
         return `${d.donorId} ${d.geneId}`
       })
       .attr('class', (d: any) => {
-        return `${this.prefix}sortable-rect-${d.type} ${this.prefix}${d.donorId}-cell ${this.prefix}${d.geneId}-cell`
+        return `${this.storage.prefix}sortable-rect-${d.type} ${this.storage.prefix}${d.donorId}-cell ${this.storage.prefix}${d.geneId}-cell`
       })
       .attr('cons', (d: any) => {
         return this.getValueByType(d)
@@ -334,7 +323,7 @@ class MainGrid extends EventEmitter {
       this.computeCoordinates()
     } else {
       this.row.selectAll('text').attr('style', () => {
-        if (this.cellHeight < this.minCellHeight) {
+        if (this.cellHeight < this.storage.minCellHeight) {
           return 'display: none;'
         } else {
           return ''
@@ -350,7 +339,7 @@ class MainGrid extends EventEmitter {
 
     for (let i = 0; i < this.numTypes; i++) {
       this.container
-        .selectAll('.' + this.prefix + 'sortable-rect-' + this.types[i])
+        .selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
         .transition()
         .attr('d', (d: any) => {
           if (d.type === 'cnv' || this.heatMap) {
@@ -376,14 +365,14 @@ class MainGrid extends EventEmitter {
     }
 
     if (this.drawGridLines) {
-      this.column = this.gridContainer.selectAll(`.${this.prefix}donor-column`)
+      this.column = this.gridContainer.selectAll(`.${this.storage.prefix}donor-column`)
         .data(this.donors)
         .enter()
         .append('line')
         .attr('x1', (d: any) => d.x)
         .attr('x2', (d: any) => d.x)
         .attr('y2', this.height)
-        .attr('class', this.prefix + 'donor-column')
+        .attr('class', `${this.storage.prefix}donor-column`)
         .style('pointer-events', 'none')
     }
 
@@ -393,10 +382,10 @@ class MainGrid extends EventEmitter {
       this.row.remove()
     }
 
-    this.row = this.gridContainer.selectAll('.' + this.prefix + 'gene-row')
+    this.row = this.gridContainer.selectAll(`.${this.storage.prefix}gene-row`)
       .data(this.genes)
       .enter().append('g')
-      .attr('class', this.prefix + 'gene-row')
+      .attr('class', `${this.storage.prefix}gene-row`)
       .attr('transform', (d: any) => {
         return 'translate(0,' + d.y + ')'
       })
@@ -409,14 +398,14 @@ class MainGrid extends EventEmitter {
 
     this.row.append('text')
       .attr('class', (g: any) => {
-        return this.prefix + g.id + '-label ' + this.prefix + 'gene-label ' + this.prefix + 'label-text-font'
+        return `${this.storage.prefix}${g.id}-label ${this.storage.prefix}gene-label ${this.storage.prefix}label-text-font`
       })
       .attr('x', -8)
       .attr('y', this.cellHeight / 2)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
       .attr('style', () => {
-        if (this.cellHeight < this.minCellHeight) {
+        if (this.cellHeight < this.storage.minCellHeight) {
           return 'display: none;'
         } else {
           return ''
@@ -440,9 +429,9 @@ class MainGrid extends EventEmitter {
     this.cellWidth = this.width / this.donors.length
     this.cellHeight = this.height / this.genes.length
 
-    if (this.cellHeight < this.minCellHeight) {
-      this.cellHeight = this.minCellHeight
-      this.height = this.genes.length * this.minCellHeight
+    if (this.cellHeight < this.storage.minCellHeight) {
+      this.cellHeight = this.storage.minCellHeight
+      this.height = this.genes.length * this.storage.minCellHeight
     }
 
     this.background
@@ -512,14 +501,14 @@ class MainGrid extends EventEmitter {
     }
 
     this.verticalCross = this.container.append('line')
-      .attr('class', this.prefix + 'vertical-cross')
+      .attr('class', `${this.storage.prefix}vertical-cross`)
       .attr('y1', -this.histogramHeight)
       .attr('y2', this.height + this.donorDescriptionBlock.height)
       .attr('opacity', 0)
       .attr('style', 'pointer-events: none')
 
     this.horizontalCross = this.container.append('line')
-      .attr('class', this.prefix + 'horizontal-cross')
+      .attr('class', `${this.storage.prefix}horizontal-cross`)
       .attr('x1', 0)
       .attr('x2', this.width + this.histogramHeight + this.geneDescriptionBlock.height)
       .attr('opacity', 0)
@@ -560,7 +549,7 @@ class MainGrid extends EventEmitter {
         .attr('y', coord[1])
         .attr('width', 1)
         .attr('height', 1)
-        .attr('class', this.prefix + 'selection-region')
+        .attr('class', `${this.storage.prefix}selection-region`)
         .attr('stroke', 'black')
         .attr('stroke-width', '2')
         .attr('opacity', 0.2)
@@ -638,8 +627,8 @@ class MainGrid extends EventEmitter {
     for (let i = 0; i < this.genes.length; i++) {
       const gene = this.genes[i]
       if (i < start || i > stop) {
-        d3.selectAll('.' + this.prefix + gene.id + '-cell').remove()
-        d3.selectAll('.' + this.prefix + gene.id + '-bar').remove()
+        d3.selectAll(`.${this.storage.prefix}${gene.id}-cell`).remove()
+        d3.selectAll(`.${this.storage.prefix}${gene.id}-bar`).remove()
         this.genes.splice(i, 1)
         i--
         start--
@@ -657,8 +646,8 @@ class MainGrid extends EventEmitter {
     for (let i = 0; i < this.donors.length; i++) {
       const donor = this.donors[i]
       if (i < start || i > stop) {
-        d3.selectAll('.' + this.prefix + donor.id + '-cell').remove()
-        d3.selectAll('.' + this.prefix + donor.id + '-bar').remove()
+        d3.selectAll(`.${this.storage.prefix}${donor.id}-cell`).remove()
+        d3.selectAll(`.${this.storage.prefix}${donor.id}-bar`).remove()
         this.donors.splice(i, 1)
         i--
         start--
@@ -711,14 +700,14 @@ class MainGrid extends EventEmitter {
       }
 
       d3.select(event.target)
-        .select(`.${this.prefix}remove-gene`)
+        .select(`.${this.storage.prefix}remove-gene`)
         .attr('style', 'display: block')
     })
 
     this.row.on('mouseout', (event: IEnhancedEvent) => {
       const curElement = event.target
       curElement.timeout = setTimeout(() => {
-        d3.select(curElement).select('.' + this.prefix + 'remove-gene')
+        d3.select(curElement).select(`.${this.storage.prefix}remove-gene`)
           .attr('style', 'display: none')
       }, 500)
     })
@@ -752,7 +741,7 @@ class MainGrid extends EventEmitter {
    * Function that determines the x position of a mutation or cnv within a cell
    */
   private getCellX(d: any) {
-    const x = this.lookupTable[d.type][d.donorId].x
+    const x = this.storage.lookupTable[d.type][d.donorId].x
 
     if (!this.heatMap && d.type === 'mutation') {
       return x + (this.cellWidth / 4)
@@ -850,7 +839,7 @@ class MainGrid extends EventEmitter {
     this.heatMap = active
 
     for (let i = 0; i < this.numTypes; i++) {
-      d3.selectAll('.' + this.prefix + 'sortable-rect-' + this.types[i])
+      d3.selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
         .transition()
         .attr('d', (d: any) => {
           if (d.type === 'cnv' || this.heatMap) {
@@ -909,8 +898,8 @@ class MainGrid extends EventEmitter {
   public removeGene(i: number) {
     const gene = this.genes[i]
     if (gene) {
-      d3.selectAll('.' + this.prefix + gene.id + '-cell').remove()
-      d3.selectAll('.' + this.prefix + gene.id + '-bar').remove()
+      d3.selectAll(`.${this.storage.prefix}${gene.id}-cell`).remove()
+      d3.selectAll(`.${this.storage.prefix}${gene.id}-bar`).remove()
       this.genes.splice(i, 1)
     }
 
@@ -927,8 +916,8 @@ class MainGrid extends EventEmitter {
     if (!donor || typeof donor !== 'object') return null
     if (!gene || typeof gene !== 'object') return null
 
-    if (this.lookupTable?.[donor.id]?.[gene.id]) {
-      return this.lookupTable[donor.id][gene.id].join(', ') // Table stores arrays and we want to return a string;
+    if (this.storage.lookupTable?.[donor.id]?.[gene.id]) {
+      return this.storage.lookupTable[donor.id][gene.id].join(', ') // Table stores arrays and we want to return a string;
     } else {
       return null
     }
@@ -938,7 +927,7 @@ class MainGrid extends EventEmitter {
    * Removes all svg elements for this grid.
    */
   public destroy() {
-    this.wrapper.select('.' + this.prefix + 'maingrid-svg').remove()
+    this.wrapper.select(`.${this.storage.prefix}maingrid-svg`).remove()
   }
 }
 
