@@ -43,6 +43,10 @@ class EventMatrix extends EventEmitter {
     this.initCharts()
   }
 
+  public static create(params: EventMatrixParams) {
+    return new EventMatrix(params)
+  }
+
   /**
    * Instantiate charts
    */
