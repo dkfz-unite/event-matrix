@@ -1,16 +1,15 @@
 import * as d3 from 'd3'
+import EventEmitter from 'eventemitter3'
 import {Domain, HistogramParams} from '../interfaces/main-grid.interface'
+import Storage from '../utils/storage'
 
-class Histogram {
+class Histogram extends EventEmitter {
   private lineWidthOffset: number
   private lineHeightOffset: number
   private padding: number
   private centerText: number
-  private prefix: string
-  private emit: Function
   private svg: any
   private rotated: boolean
-  private type: string
   private domain: Domain[]
   private margin: {
     top: number;
@@ -34,17 +33,16 @@ class Histogram {
   private topText: any
   private middleText: any
   private leftLabel: any
+  private storage: Storage = Storage.getInstance()
 
-  constructor(params: HistogramParams, svg: any, rotated?: boolean, type?: string) {
+  constructor(params: HistogramParams, svg: any, rotated?: boolean) {
+    super()
     this.lineWidthOffset = params.histogramBorderPadding?.left || 10
     this.lineHeightOffset = params.histogramBorderPadding?.bottom || 5
     this.padding = 20
     this.centerText = -6
-    this.prefix = params.prefix || 'og-'
-    this.emit = params.emit
     this.svg = svg
     this.rotated = rotated || false
-    this.type = type || 'mutation'
     this.domain = (this.rotated ? params.genes : params.donors) || []
     this.margin = params.margin || {top: 30, right: 15, bottom: 15, left: 80}
     this.width = params.width || 500
@@ -53,16 +51,16 @@ class Histogram {
     this.histogramHeight = 80
     this.numDomain = this.domain.length
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
-    this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding + (this.type === 'cnv' ? 120 : 0)
+    this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding
     this.wrapper = d3.select(params.wrapper || 'body')
   }
 
   public render(): void {
-    const topCount = this.getLargestCount(this.domain, this.type)
+    const topCount = this.getLargestCount(this.domain)
     this.topCount = topCount
 
     this.container = this.svg.append('g')
-      .attr('class', this.prefix + 'histogram')
+      .attr('class', `${this.storage.prefix}histogram`)
       .attr('width', () => {
         if (this.rotated) {
           return this.height
@@ -86,17 +84,17 @@ class Histogram {
     this.renderAxis(topCount)
 
     this.histogram
-      .on('mouseover', () => {
-        const target = d3.event.target
+      .on('mouseover', (event) => {
+        const target = event.target
         const domain = this.domain[target.dataset.domainIndex]
         if (!domain) return
-        this.emit((this.type === 'cnv' ? 'cnvHistogramMouseOver' : 'histogramMouseOver'), {domain: domain})
+        this.emit('histogramMouseOver', {domain: domain})
       })
       .on('mouseout', () => {
         this.emit('histogramMouseOut')
       })
-      .on('click', () => {
-        const target = d3.event.target
+      .on('click', (event) => {
+        const target = event.target
         const domain = this.domain[target.dataset.domainIndex]
         if (!domain) return
         this.emit('histogramClick', {
@@ -110,18 +108,18 @@ class Histogram {
       .enter()
       .append('rect')
       .attr('class', (d: Domain) => {
-        return this.prefix + 'sortable-bar ' + this.prefix + d.id + '-bar'
+        return `${this.storage.prefix}sortable-bar ${this.storage.prefix}${d.id}-bar`
       })
       .attr('data-domain-index', (d: Domain, i: number) => i)
       .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
       .attr('height', (d: Domain) => {
-        return this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount
+        return this.histogramHeight * d.count / topCount
       })
       .attr('x', (d: Domain) => {
         return this.rotated ? d.y : d.x
       })
       .attr('y', (d: Domain) => {
-        return this.histogramHeight - this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount
+        return this.histogramHeight - this.histogramHeight * d.count / topCount
       })
       .attr('fill', '#1693C0')
   }
@@ -140,10 +138,10 @@ class Histogram {
       .transition()
       .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
       .attr('height', (d: Domain) => {
-        return this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount
+        return this.histogramHeight * d.count / topCount
       })
       .attr('y', (d: Domain) => {
-        return this.histogramHeight - this.histogramHeight * (this.type === 'cnv' ? d.cnv : d.count) / topCount
+        return this.histogramHeight - this.histogramHeight * d.count / topCount
       })
       .attr('x', (d: Domain) => {
         return this.rotated ? d.y : d.x
@@ -179,25 +177,25 @@ class Histogram {
 
   private renderAxis(topCount: number): void {
     this.bottomAxis = this.histogram.append('line')
-      .attr('class', this.prefix + 'histogram-axis')
+      .attr('class', `${this.storage.prefix}histogram-axis`)
 
     this.leftAxis = this.histogram.append('line')
-      .attr('class', this.prefix + 'histogram-axis')
+      .attr('class', `${this.storage.prefix}histogram-axis`)
 
     this.topText = this.histogram.append('text')
-      .attr('class', this.prefix + 'label-text-font')
+      .attr('class', `${this.storage.prefix}label-text-font`)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
 
     this.middleText = this.histogram.append('text')
-      .attr('class', this.prefix + 'label-text-font')
+      .attr('class', `${this.storage.prefix}label-text-font`)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
 
     this.leftLabel = this.histogram.append('text')
-      .text(this.type === 'cnv' ? 'CNV freq.' : 'Mutation freq.')
+      .text('Mutation freq.')
       .attr({
-        'class': this.prefix + 'label-text-font',
+        'class': `${this.storage.prefix}label-text-font`,
         'text-anchor': 'middle',
         transform: 'rotate(-90)',
       })
@@ -237,11 +235,11 @@ class Histogram {
       })
   }
 
-  private getLargestCount(domain: Domain[], type?: string): number {
+  private getLargestCount(domain: Domain[]): number {
     let retVal = 1
 
-    for (let i = 0; i < domain.length; i++) {
-      retVal = Math.max(retVal, type === 'cnv' ? domain[i].cnv : domain[i].count)
+    for (const item of domain) {
+      retVal = Math.max(retVal, item.count)
     }
 
     return retVal

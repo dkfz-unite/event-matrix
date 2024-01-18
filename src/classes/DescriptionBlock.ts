@@ -1,11 +1,12 @@
 import EventEmitter from 'eventemitter3'
-import {IComputedProps, IDescriptionBlockParams, IDescriptionFieldsGroupParams} from '../interfaces/main-grid.interface'
+import {IDescriptionBlockParams, IDescriptionFieldsGroupParams} from '../interfaces/main-grid.interface'
+import Storage from '../utils/storage'
 import DescriptionField from './DescriptionField'
 import DescriptionFieldsGroup from './DescriptionFieldsGroup'
 
 class DescriptionBlock extends EventEmitter {
   params: IDescriptionBlockParams
-  computedProps: IComputedProps
+  blockType: string
   offset: any
   svg: any
   rotated: boolean
@@ -20,17 +21,18 @@ class DescriptionBlock extends EventEmitter {
   groups: DescriptionFieldsGroup[]
   container: any
   parentHeight: number
+  private storage: Storage = Storage.getInstance()
 
   constructor(
     params: IDescriptionBlockParams,
-    computedProps: IComputedProps,
+    blockType: string,
     svg: any,
     rotated: boolean,
     fields: DescriptionField[],
     offset: any
   ) {
     super()
-    this.computedProps = computedProps
+    this.blockType = blockType
     this.offset = offset
     this.params = params
     this.svg = svg
@@ -49,10 +51,6 @@ class DescriptionBlock extends EventEmitter {
     this.nullSentinel = params.nullSentinel || -777
 
     this.parseGroups()
-  }
-
-  private getPrefix() {
-    return this.params.prefix ?? 'og-'
   }
 
   private getDimensions() {
@@ -90,7 +88,7 @@ class DescriptionBlock extends EventEmitter {
       if (this.groupMap[fieldsGroupName] !== undefined) {
         const fieldsGroup = new DescriptionFieldsGroup(
           this.getDescriptionFieldsGroupParams(this.isGroupExpandable(fieldsGroupName)),
-          this.computedProps,
+          this.blockType,
           fieldsGroupName,
           this.rotated
         )
@@ -119,7 +117,7 @@ class DescriptionBlock extends EventEmitter {
     for (const group of this.groups) {
       const descriptionBlockContainer = this.container.append('g').attr('transform', 'translate(0,' + this.parentHeight + ')')
       group.init(descriptionBlockContainer)
-      this.parentHeight += Number(group.totalHeight) + padding
+      this.parentHeight += group.getTotalHeight() + padding
     }
 
     const translateDown = this.rotated ? -(this.offset + this.parentHeight) : padding + this.offset
@@ -127,7 +125,7 @@ class DescriptionBlock extends EventEmitter {
     this.container
       .attr('width', this.width)
       .attr('height', this.parentHeight)
-      .attr('class', `${this.getPrefix()}track`)
+      .attr('class', `${this.storage.prefix}track`)
       .attr('transform', function () {
         return (this.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')'
       })
@@ -153,7 +151,7 @@ class DescriptionBlock extends EventEmitter {
     for (const group of this.groups) {
       group.container.attr('transform', 'translate(0,' + this.parentHeight + ')')
       group.resize(this.width)
-      this.parentHeight += Number(group.totalHeight) + padding
+      this.parentHeight += group.getTotalHeight() + padding
     }
 
     const translateDown = this.rotated ? -(this.offset + this.parentHeight) : padding + this.offset

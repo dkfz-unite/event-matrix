@@ -1,8 +1,6 @@
 export type MainGridParams = {
   scaleToFit?: boolean
   leftTextWidth?: number
-  prefix?: string
-  minCellHeight?: number
   donors?: any[]
   genes?: any[]
   wrapper?: string
@@ -35,7 +33,6 @@ export interface HistogramParams {
     left?: number
     bottom?: number
   }
-  prefix?: string
   type?: string
   genes?: Domain[]
   donors?: Domain[]
@@ -61,15 +58,15 @@ export interface Domain {
 }
 
 export type EventMatrixParams = {
-  element: string
+  prefix?: string
   minCellHeight?: number
+  element: string
   observations?: any[]
 } & MainGridParams
 
 export interface IDescriptionBlockParams {
   padding?: number
   offset: any
-  prefix?: string
   label: string
   margin?: {
     top: number
@@ -116,7 +113,6 @@ export interface IPreparedFieldData {
 }
 
 export interface IDescriptionFieldsGroupParams {
-  prefix?: string
   expandable: boolean
   cellHeight?: number
   width: number
@@ -127,12 +123,7 @@ export interface IDescriptionFieldsGroupParams {
   label?: string
 }
 
-export interface IComputedProps {
-  opacity: undefined | ((val: any) => number),
-  fill: undefined | ((val: any) => string),
-}
-
-export interface LookupTable {
+export interface ILookupTable {
   [key: string]: Record<string, string[]>
 }
 
