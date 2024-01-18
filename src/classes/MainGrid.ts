@@ -1,21 +1,29 @@
 import * as d3 from 'd3'
+import {D3DragEvent, ScaleBand, Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {HistogramParams, MainGridParams, OncoTrackParams} from '../interfaces/main-grid.interface'
+import {parseTransform} from '../utils/utils'
 
 import Histogram from './Histogram'
 import Track from './Track'
 
+interface EnhancedEvent extends Event {
+  target: HTMLElement & {
+    dataset: Record<string, string>,
+    timeout?: any
+  }
+}
+
 class MainGrid extends EventEmitter {
   private params: MainGridParams
-  private x: any
-  private y: any
+  private x: ScaleBand<string>
+  private y: ScaleBand<string>
   private lookupTable: any
-  private updateCallback: () => void
   private histogramHeight: any
   private donorTrack: any
-  private geneHistogram: any
+  private geneHistogram: Histogram
+  private donorHistogram: Histogram
   private geneTrack: any
-  private cnvGeneHistogram: any
   private scaleToFit: boolean
   private leftTextWidth: number
   private prefix: string
@@ -23,10 +31,12 @@ class MainGrid extends EventEmitter {
   private donors: any[]
   private genes: any[]
   private types: any[]
-  private ssmObservations: any[]
-  private cnvObservations: any[]
   private observations: any[]
-  private wrapper: any
+  private wrapper: Selection<any, any, HTMLElement, any>
+  private svg: Selection<any, any, HTMLElement, any>
+  private container: Selection<any, any, HTMLElement, any>
+  private background: Selection<any, any, HTMLElement, any>
+  private gridContainer: Selection<any, any, HTMLElement, any>
   private colorMap: any
   private numDonors: number
   private numGenes: number
@@ -42,11 +52,6 @@ class MainGrid extends EventEmitter {
   private drawGridLines: boolean
   private crosshair: boolean
   private heatMapColor: string
-  private svg: any
-
-  private container: any
-  private background: any
-  private gridContainer: any
   private verticalCross: any
   private horizontalCross: any
   private selectionRegion: any
@@ -54,10 +59,10 @@ class MainGrid extends EventEmitter {
   private row: any
   private geneMap: any
 
-  constructor(params: MainGridParams, lookupTable: any, x: any, y: any) {
+  constructor(params: MainGridParams, lookupTable: any, x: ScaleBand<string>, y: ScaleBand<string>) {
     super()
-    this.params =
-      this.x = x
+    this.params = params
+    this.x = x
     this.y = y
     this.lookupTable = lookupTable
 
@@ -67,7 +72,7 @@ class MainGrid extends EventEmitter {
 
     const trackParams = this.getTrackParams()
     const histogramParams = this.getHistogramParams()
-
+    this.donorHistogram = new Histogram(histogramParams, this.container, false)
     this.donorTrack = new Track(
       trackParams,
       {
@@ -81,7 +86,6 @@ class MainGrid extends EventEmitter {
     )
     this.donorTrack.on('resize', this.emit)
     this.donorTrack.on('update', this.emit)
-
     this.donorTrack.init()
 
     this.geneHistogram = new Histogram(histogramParams, this.container, true)
@@ -100,8 +104,6 @@ class MainGrid extends EventEmitter {
     this.geneTrack.on('resize', this.emit)
     this.donorTrack.on('update', this.emit)
     this.geneTrack.init()
-
-    this.cnvGeneHistogram = new Histogram(histogramParams, this.container, true, 'cnv')
   }
 
   private getTrackParams(): OncoTrackParams {
@@ -150,15 +152,9 @@ class MainGrid extends EventEmitter {
     this.donors = params.donors || []
     this.genes = params.genes || []
     this.types = []
-    this.ssmObservations = params.ssmObservations || []
-    this.cnvObservations = params.cnvObservations || []
-    this.observations = this.cnvObservations.concat(this.ssmObservations) || []
-    if (this.cnvObservations.length) {
-      this.types.push('cnv')
-    }
-    if (this.ssmObservations.length) {
-      this.types.push('mutation')
-    }
+
+    this.observations = this.observations ?? []
+    this.types.push('mutation')
 
     this.wrapper = d3.select(params.wrapper || 'body')
 
@@ -191,7 +187,7 @@ class MainGrid extends EventEmitter {
     }
 
     this.margin = params.margin || {top: 30, right: 100, bottom: 15, left: 80}
-    this.heatMap = params.heatMap
+    this.heatMap = params.heatMap ?? false
 
     this.drawGridLines = params.grid || false
     this.crosshair = false
@@ -229,9 +225,9 @@ class MainGrid extends EventEmitter {
     this.emit('render:mainGrid:start')
     this.computeCoordinates()
 
-    this.svg.on('mouseover', (d: any) => {
-      const target = d3.event.target
-      const coord = d3.mouse(target)
+    this.svg.on('mouseover', (event: EnhancedEvent) => {
+      const target = event.target
+      const coord = d3.pointer(event, target)
 
       const xIndex = this.rangeToDomain(this.x, coord[0])
       const yIndex = this.rangeToDomain(this.y, coord[1])
@@ -255,8 +251,8 @@ class MainGrid extends EventEmitter {
       this.emit('gridMouseOut')
     })
 
-    this.svg.on('click', () => {
-      const obsIds = d3.event.target.dataset.obsIndex?.split(' ')
+    this.svg.on('click', (event: EnhancedEvent) => {
+      const obsIds = event.target.dataset.obsIndex?.split(' ')
       if (!obsIds) {
         return
       }
@@ -299,17 +295,7 @@ class MainGrid extends EventEmitter {
 
     this.emit('render:mainGrid:end')
 
-    if (this.cnvObservations.length) {
-      this.emit('render:cnvDonorHistogram:start')
-      this.cnvDonorHistogram.render()
-      this.emit('render:cnvDonorHistogram:end')
-
-      this.emit('render:cnvGeneHistogram:start')
-      this.cnvGeneHistogram.render()
-      this.emit('render:cnvGeneHistogram:end')
-    }
-
-    if (this.ssmObservations.length) {
+    if (this.observations.length) {
       this.emit('render:donorHistogram:start')
       this.donorHistogram.render()
       this.emit('render:donorHistogram:end')
@@ -335,7 +321,7 @@ class MainGrid extends EventEmitter {
   /**
    * Render function ensures presentation matches the data. Called after modifying data.
    */
-  public update(x: number, y: number) {
+  public update(x: ScaleBand<string>, y: ScaleBand<string>) {
     this.createGeneMap()
 
     this.x = x
@@ -392,16 +378,14 @@ class MainGrid extends EventEmitter {
     }
 
     if (this.drawGridLines) {
-      this.column = this.gridContainer.selectAll('.' + this.prefix + 'donor-column')
+      this.column = this.gridContainer.selectAll(`.${this.prefix}donor-column`)
         .data(this.donors)
         .enter()
         .append('line')
-        .attr({
-          x1: (d: any) => d.x,
-          x2: (d: any) => d.x,
-          y2: this.height,
-          'class': this.prefix + 'donor-column',
-        })
+        .attr('x1', (d: any) => d.x)
+        .attr('x2', (d: any) => d.x)
+        .attr('y2', this.height)
+        .attr('class', this.prefix + 'donor-column')
         .style('pointer-events', 'none')
     }
 
@@ -447,7 +431,7 @@ class MainGrid extends EventEmitter {
     this.defineRowDragBehaviour()
   }
 
-  public resize(width: number, height: number, x: any, y: any) {
+  public resize(width: number, height: number, x: ScaleBand<string>, y: ScaleBand<string>) {
     this.createGeneMap()
 
     this.x = x
@@ -469,21 +453,16 @@ class MainGrid extends EventEmitter {
 
     this.computeCoordinates()
 
-    if (this.ssmObservations.length) {
+    if (this.observations.length) {
       this.donorHistogram.resize(width, this.height)
       this.geneHistogram.resize(width, this.height)
-    }
-
-    if (this.cnvObservations.length) {
-      this.cnvDonorHistogram.resize(width, this.height)
-      this.cnvGeneHistogram.resize(width, this.height)
     }
 
     this.donorTrack.resize(width, this.height, this.height)
     this.geneTrack.resize(width, this.height, this.width + this.histogramHeight + 120)
 
     this.resizeSvg()
-    this.update(this.x, this.x)
+    this.update(this.x, this.y)
 
     this.verticalCross.attr('y2', this.height + this.donorTrack.height)
     this.horizontalCross.attr('x2', this.width + (this.histogramHeight * this.numTypes) + this.geneTrack.height)
@@ -491,7 +470,6 @@ class MainGrid extends EventEmitter {
 
   private resizeSvg() {
     const width = this.margin.left + this.leftTextWidth + this.width + (this.histogramHeight * this.numTypes) + this.geneTrack.height + this.margin.right
-
     const height = this.margin.top + (this.histogramHeight * this.numTypes) + this.height + this.donorTrack.height + this.margin.bottom
 
     this.svg
@@ -505,9 +483,9 @@ class MainGrid extends EventEmitter {
   }
 
   private defineCrosshairBehaviour() {
-    const moveCrossHair = (eventType: string, target: any) => {
+    const moveCrossHair = (eventType: string, event: EnhancedEvent) => {
       if (this.crosshair) {
-        const coord = d3.mouse(target)
+        const coord = d3.pointer(event, event.target)
 
         this.verticalCross.attr('x1', coord[0]).attr('opacity', 1)
         this.verticalCross.attr('x2', coord[0]).attr('opacity', 1)
@@ -550,14 +528,14 @@ class MainGrid extends EventEmitter {
       .attr('style', 'pointer-events: none')
 
     this.container
-      .on('mousedown', () => {
-        this.startSelection(this)
+      .on('mousedown', (event: EnhancedEvent) => {
+        this.startSelection(event)
       })
-      .on('mouseover', () => {
-        moveCrossHair('mouseover', this)
+      .on('mouseover', (event: EnhancedEvent) => {
+        moveCrossHair('mouseover', event)
       })
-      .on('mousemove', () => {
-        moveCrossHair('mousemove', this)
+      .on('mousemove', (event: EnhancedEvent) => {
+        moveCrossHair('mousemove', event)
       })
       .on('mouseout', () => {
         if (this.crosshair) {
@@ -566,18 +544,18 @@ class MainGrid extends EventEmitter {
           this.emit('gridCrosshairMouseOut')
         }
       })
-      .on('mouseup', () => {
-        this.finishSelection()
+      .on('mouseup', (event: EnhancedEvent) => {
+        this.finishSelection(event)
       })
   }
 
   /**
    * Event behavior when pressing down on the mouse to make a selection
    */
-  private startSelection(e: any) {
+  private startSelection(event: EnhancedEvent) {
     if (this.crosshair && typeof this.selectionRegion === 'undefined') {
-      d3.event.stopPropagation()
-      const coord = d3.mouse(e)
+      event.stopPropagation()
+      const coord = d3.pointer(event, event.target)
 
       this.selectionRegion = this.container.append('rect')
         .attr('x', coord[0])
@@ -627,9 +605,9 @@ class MainGrid extends EventEmitter {
   /**
    * Event behavior when releasing mouse when finishing with a selection
    */
-  private finishSelection() {
+  private finishSelection(event: EnhancedEvent) {
     if (this.crosshair && typeof this.selectionRegion !== 'undefined') {
-      d3.event.stopPropagation()
+      event.stopPropagation()
 
       const x1 = Number(this.selectionRegion.attr('x'))
       const x2 = x1 + Number(this.selectionRegion.attr('width'))
@@ -643,8 +621,8 @@ class MainGrid extends EventEmitter {
       const yStart = this.rangeToDomain(this.y, y1)
       const yStop = this.rangeToDomain(this.y, y2)
 
-      this.sliceDonors(xStart, xStop)
-      this.sliceGenes(yStart, yStop)
+      this.sliceDonors(parseInt(xStart), parseInt(xStop))
+      this.sliceGenes(parseInt(yStart), parseInt(yStop))
 
       this.selectionRegion.remove()
       delete this.selectionRegion
@@ -695,50 +673,52 @@ class MainGrid extends EventEmitter {
    * Defines the row drag behaviour for moving genes and binds it to the row elements.
    */
   private defineRowDragBehaviour() {
-    const drag = d3.behavior.drag()
-    drag.on('dragstart', () => {
-      d3.event.sourceEvent.stopPropagation() // silence other listeners
-    })
-    drag.on('drag', () => {
-      const trans = d3.event.dy
-      const selection = d3.select(this)
-
-      selection.attr('transform', () => {
-        const transform = d3.transform(d3.select(this).attr('transform'))
-        return 'translate( 0, ' + (parseInt(transform.translate[1]) + trans) + ')'
+    const drag = d3.drag()
+      .on('dragstart', (event: D3DragEvent<any, any, any>) => {
+        event.sourceEvent.stopPropagation()
       })
-    })
+      .on('drag', (event: D3DragEvent<any, any, any>) => {
+        const trans = event.dy
+        const selection = d3.select(event.sourceEvent.target) // изменено на event.target
 
-    drag.on('dragend', (d: any) => {
-      const coord = d3.mouse(this.container.node())
-      const dragged = this.genes.indexOf(d)
+        selection.attr('transform', () => {
+          const transform = d3.select(event.sourceEvent.target).attr('transform')
+          const {translate} = parseTransform(transform)
+          return `translate( 0, ${translate[1] + trans})`
+        })
+      })
+
+    drag.on('dragend', (event: D3DragEvent<any, any, any>) => {
+      const coord = d3.pointer(event, this.container.node())
+      const dragged = this.genes.indexOf(event.target)
       const yIndex = this.rangeToDomain(this.y, coord[1])
 
       this.genes.splice(dragged, 1)
-      this.genes.splice(yIndex, 0, d)
+      this.genes.splice(parseInt(yIndex), 0, d)
 
-      this.updateCallback(true)
+      this.emit('update', true)
     })
 
     const dragSelection = this.row.call(drag)
-    dragSelection.on('click', () => {
-      if (d3.event.defaultPrevented) {
+    dragSelection.on('click', (event: EnhancedEvent) => {
+      if (event.defaultPrevented) {
+        //
       }
     })
 
-    this.row.on('mouseover', () => {
-      const curElement = this
-      if (typeof curElement.timeout !== 'undefined') {
+    this.row.on('mouseover', (event: EnhancedEvent) => {
+      const curElement = event.target
+      if (curElement.timeout !== undefined) {
         clearTimeout(curElement.timeout)
       }
 
-      d3.select(this)
-        .select('.' + this.prefix + 'remove-gene')
+      d3.select(event.target)
+        .select(`.${this.prefix}remove-gene`)
         .attr('style', 'display: block')
     })
 
-    this.row.on('mouseout', () => {
-      const curElement = this
+    this.row.on('mouseout', (event: EnhancedEvent) => {
+      const curElement = event.target
       curElement.timeout = setTimeout(() => {
         d3.select(curElement).select('.' + this.prefix + 'remove-gene')
           .attr('style', 'display: none')
@@ -748,8 +728,7 @@ class MainGrid extends EventEmitter {
 
   private createGeneMap() {
     const geneMap = {}
-    for (let i = 0; i < this.genes.length; i += 1) {
-      const gene = this.genes[i]
+    for (const gene of this.genes) {
       geneMap[gene.id] = gene
     }
     this.geneMap = geneMap
@@ -937,11 +916,11 @@ class MainGrid extends EventEmitter {
       this.genes.splice(i, 1)
     }
 
-    this.updateCallback(true)
+    this.emit('update', true)
   }
 
 
-  private rangeToDomain(scale: any, value: any) {
+  private rangeToDomain(scale: ScaleBand<string>, value: number) {
     return scale.domain()[d3.bisect(scale.range(), value) - 1]
   }
 
