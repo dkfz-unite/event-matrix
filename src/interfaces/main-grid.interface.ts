@@ -21,7 +21,14 @@ export type MainGridParams = {
   donorFillFunc?: (val: any) => string,
   geneOpacityFunc?: (val: any) => number,
   geneFillFunc?: (val: any) => string,
-} & HistogramParams & OncoTrackParams
+
+  trackPadding?: number
+  offset: any
+  trackLegendLabel: any
+  trackHeight?: number
+  nullSentinel?: number
+  expandableGroups?: string[]
+} & HistogramParams
 
 export interface HistogramParams {
   histogramBorderPadding?: {
@@ -59,11 +66,11 @@ export type EventMatrixParams = {
   observations?: any[]
 } & MainGridParams
 
-export interface OncoTrackParams {
-  trackPadding?: number
+export interface IDescriptionBlockParams {
+  padding?: number
   offset: any
   prefix?: string
-  trackLegendLabel: any
+  label: string
   margin?: {
     top: number
     right: number
@@ -74,14 +81,41 @@ export interface OncoTrackParams {
   donors?: any[]
   width?: number
   height?: number
-  trackHeight?: number
+  parentHeight?: number
   nullSentinel?: number
   grid?: boolean
   wrapper: any
   expandableGroups?: string[]
 }
 
-export interface OncoTrackGroupParams {
+export interface IDescriptionField {
+  name: string
+  fieldName: string // The field of the donor/gene object to read
+  type?: string | null // The type of the field data, not used by EventMatrix internally, but allows user to group behaviour
+  group?: string | null // the name of the group the field belongs to.
+  collapsed?: boolean // if true, and the field group is in the expandableGroups array, then the field by default will not be shown
+}
+
+export interface IEnhancedEvent extends Event {
+  target: HTMLElement & {
+    dataset: Record<string, string>,
+    timeout?: any
+  }
+}
+
+export interface IPreparedFieldData {
+  id: string
+  displayId?: string
+  domainIndex: number
+  value: any
+  displayValue: string
+  notNullSentinel: boolean
+  displayName: string
+  fieldName: string
+  type: string | null
+}
+
+export interface IDescriptionFieldsGroupParams {
   prefix?: string
   expandable: boolean
   cellHeight?: number
@@ -90,7 +124,7 @@ export interface OncoTrackGroupParams {
   grid?: boolean
   domain: any[]
   wrapper?: string
-  trackLegendLabel: any
+  label?: string
 }
 
 export interface IComputedProps {

@@ -1,18 +1,16 @@
 import * as d3 from 'd3'
 import {D3DragEvent, ScaleBand, Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
-import {HistogramParams, MainGridParams, OncoTrackParams} from '../interfaces/main-grid.interface'
+import {
+  HistogramParams,
+  IDescriptionBlockParams,
+  IEnhancedEvent,
+  MainGridParams
+} from '../interfaces/main-grid.interface'
 import {parseTransform} from '../utils/utils'
+import DescriptionBlock from './DescriptionBlock'
 
 import Histogram from './Histogram'
-import Track from './Track'
-
-interface EnhancedEvent extends Event {
-  target: HTMLElement & {
-    dataset: Record<string, string>,
-    timeout?: any
-  }
-}
 
 class MainGrid extends EventEmitter {
   private params: MainGridParams
@@ -20,10 +18,10 @@ class MainGrid extends EventEmitter {
   private y: ScaleBand<string>
   private lookupTable: any
   private histogramHeight: any
-  private donorTrack: any
+  private donorDescriptionBlock: DescriptionBlock
   private geneHistogram: Histogram
   private donorHistogram: Histogram
-  private geneTrack: any
+  private geneDescriptionBlock: DescriptionBlock
   private scaleToFit: boolean
   private leftTextWidth: number
   private prefix: string
@@ -70,11 +68,11 @@ class MainGrid extends EventEmitter {
     this.createGeneMap()
     this.init()
 
-    const trackParams = this.getTrackParams()
+    const descriptionBlockParams = this.getDescriptionBlockParams()
     const histogramParams = this.getHistogramParams()
     this.donorHistogram = new Histogram(histogramParams, this.container, false)
-    this.donorTrack = new Track(
-      trackParams,
+    this.donorDescriptionBlock = new DescriptionBlock(
+      descriptionBlockParams,
       {
         opacity: params.donorOpacityFunc,
         fill: params.donorFillFunc,
@@ -84,14 +82,14 @@ class MainGrid extends EventEmitter {
       params.donorTracks ?? [],
       this.height
     )
-    this.donorTrack.on('resize', this.emit)
-    this.donorTrack.on('update', this.emit)
-    this.donorTrack.init()
+    this.donorDescriptionBlock.on('resize', this.emit)
+    this.donorDescriptionBlock.on('update', this.emit)
+    this.donorDescriptionBlock.init()
 
     this.geneHistogram = new Histogram(histogramParams, this.container, true)
-    this.geneTrack =
-      new Track(
-        trackParams,
+    this.geneDescriptionBlock =
+      new DescriptionBlock(
+        descriptionBlockParams,
         {
           opacity: params.geneOpacityFunc,
           fill: params.geneFillFunc,
@@ -101,23 +99,23 @@ class MainGrid extends EventEmitter {
         params.geneTracks ?? [],
         this.width + (this.histogramHeight * this.numTypes)
       )
-    this.geneTrack.on('resize', this.emit)
-    this.donorTrack.on('update', this.emit)
-    this.geneTrack.init()
+    this.geneDescriptionBlock.on('resize', this.emit)
+    this.geneDescriptionBlock.on('update', this.emit)
+    this.geneDescriptionBlock.init()
   }
 
-  private getTrackParams(): OncoTrackParams {
+  private getDescriptionBlockParams(): IDescriptionBlockParams {
     return {
-      trackPadding: this.params.trackPadding,
+      padding: this.params.trackPadding,
       offset: this.params.offset,
       prefix: this.params.prefix,
-      trackLegendLabel: this.params.trackLegendLabel,
+      label: this.params.trackLegendLabel,
       margin: this.params.margin,
       genes: this.params.genes,
       donors: this.params.donors,
       width: this.params.width,
-      height: this.params.height,
-      trackHeight: this.params.trackHeight,
+      parentHeight: this.params.height,
+      height: this.params.trackHeight,
       nullSentinel: this.params.nullSentinel,
       grid: this.params.grid,
       wrapper: this.params.wrapper,
@@ -225,7 +223,7 @@ class MainGrid extends EventEmitter {
     this.emit('render:mainGrid:start')
     this.computeCoordinates()
 
-    this.svg.on('mouseover', (event: EnhancedEvent) => {
+    this.svg.on('mouseover', (event: IEnhancedEvent) => {
       const target = event.target
       const coord = d3.pointer(event, target)
 
@@ -251,7 +249,7 @@ class MainGrid extends EventEmitter {
       this.emit('gridMouseOut')
     })
 
-    this.svg.on('click', (event: EnhancedEvent) => {
+    this.svg.on('click', (event: IEnhancedEvent) => {
       const obsIds = event.target.dataset.obsIndex?.split(' ')
       if (!obsIds) {
         return
@@ -306,11 +304,11 @@ class MainGrid extends EventEmitter {
     }
 
     this.emit('render:donorTrack:start')
-    this.donorTrack.render()
+    this.donorDescriptionBlock.render()
     this.emit('render:donorTrack:end')
 
     this.emit('render:geneTrack:start')
-    this.geneTrack.render()
+    this.geneDescriptionBlock.render()
     this.emit('render:geneTrack:end')
 
     this.defineCrosshairBehaviour()
@@ -362,8 +360,8 @@ class MainGrid extends EventEmitter {
         })
     }
 
-    this.donorTrack.update(this.donors)
-    this.geneTrack.update(this.genes)
+    this.donorDescriptionBlock.update(this.donors)
+    this.geneDescriptionBlock.update(this.genes)
   }
 
 
@@ -458,19 +456,19 @@ class MainGrid extends EventEmitter {
       this.geneHistogram.resize(width, this.height)
     }
 
-    this.donorTrack.resize(width, this.height, this.height)
-    this.geneTrack.resize(width, this.height, this.width + this.histogramHeight + 120)
+    this.donorDescriptionBlock.resize(width, this.height, this.height)
+    this.geneDescriptionBlock.resize(width, this.height, this.width + this.histogramHeight + 120)
 
     this.resizeSvg()
     this.update(this.x, this.y)
 
-    this.verticalCross.attr('y2', this.height + this.donorTrack.height)
-    this.horizontalCross.attr('x2', this.width + (this.histogramHeight * this.numTypes) + this.geneTrack.height)
+    this.verticalCross.attr('y2', this.height + this.donorDescriptionBlock.height)
+    this.horizontalCross.attr('x2', this.width + (this.histogramHeight * this.numTypes) + this.geneDescriptionBlock.height)
   }
 
   private resizeSvg() {
-    const width = this.margin.left + this.leftTextWidth + this.width + (this.histogramHeight * this.numTypes) + this.geneTrack.height + this.margin.right
-    const height = this.margin.top + (this.histogramHeight * this.numTypes) + this.height + this.donorTrack.height + this.margin.bottom
+    const width = this.margin.left + this.leftTextWidth + this.width + (this.histogramHeight * this.numTypes) + this.geneDescriptionBlock.height + this.margin.right
+    const height = this.margin.top + (this.histogramHeight * this.numTypes) + this.height + this.donorDescriptionBlock.height + this.margin.bottom
 
     this.svg
       .attr('width', width).attr('height', height)
@@ -483,7 +481,7 @@ class MainGrid extends EventEmitter {
   }
 
   private defineCrosshairBehaviour() {
-    const moveCrossHair = (eventType: string, event: EnhancedEvent) => {
+    const moveCrossHair = (eventType: string, event: IEnhancedEvent) => {
       if (this.crosshair) {
         const coord = d3.pointer(event, event.target)
 
@@ -516,25 +514,25 @@ class MainGrid extends EventEmitter {
     this.verticalCross = this.container.append('line')
       .attr('class', this.prefix + 'vertical-cross')
       .attr('y1', -this.histogramHeight)
-      .attr('y2', this.height + this.donorTrack.height)
+      .attr('y2', this.height + this.donorDescriptionBlock.height)
       .attr('opacity', 0)
       .attr('style', 'pointer-events: none')
 
     this.horizontalCross = this.container.append('line')
       .attr('class', this.prefix + 'horizontal-cross')
       .attr('x1', 0)
-      .attr('x2', this.width + this.histogramHeight + this.geneTrack.height)
+      .attr('x2', this.width + this.histogramHeight + this.geneDescriptionBlock.height)
       .attr('opacity', 0)
       .attr('style', 'pointer-events: none')
 
     this.container
-      .on('mousedown', (event: EnhancedEvent) => {
+      .on('mousedown', (event: IEnhancedEvent) => {
         this.startSelection(event)
       })
-      .on('mouseover', (event: EnhancedEvent) => {
+      .on('mouseover', (event: IEnhancedEvent) => {
         moveCrossHair('mouseover', event)
       })
-      .on('mousemove', (event: EnhancedEvent) => {
+      .on('mousemove', (event: IEnhancedEvent) => {
         moveCrossHair('mousemove', event)
       })
       .on('mouseout', () => {
@@ -544,7 +542,7 @@ class MainGrid extends EventEmitter {
           this.emit('gridCrosshairMouseOut')
         }
       })
-      .on('mouseup', (event: EnhancedEvent) => {
+      .on('mouseup', (event: IEnhancedEvent) => {
         this.finishSelection(event)
       })
   }
@@ -552,7 +550,7 @@ class MainGrid extends EventEmitter {
   /**
    * Event behavior when pressing down on the mouse to make a selection
    */
-  private startSelection(event: EnhancedEvent) {
+  private startSelection(event: IEnhancedEvent) {
     if (this.crosshair && typeof this.selectionRegion === 'undefined') {
       event.stopPropagation()
       const coord = d3.pointer(event, event.target)
@@ -605,7 +603,7 @@ class MainGrid extends EventEmitter {
   /**
    * Event behavior when releasing mouse when finishing with a selection
    */
-  private finishSelection(event: EnhancedEvent) {
+  private finishSelection(event: IEnhancedEvent) {
     if (this.crosshair && typeof this.selectionRegion !== 'undefined') {
       event.stopPropagation()
 
@@ -700,13 +698,13 @@ class MainGrid extends EventEmitter {
     })
 
     const dragSelection = this.row.call(drag)
-    dragSelection.on('click', (event: EnhancedEvent) => {
+    dragSelection.on('click', (event: IEnhancedEvent) => {
       if (event.defaultPrevented) {
         //
       }
     })
 
-    this.row.on('mouseover', (event: EnhancedEvent) => {
+    this.row.on('mouseover', (event: IEnhancedEvent) => {
       const curElement = event.target
       if (curElement.timeout !== undefined) {
         clearTimeout(curElement.timeout)
@@ -717,7 +715,7 @@ class MainGrid extends EventEmitter {
         .attr('style', 'display: block')
     })
 
-    this.row.on('mouseout', (event: EnhancedEvent) => {
+    this.row.on('mouseout', (event: IEnhancedEvent) => {
       const curElement = event.target
       curElement.timeout = setTimeout(() => {
         d3.select(curElement).select('.' + this.prefix + 'remove-gene')
@@ -876,8 +874,8 @@ class MainGrid extends EventEmitter {
     if (this.drawGridLines === active) return this.drawGridLines
     this.drawGridLines = active
 
-    this.geneTrack.setGridLines(this.drawGridLines)
-    this.donorTrack.setGridLines(this.drawGridLines)
+    this.geneDescriptionBlock.setGridLines(this.drawGridLines)
+    this.donorDescriptionBlock.setGridLines(this.drawGridLines)
 
     this.computeCoordinates()
 

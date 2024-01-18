@@ -1,12 +1,18 @@
 import * as d3 from 'd3'
 import EventEmitter from 'eventemitter3'
-import {Domain, IComputedProps, OncoTrackGroupParams} from '../interfaces/main-grid.interface'
-import Track from './Track'
+import {
+  Domain,
+  IComputedProps,
+  IDescriptionFieldsGroupParams,
+  IEnhancedEvent,
+  IPreparedFieldData
+} from '../interfaces/main-grid.interface'
+import DescriptionField from './DescriptionField'
 
-class TrackGroup extends EventEmitter {
+class DescriptionFieldsGroup extends EventEmitter {
   private prefix: string
   private rendered = false
-  private params: OncoTrackGroupParams
+  private params: IDescriptionFieldsGroupParams
   private computedProps: IComputedProps = {
     opacity: (val: any) => 1,
     fill: (val: any) => 'black',
@@ -16,14 +22,14 @@ class TrackGroup extends EventEmitter {
   private height: number
   private totalHeight: number
   private width: number
-  private tracks: Track[] = []
-  private collapsedTracks: Track[] = []
+  private fields: DescriptionField[] = []
+  private collapsedFields: DescriptionField[] = []
   private length: number
   private nullSentinel: number
   private rotated: boolean
   private drawGridLines: boolean
   private domain: Domain[]
-  private trackData: any[] = []
+  private fieldsData: IPreparedFieldData[] = []
   private wrapper: any
   private container: any
   private label: any
@@ -34,7 +40,7 @@ class TrackGroup extends EventEmitter {
   private row: any
 
   constructor(
-    params: OncoTrackGroupParams,
+    params: IDescriptionFieldsGroupParams,
     computed: IComputedProps,
     name: string,
     rotated: boolean
@@ -59,28 +65,24 @@ class TrackGroup extends EventEmitter {
 
 
   /**
-   * Method for adding a track to the track group.
+   * Method for adding a field to the field group.
    */
-  addTrack(tracks: Track | Track[]) {
-    tracks = Array.isArray(tracks) ? tracks : [tracks]
-
-    for (let i = 0, track; i < tracks.length; i++) {
-      track = tracks[i]
-
-      if (!this.rendered && track.collapsed && this.expandable) {
-        this.collapsedTracks.push(track)
+  addDescriptionFields(fields: DescriptionField[]) {
+    for (const descriptionField of fields) {
+      if (!this.rendered && descriptionField.collapsed && this.expandable) {
+        this.collapsedFields.push(descriptionField)
       } else {
-        this.tracks.push(track)
+        this.fields.push(descriptionField)
       }
     }
 
-    this.collapsedTracks = this.collapsedTracks.filter((collapsedTrack) => {
-      return !this.tracks.some((track) => {
-        return collapsedTrack.fieldName === track.fieldName
+    this.collapsedFields = this.collapsedFields.filter((collapsedFields) => {
+      return !this.fields.some((field) => {
+        return collapsedFields.fieldName === field.fieldName
       })
     })
 
-    this.tracks = [...new Set(this.tracks)]
+    this.fields = [...new Set(this.fields)]
 
     // const { height: cellHeight, length } = this.getDimensions()
 
@@ -93,48 +95,46 @@ class TrackGroup extends EventEmitter {
   }
 
   /**
-   * Method for removing a track from the track group.
+   * Method for removing a field from the fields group.
    */
-  removeTrack(i: number) {
-    const removed = this.tracks.splice(i, 1)
-    this.collapsedTracks = this.collapsedTracks.concat(removed)
+  removeField(i: number) {
+    const removed = this.fields.splice(i, 1)
+    this.collapsedFields = this.collapsedFields.concat(removed)
 
     this.refreshData()
     this.emit('resize')
   }
 
   /**
-   * Refreshes the data after adding a new track.
+   * Refreshes the data after adding a new field.
    */
   refreshData() {
-    const {length} = this.getDimensions()
-    this.trackData = []
-    for (let i = 0, domain; i < this.domain.length; i++) {
-      domain = this.domain[i]
+    this.fieldsData = []
+    for (let i = 0; i < this.domain.length; i++) {
+      const domain = this.domain[i]
 
-      for (let j = 0, track, value; j < length; j++) {
-        track = this.tracks[j]
-        value = domain[track.fieldName]
+      for (const field of this.fields) {
+        const value = domain[field.fieldName]
         const isNullSentinel = value === this.nullSentinel
-        this.trackData.push({
+        this.fieldsData.push({
           id: domain.id,
-          displayId: domain.displayId || (this.rotated ? domain.symbol : domain.id),
+          displayId: domain.displayId ?? (this.rotated ? domain.symbol : domain.id),
           domainIndex: i,
           value: value,
           displayValue: isNullSentinel ? 'Not Verified' : value,
           notNullSentinel: !isNullSentinel,
-          displayName: track.name,
-          fieldName: track.fieldName,
-          type: track.type,
+          displayName: field.name,
+          fieldName: field.fieldName,
+          type: field.type,
         })
       }
     }
   }
 
   /**
-   * Initializes the container for the track groups.
+   * Initializes the container for the field groups.
    */
-  init(container: any) {
+  init(container: HTMLElement) {
     this.container = container
 
     this.label = this.container.append('text')
@@ -153,7 +153,7 @@ class TrackGroup extends EventEmitter {
       .attr('x', 0)
       .attr('y', -22)
       .append('xhtml:div')
-      .html(this.params.trackLegendLabel)
+      .html(this.params.label)
 
     this.background = this.container.append('rect')
       .attr('class', 'background')
@@ -163,11 +163,11 @@ class TrackGroup extends EventEmitter {
     this.refreshData()
 
     const {height: cellHeight} = this.getDimensions()
-    this.totalHeight = this.height + (this.collapsedTracks.length ? cellHeight : 0)
+    this.totalHeight = this.height + (this.collapsedFields.length ? cellHeight : 0)
   }
 
   /**
-   * Renders the track group. Takes the x axis range, and the div for tooltips.
+   * Renders the field group. Takes the x axis range, and the div for tooltips.
    */
   render() {
     this.rendered = true
@@ -189,12 +189,12 @@ class TrackGroup extends EventEmitter {
     return {
       width: this.domain?.length > 0 ? this.width / this.domain.length : 0,
       height: this.params.cellHeight ?? 20,
-      length: this.tracks?.length ?? 0,
+      length: this.fields?.length ?? 0,
     }
   }
 
   /**
-   * Updates the track group rendering based on the given domain and range for axis.
+   * Updates the field group rendering based on the given domain and range for axis.
    */
   update(domain: Domain[]) {
     this.domain = domain
@@ -204,22 +204,22 @@ class TrackGroup extends EventEmitter {
       map[domain[i].id] = i
     }
 
-    const trackData = []
-    for (const data of this.trackData) {
+    const groupData = []
+    for (const data of this.fieldsData) {
       const domainIndex = map[data.id]
       if (domainIndex || domainIndex === 0) {
         data.domainIndex = domainIndex
-        trackData.push(data)
+        groupData.push(data)
       }
     }
-    this.trackData = trackData
+    this.fieldsData = groupData
 
     this.computeCoordinates()
 
     const {width: cellWidth} = this.getDimensions()
 
     this.container.selectAll('.' + this.prefix + 'track-data')
-      .data(this.trackData)
+      .data(this.fieldsData)
       .attr('x', (d) => {
         const domain = this.domain[d.domainIndex]
         return this.rotated ? domain.y : domain.x
@@ -236,7 +236,7 @@ class TrackGroup extends EventEmitter {
 
     this.width = width
     this.height = cellHeight * length
-    if (this.collapsedTracks.length) {
+    if (this.collapsedFields.length) {
       this.totalHeight = this.height + cellHeight
     }
 
@@ -247,7 +247,7 @@ class TrackGroup extends EventEmitter {
 
     this.computeCoordinates()
 
-    this.totalHeight = this.height + (this.collapsedTracks.length ? cellHeight : 0)
+    this.totalHeight = this.height + (this.collapsedFields.length ? cellHeight : 0)
 
     this.renderData()
   }
@@ -285,7 +285,7 @@ class TrackGroup extends EventEmitter {
     }
 
     this.row = this.container.selectAll('.' + this.prefix + 'row')
-      .data(this.tracks)
+      .data(this.fields)
       .enter().append('g')
       .attr('class', this.prefix + 'row')
       .attr('transform', (d, i) => 'translate(0,' + this.y(i) + ')')
@@ -309,13 +309,13 @@ class TrackGroup extends EventEmitter {
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
       .text((d, i) => {
-        return this.tracks[i].name
+        return this.fields[i].name
       })
 
     if (this.expandable) {
       setTimeout(() => {
-        const removeTrackClass = this.prefix + 'remove-track'
-        this.container.selectAll('.' + removeTrackClass).remove()
+        const removeFieldClass = `${this.prefix}remove-track`
+        this.container.selectAll(`.${removeFieldClass}`).remove()
 
         const textLengths = {}
         labels.each(function (d) {
@@ -323,12 +323,12 @@ class TrackGroup extends EventEmitter {
         })
         this.row
           .append('text')
-          .attr('class', removeTrackClass)
+          .attr('class', removeFieldClass)
           .text('-')
           .attr('y', cellHeight / 2)
           .attr('dy', '.32em')
           .on('click', (d, i) => {
-            this.removeTrack(i)
+            this.removeField(i)
           })
           .attr('x', function (d) {
             return -(textLengths[d.name] + 12 + this.getComputedTextLength())
@@ -336,10 +336,10 @@ class TrackGroup extends EventEmitter {
       })
     }
 
-    // append or remove add track button
+    // append or remove add field button
     let addButton = this.container.selectAll('.' + this.prefix + 'add-track')
 
-    if (this.collapsedTracks.length && this.expandable) {
+    if (this.collapsedFields.length && this.expandable) {
       if (addButton.empty()) {
         addButton = this.container.append('text')
           .text('+')
@@ -349,8 +349,8 @@ class TrackGroup extends EventEmitter {
           .attr('text-anchor', 'end')
           .on('click', () => {
             this.emit('addTrackClick', {
-              hiddenTracks: this.collapsedTracks.slice(),
-              addTrack: this.addTrack.bind(this),
+              hiddenTracks: this.collapsedFields.slice(),
+              addTrack: this.addDescriptionFields.bind(this),
             })
           })
       }
@@ -369,29 +369,29 @@ class TrackGroup extends EventEmitter {
 
   renderData() {
     const selection = this.container.selectAll('.' + this.prefix + 'track-data')
-      .data(this.trackData)
+      .data(this.fieldsData)
 
     selection.enter()
       .append('rect')
 
     const yIndexLookup = {}
-    for (let i = 0; i < this.tracks.length; i += 1) {
-      yIndexLookup[this.tracks[i].fieldName] = i
+    for (let i = 0; i < this.fields.length; i += 1) {
+      yIndexLookup[this.fields[i].fieldName] = i
     }
 
     this.container
-      .on('click', () => {
-        const target = d3.event.target
-        const d = this.trackData[target.dataset.trackDataIndex]
+      .on('click', (event: IEnhancedEvent) => {
+        const target = event.target
+        const d = this.fieldsData[target.dataset.fieldDataIndex]
         if (!d) return
         this.emit('trackClick', {
           domain: d,
           type: this.rotated ? 'gene' : 'donor',
         })
       })
-      .on('mouseover', () => {
-        const target = d3.event.target
-        const d = this.trackData[target.dataset.trackDataIndex]
+      .on('mouseover', (event: IEnhancedEvent) => {
+        const target = event.target
+        const d = this.fieldsData[target.dataset.fieldDataIndex]
         if (!d) return
 
         this.emit('trackMouseOver', {
@@ -417,14 +417,16 @@ class TrackGroup extends EventEmitter {
       .attr('fill', this.computedProps.fill)
       .attr('opacity', this.computedProps.opacity)
       .attr('class', (d) => {
-        return this.prefix + 'track-data ' +
-          this.prefix + 'track-' + d.fieldName + ' ' +
-          this.prefix + 'track-' + d.value + ' ' +
-          this.prefix + d.id + '-cell'
+        return [
+          `${this.prefix}track-data`,
+          `${this.prefix}track-${d.fieldName}`,
+          `${this.prefix}track-${d.value}`,
+          `${this.prefix}${d.id}-cell`,
+        ].join(' ')
       })
 
     selection.exit().remove()
   }
 }
 
-export default TrackGroup
+export default DescriptionFieldsGroup
