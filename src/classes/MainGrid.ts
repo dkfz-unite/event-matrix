@@ -690,7 +690,7 @@ class MainGrid extends EventEmitter {
 
     drag.on('dragend', (event: D3DragEvent<any, any, any>) => {
       const coord = d3.pointer(event, this.container.node())
-      const dragged = this.genes.indexOf(event.target)
+      const dragged = this.genes.indexOf(d)
       const yIndex = this.rangeToDomain(this.y, coord[1])
 
       this.genes.splice(dragged, 1)
