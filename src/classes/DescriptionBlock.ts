@@ -1,9 +1,10 @@
 import EventEmitter from 'eventemitter3'
-import {IComputedProps, OncoTrackParams} from '../interfaces/main-grid.interface'
-import TrackGroup from './TrackGroup'
+import {IComputedProps, IDescriptionBlockParams, IDescriptionFieldsGroupParams} from '../interfaces/main-grid.interface'
+import DescriptionField from './DescriptionField'
+import DescriptionFieldsGroup from './DescriptionFieldsGroup'
 
-class Track extends EventEmitter {
-  params: OncoTrackParams
+class DescriptionBlock extends EventEmitter {
+  params: IDescriptionBlockParams
   computedProps: IComputedProps
   offset: any
   svg: any
@@ -12,20 +13,20 @@ class Track extends EventEmitter {
   width: number
   cellHeight: number
   cellWidth: number
-  availableTracks: any[]
+  fields: DescriptionField[]
   drawGridLines: boolean
   nullSentinel: number
   groupMap: any
-  groups: TrackGroup[]
+  groups: DescriptionFieldsGroup[]
   container: any
-  height: number
+  parentHeight: number
 
   constructor(
-    params: OncoTrackParams,
+    params: IDescriptionBlockParams,
     computedProps: IComputedProps,
     svg: any,
     rotated: boolean,
-    tracks: any[],
+    fields: DescriptionField[],
     offset: any
   ) {
     super()
@@ -37,12 +38,12 @@ class Track extends EventEmitter {
 
     this.domain = (this.rotated ? params.genes : params.donors) || []
 
-    this.width = (this.rotated ? params.height : params.width) || 500
+    this.width = (this.rotated ? params.parentHeight : params.width) || 500
 
-    this.cellHeight = params.trackHeight || 10
+    this.cellHeight = params.height || 10
     this.cellWidth = this.domain.length > 0 ? this.width / this.domain.length : 0
 
-    this.availableTracks = tracks || []
+    this.fields = fields || []
     this.drawGridLines = params.grid || false
 
     this.nullSentinel = params.nullSentinel || -777
@@ -56,118 +57,119 @@ class Track extends EventEmitter {
 
   private getDimensions() {
     return {
-      padding: this.params.trackPadding ?? 20,
+      padding: this.params.padding ?? 20,
       margin: this.params.margin || {top: 30, right: 15, bottom: 15, left: 80},
     }
   }
 
-  private isGroupExpandable(group: string) {
+  private isGroupExpandable(group: string): boolean {
     return this.params.expandableGroups?.includes(group) ?? false
   }
 
-  private getTrackGroupParams(groupType) {
+  private getDescriptionFieldsGroupParams(expandable: boolean): IDescriptionFieldsGroupParams {
     return {
       cellHeight: this.cellHeight,
       width: this.width,
       grid: this.drawGridLines,
       nullSentinel: this.nullSentinel,
       domain: this.domain,
-      trackLegendLabel: this.params.trackLegendLabel,
-      expandable: this.isGroupExpandable(groupType),
+      label: this.params.label,
+      expandable: expandable,
       wrapper: this.params.wrapper,
     }
   }
 
   /**
-   * Parses track groups out of input.
+   * Parses field groups out of input.
    */
   parseGroups(): void {
     this.groupMap = {} // Nice for lookups and existence checks
     this.groups = [] // Nice for direct iteration
-    this.availableTracks.forEach((track) => {
-      const groupType = track.group || 'Tracks'
-      if (this.groupMap[groupType] !== undefined) {
-        const trackGroup = new TrackGroup(
-          this.getTrackGroupParams(groupType),
+    this.fields.forEach((descriptionField) => {
+      const fieldsGroupName = descriptionField.group
+      if (this.groupMap[fieldsGroupName] !== undefined) {
+        const fieldsGroup = new DescriptionFieldsGroup(
+          this.getDescriptionFieldsGroupParams(this.isGroupExpandable(fieldsGroupName)),
           this.computedProps,
-          groupType,
+          fieldsGroupName,
           this.rotated
         )
-        trackGroup.on('resize', this.emit)
-        trackGroup.on('update', this.emit)
-        this.groupMap[groupType] = trackGroup
-        this.groups.push(trackGroup)
+        this.groupMap[fieldsGroupName] = fieldsGroup
+        this.groups.push(fieldsGroup)
+
+        fieldsGroup.on('resize', this.emit)
+        fieldsGroup.on('update', this.emit)
       }
 
-      this.groupMap[groupType].addTrack(track)
+      this.groupMap[fieldsGroupName].addDescriptionFields([descriptionField])
     })
   }
 
   /**
-   * Initializes the track group data and places container for each group in spaced
+   * Initializes the field group data and places container for each group in spaced
    * intervals.
    */
   init(): void {
     this.container = this.svg.append('g')
 
     const labelHeight = this.rotated ? 16.5 : 0
-    this.height = 0
+    this.parentHeight = 0
     const {padding} = this.getDimensions()
 
     for (const group of this.groups) {
-      const trackContainer = this.container.append('g').attr('transform', 'translate(0,' + this.height + ')')
-      group.init(trackContainer)
-      this.height += Number(group.totalHeight) + padding
+      const descriptionBlockContainer = this.container.append('g').attr('transform', 'translate(0,' + this.parentHeight + ')')
+      group.init(descriptionBlockContainer)
+      this.parentHeight += Number(group.totalHeight) + padding
     }
 
-    const translateDown = this.rotated ? -(this.offset + this.height) : padding + this.offset
+    const translateDown = this.rotated ? -(this.offset + this.parentHeight) : padding + this.offset
 
     this.container
       .attr('width', this.width)
-      .attr('height', this.height)
-      .attr('class', this.getPrefix() + 'track')
+      .attr('height', this.parentHeight)
+      .attr('class', `${this.getPrefix()}track`)
       .attr('transform', function () {
         return (this.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')'
       })
 
-    this.height += labelHeight
+    this.parentHeight += labelHeight
   }
 
-  /** Calls render on all track groups */
+  /** Calls render on all field groups */
   render(): void {
     for (const group of this.groups) {
       group.render()
     }
   }
 
-  /** Resizes all the track groups */
+  /** Resizes all the field groups */
   resize(width: number, height: number, offset: any): void {
     this.offset = offset || this.offset
     this.width = this.rotated ? height : width
-    this.height = 0
+    this.parentHeight = 0
     const labelHeight = this.rotated ? 16.5 : 0
     const {padding} = this.getDimensions()
 
     for (const group of this.groups) {
-      group.container.attr('transform', 'translate(0,' + this.height + ')')
+      group.container.attr('transform', 'translate(0,' + this.parentHeight + ')')
       group.resize(this.width)
-      this.height += Number(group.totalHeight) + padding
+      this.parentHeight += Number(group.totalHeight) + padding
     }
 
-    const translateDown = this.rotated ? -(this.offset + this.height) : padding + this.offset
+    const translateDown = this.rotated ? -(this.offset + this.parentHeight) : padding + this.offset
 
     this.container
       .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('height', this.parentHeight)
       .attr('transform', function () {
         return (this.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')'
       })
 
-    this.height += labelHeight
+    this.parentHeight += labelHeight
   }
 
   /**
-   * Updates the rendering of the tracks.
+   * Updates the rendering of the fields.
    */
   update(domain: any[]): void {
     this.domain = domain
@@ -184,4 +186,4 @@ class Track extends EventEmitter {
   }
 }
 
-export default Track
+export default DescriptionBlock
