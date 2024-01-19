@@ -1,4 +1,5 @@
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
+import { BlockType } from '../interfaces/base.interface'
 
 class Storage {
   private static instance = null
@@ -10,11 +11,11 @@ class Storage {
   public prefix = 'og-'
   public lookupTable: ILookupTable = {}
   public customFunctions = {
-    gene: {
+    [BlockType.Gene]: {
       opacity: (val: any) => 1,
       fill: (val: any) => 'black',
     },
-    donor: {
+    [BlockType.Donor]: {
       opacity: (val: any) => 1,
       fill: (val: any) => 'black',
     },

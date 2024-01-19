@@ -8,8 +8,11 @@ import {
 } from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import DescriptionField from './DescriptionField'
+import { BlockType } from '../interfaces/base.interface'
 
 class DescriptionFieldsGroup extends EventEmitter {
+  public container!: d3.Selection<SVGGElement, any, HTMLElement, any>
+
   private rendered = false
   private params: IDescriptionFieldsGroupParams
   private expandable: boolean
@@ -25,19 +28,18 @@ class DescriptionFieldsGroup extends EventEmitter {
   private domain: Domain[]
   private fieldsData: IPreparedFieldData[] = []
   private wrapper: any
-  private container: any
   private label: any
   private legendObject: any
   private legend: any
   private background: any
   private column: any
   private row: any
-  private blockType: string
+  private blockType: BlockType
   private storage: Storage = Storage.getInstance()
 
   constructor(
     params: IDescriptionFieldsGroupParams,
-    blockType: string,
+    blockType: BlockType,
     name: string,
     rotated: boolean
   ) {
@@ -50,6 +52,7 @@ class DescriptionFieldsGroup extends EventEmitter {
     this.rotated = rotated
     this.drawGridLines = params.grid ?? false
     this.domain = params.domain
+    this.blockType = blockType
     this.wrapper = d3.select(params.wrapper || 'body')
   }
 
@@ -129,7 +132,7 @@ class DescriptionFieldsGroup extends EventEmitter {
   /**
    * Initializes the container for the field groups.
    */
-  init(container: HTMLElement) {
+  init(container: d3.Selection<SVGGElement, any, HTMLElement, any>) {
     this.container = container
 
     this.label = this.container.append('text')

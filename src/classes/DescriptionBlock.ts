@@ -1,14 +1,16 @@
+import {Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {IDescriptionBlockParams, IDescriptionFieldsGroupParams} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import DescriptionField from './DescriptionField'
 import DescriptionFieldsGroup from './DescriptionFieldsGroup'
+import {BlockType} from '../interfaces/base.interface'
 
 class DescriptionBlock extends EventEmitter {
   params: IDescriptionBlockParams
-  blockType: string
-  offset: any
-  svg: any
+  blockType: BlockType
+  offset: number
+  svg: Selection<any, any, HTMLElement, any>
   rotated: boolean
   domain: any[]
   width: number
@@ -17,15 +19,15 @@ class DescriptionBlock extends EventEmitter {
   fields: DescriptionField[]
   drawGridLines: boolean
   nullSentinel: number
-  groupMap: any
-  groups: DescriptionFieldsGroup[]
-  container: any
-  parentHeight: number
+  groupMap: Record<string, DescriptionFieldsGroup> = {}
+  groups: DescriptionFieldsGroup[] = []
+  container!: Selection<SVGGElement, any, HTMLElement, any>
+  parentHeight = 0
   private storage: Storage = Storage.getInstance()
 
   constructor(
     params: IDescriptionBlockParams,
-    blockType: string,
+    blockType: BlockType,
     svg: any,
     rotated: boolean,
     fields: DescriptionField[],
@@ -81,8 +83,6 @@ class DescriptionBlock extends EventEmitter {
    * Parses field groups out of input.
    */
   parseGroups(): void {
-    this.groupMap = {} // Nice for lookups and existence checks
-    this.groups = [] // Nice for direct iteration
     this.fields.forEach((descriptionField) => {
       const fieldsGroupName = descriptionField.group
       if (this.groupMap[fieldsGroupName] !== undefined) {
@@ -126,8 +126,8 @@ class DescriptionBlock extends EventEmitter {
       .attr('width', this.width)
       .attr('height', this.parentHeight)
       .attr('class', `${this.storage.prefix}track`)
-      .attr('transform', function () {
-        return (this.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')'
+      .attr('transform', () => {
+        return `${this.rotated ? 'rotate(90) ' : ''}translate(0,${translateDown})`
       })
 
     this.parentHeight += labelHeight
@@ -141,7 +141,7 @@ class DescriptionBlock extends EventEmitter {
   }
 
   /** Resizes all the field groups */
-  resize(width: number, height: number, offset: any): void {
+  resize(width: number, height: number, offset: number): void {
     this.offset = offset || this.offset
     this.width = this.rotated ? height : width
     this.parentHeight = 0
@@ -159,8 +159,8 @@ class DescriptionBlock extends EventEmitter {
     this.container
       .attr('width', this.width)
       .attr('height', this.parentHeight)
-      .attr('transform', function () {
-        return (this.rotated ? 'rotate(90)' : '') + 'translate(0,' + translateDown + ')'
+      .attr('transform', () => {
+        return `${this.rotated ? 'rotate(90) ' : ''}translate(0,${translateDown})`
       })
 
     this.parentHeight += labelHeight

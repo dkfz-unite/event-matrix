@@ -1,13 +1,15 @@
-export type MainGridParams = {
+import { ColorMap, CssMarginProps } from './base.interface'
+
+export type MainGridParams = Readonly<{
   scaleToFit?: boolean
   leftTextWidth?: number
   donors?: any[]
   genes?: any[]
   wrapper?: string
-  colorMap?: any
+  colorMap?: ColorMap
   width?: number
   height?: number
-  margin?: { top: number, right: number, bottom: number, left: number }
+  margin?: CssMarginProps
   heatMap?: boolean
   grid?: boolean
   heatMapColor?: string,
@@ -26,7 +28,7 @@ export type MainGridParams = {
   trackHeight?: number
   nullSentinel?: number
   expandableGroups?: string[]
-} & HistogramParams
+} & HistogramParams>
 
 export interface HistogramParams {
   histogramBorderPadding?: {
@@ -36,12 +38,7 @@ export interface HistogramParams {
   type?: string
   genes?: Domain[]
   donors?: Domain[]
-  margin?: {
-    top: number
-    right: number
-    bottom: number
-    left: number
-  }
+  margin?: CssMarginProps
   width?: number
   height?: number
   wrapper?: string
@@ -68,12 +65,7 @@ export interface IDescriptionBlockParams {
   padding?: number
   offset: any
   label: string
-  margin?: {
-    top: number
-    right: number
-    bottom: number
-    left: number
-  }
+  margin?: CssMarginProps
   genes?: any[]
   donors?: any[]
   width?: number
