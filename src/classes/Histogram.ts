@@ -2,20 +2,21 @@ import * as d3 from 'd3'
 import EventEmitter from 'eventemitter3'
 import {Domain, HistogramParams} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
+import { Selection } from 'd3'
 
 class Histogram extends EventEmitter {
   private lineWidthOffset: number
   private lineHeightOffset: number
   private padding: number
   private centerText: number
-  private svg: any
+  private svg: Selection<any, any, HTMLElement, any>
   private rotated: boolean
   private domain: Domain[]
   private margin: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
+    top: number
+    right: number
+    bottom: number
+    left: number
   }
   private width: number
   private height: number
@@ -24,10 +25,10 @@ class Histogram extends EventEmitter {
   private numDomain: number
   private barWidth: number
   private totalHeight: number
-  private wrapper: any
-  private topCount: number
-  private container: any
-  private histogram: any
+  private wrapper: d3.Selection<Element, unknown, Element, unknown>
+  private topCount = 1
+  private container!: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private histogram!: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
   private bottomAxis: any
   private leftAxis: any
   private topText: any
@@ -35,7 +36,7 @@ class Histogram extends EventEmitter {
   private leftLabel: any
   private storage: Storage = Storage.getInstance()
 
-  constructor(params: HistogramParams, svg: any, rotated?: boolean) {
+  constructor(params: HistogramParams, svg: Selection<any, any, HTMLElement, any>, rotated?: boolean) {
     super()
     this.lineWidthOffset = params.histogramBorderPadding?.left || 10
     this.lineHeightOffset = params.histogramBorderPadding?.bottom || 5
@@ -52,7 +53,7 @@ class Histogram extends EventEmitter {
     this.numDomain = this.domain.length
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
     this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding
-    this.wrapper = d3.select(params.wrapper || 'body')
+    this.wrapper = d3.select<Element, unknown>(params.wrapper || 'body')
   }
 
   public render(): void {
@@ -194,11 +195,9 @@ class Histogram extends EventEmitter {
 
     this.leftLabel = this.histogram.append('text')
       .text('Mutation freq.')
-      .attr({
-        'class': `${this.storage.prefix}label-text-font`,
-        'text-anchor': 'middle',
-        transform: 'rotate(-90)',
-      })
+      .attr('class', `${this.storage.prefix}label-text-font`)
+      .attr('text-anchor', 'middle')
+      .attr('rotate', 'rotate(-90)')
 
     this.updateAxis(topCount)
   }
