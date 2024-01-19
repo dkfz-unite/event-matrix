@@ -23,4 +23,4 @@ export interface ColorMap {
   'initiator_codon_variant': string,
 }
 
-export type SortFn = any
+export type SortFn = (a: any, b: any) => number
