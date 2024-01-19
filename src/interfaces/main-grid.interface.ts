@@ -1,6 +1,6 @@
 import { ColorMap, CssMarginProps } from './base.interface'
 
-export type MainGridParams = Readonly<{
+export type MainGridParams = {
   scaleToFit?: boolean
   leftTextWidth?: number
   donors?: any[]
@@ -28,7 +28,7 @@ export type MainGridParams = Readonly<{
   trackHeight?: number
   nullSentinel?: number
   expandableGroups?: string[]
-} & HistogramParams>
+} & HistogramParams
 
 export interface HistogramParams {
   histogramBorderPadding?: {
@@ -115,9 +115,11 @@ export interface IDescriptionFieldsGroupParams {
   label?: string
 }
 
-export interface ILookupTable {
-  [key: string]: Record<string, string[]>
-}
+export type ILookupTable = {
+  [donorId: string]: {
+    [geneId: string]: Observation['id'][]
+  }
+} & { x?: number }
 
 export interface Observation {
   id: string
