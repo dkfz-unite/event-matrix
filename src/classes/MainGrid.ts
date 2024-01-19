@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import {D3DragEvent, ScaleBand, Selection} from 'd3'
+import { D3DragEvent, ScaleBand, Selection } from 'd3'
 import EventEmitter from 'eventemitter3'
 import {
   HistogramParams,
@@ -8,10 +8,11 @@ import {
   MainGridParams
 } from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
-import {parseTransform} from '../utils/utils'
+import { parseTransform } from '../utils/utils'
 import DescriptionBlock from './DescriptionBlock'
 
 import Histogram from './Histogram'
+import { BaseType, BlockType, ColorMap, CssMarginProps } from '../interfaces/base.interface'
 
 class MainGrid extends EventEmitter {
   private params: MainGridParams
@@ -23,32 +24,39 @@ class MainGrid extends EventEmitter {
   private geneHistogram: Histogram
   private donorHistogram: Histogram
   private geneDescriptionBlock: DescriptionBlock
-  private scaleToFit: boolean
-  private leftTextWidth: number
-  private donors: any[]
-  private genes: any[]
-  private types: any[]
-  private observations: any[]
-  private wrapper: Selection<any, any, HTMLElement, any>
-  private svg: Selection<any, any, HTMLElement, any>
-  private container: Selection<any, any, HTMLElement, any>
-  private background: Selection<any, any, HTMLElement, any>
-  private gridContainer: Selection<any, any, HTMLElement, any>
-  private colorMap: any
-  private numDonors: number
-  private numGenes: number
-  private numTypes: number
-  private width: number
-  private height: number
-  private inputWidth: number
-  private inputHeight: number
-  private cellWidth: number
-  private cellHeight: number
-  private margin: { top: number, right: number, bottom: number, left: number }
-  private heatMap: boolean
-  private drawGridLines: boolean
-  private crosshair: boolean
-  private heatMapColor: string
+  private scaleToFit = true
+  private leftTextWidth = 80
+  private donors: any[] = []
+  private genes: any[] = []
+  private types: BaseType[] = [BaseType.Mutation]
+  private observations: any[] = []
+  private wrapper!: Selection<HTMLElement, any, HTMLElement, any>
+  private svg!: Selection<SVGSVGElement, any, HTMLElement, any>
+  private container!: Selection<SVGGElement, any, HTMLElement, any>
+  private background!: Selection<SVGRectElement, any, HTMLElement, any>
+  private gridContainer!: Selection<SVGGElement, any, HTMLElement, any>
+  private colorMap: ColorMap = {
+    'missense_variant': '#ff9b6c',
+    'frameshift_variant': '#57dba4',
+    'stop_gained': '#af57db',
+    'start_lost': '#ff2323',
+    'stop_lost': '#d3ec00',
+    'initiator_codon_variant': '#5abaff',
+  }
+  private numDonors!: number
+  private numGenes!: number
+  private numTypes!: number
+  private width = 500
+  private height = 500
+  private inputWidth = 500
+  private inputHeight = 500
+  private cellWidth!: number
+  private cellHeight!: number
+  private margin: CssMarginProps = { top: 30, right: 100, bottom: 15, left: 80 }
+  private heatMap = false
+  private drawGridLines = false
+  private crosshair = false
+  private heatMapColor = '#D33682'
   private verticalCross: any
   private horizontalCross: any
   private selectionRegion: any
@@ -72,7 +80,7 @@ class MainGrid extends EventEmitter {
     this.donorHistogram = new Histogram(histogramParams, this.container, false)
     this.donorDescriptionBlock = new DescriptionBlock(
       descriptionBlockParams,
-      'donor',
+      BlockType.Donor,
       this.container,
       false,
       params.donorTracks ?? [],
@@ -86,7 +94,7 @@ class MainGrid extends EventEmitter {
     this.geneDescriptionBlock =
       new DescriptionBlock(
         descriptionBlockParams,
-        'gene',
+        BlockType.Gene,
         this.container,
         true,
         params.geneTracks ?? [],
@@ -132,53 +140,69 @@ class MainGrid extends EventEmitter {
    * Responsible for initializing instance fields of MainGrid from the provided params object.
    * @param params
    */
-  private loadParams(params: MainGridParams) {
-    this.scaleToFit = typeof params.scaleToFit === 'boolean' ? params.scaleToFit : true
-    this.leftTextWidth = params.leftTextWidth || 80
-
-    this.donors = params.donors || []
-    this.genes = params.genes || []
-    this.types = []
-
-    this.observations = this.observations ?? []
-    this.types.push('mutation')
-
-    this.wrapper = d3.select(params.wrapper || 'body')
-
-    this.colorMap = params.colorMap || {
-      'missense_variant': '#ff9b6c',
-      'frameshift_variant': '#57dba4',
-      'stop_gained': '#af57db',
-      'start_lost': '#ff2323',
-      'stop_lost': '#d3ec00',
-      'initiator_codon_variant': '#5abaff',
+  private loadParams({
+    scaleToFit,
+    leftTextWidth,
+    donors,
+    genes,
+    wrapper,
+    colorMap,
+    width,
+    height,
+    margin,
+    heatMap,
+    heatMapColor,
+    grid,
+  }: MainGridParams) {
+    if (scaleToFit !== undefined) {
+      this.scaleToFit = scaleToFit
     }
-
+    if (scaleToFit !== undefined) {
+      this.leftTextWidth = leftTextWidth!
+    }
+    if (donors !== undefined) {
+      this.donors = donors
+    }
+    if (genes !== undefined) {
+      this.genes = genes
+    }
+    this.wrapper = d3.select(wrapper || 'body')
+    if (colorMap !== undefined) {
+      this.colorMap = colorMap
+    }
     this.numDonors = this.donors.length
     this.numGenes = this.genes.length
     this.numTypes = this.types.length
 
-    this.width = params.width || 500
-    this.height = params.height || 500
-    this.inputWidth = params.width || 500
-    this.inputHeight = params.height || 500
+    if (width !== undefined) {
+      this.width = width
+      this.inputWidth = width
+    }
+    if (height !== undefined) {
+      this.height = height
+      this.inputHeight = height
+    }
 
     this.cellWidth = this.width / this.donors.length
-
     this.cellHeight = this.height / this.numGenes
 
     if (this.cellHeight < this.storage.minCellHeight) {
       this.cellHeight = this.storage.minCellHeight
-      params.height = this.numGenes * this.storage.minCellHeight
-      this.height = params.height
+      this.height = this.numGenes * this.storage.minCellHeight
     }
 
-    this.margin = params.margin || {top: 30, right: 100, bottom: 15, left: 80}
-    this.heatMap = params.heatMap ?? false
-
-    this.drawGridLines = params.grid || false
-    this.crosshair = false
-    this.heatMapColor = params.heatMapColor || '#D33682'
+    if (margin !== undefined) {
+      this.margin = margin
+    }
+    if (heatMap !== undefined) {
+      this.heatMap = heatMap
+    }
+    if (grid !== undefined) {
+      this.drawGridLines = grid
+    }
+    if (heatMapColor !== undefined) {
+      this.heatMapColor = heatMapColor
+    }
   }
 
   /**
@@ -193,8 +217,7 @@ class MainGrid extends EventEmitter {
       .style('top', 0)
       .style('left', 0)
 
-    this.container = this.svg
-      .append('g')
+    this.container = this.svg.append('g')
 
     this.background = this.container.append('rect')
       .attr('class', 'background')
@@ -778,7 +801,7 @@ class MainGrid extends EventEmitter {
    * Returns the height of an observation cell.
    * @returns {number}
    */
-  private getHeight(d: any) {
+  private getHeight(d: any): number {
     if (typeof d !== 'undefined') {
       if (!this.heatMap === true && d.type === 'mutation') {
         if (this.cellWidth > this.cellHeight) {

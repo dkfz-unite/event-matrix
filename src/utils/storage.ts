@@ -1,4 +1,5 @@
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
+import { BlockType } from '../interfaces/base.interface'
 
 class Storage {
   private static instance = null
@@ -6,15 +7,15 @@ class Storage {
   private constructor() {
   }
 
-  public minCellHeight: number
-  public prefix: string
+  public minCellHeight = 10
+  public prefix = 'og-'
   public lookupTable: ILookupTable = {}
   public customFunctions = {
-    gene: {
+    [BlockType.Gene]: {
       opacity: (val: any) => 1,
       fill: (val: any) => 'black',
     },
-    donor: {
+    [BlockType.Donor]: {
       opacity: (val: any) => 1,
       fill: (val: any) => 'black',
     },
@@ -24,20 +25,31 @@ class Storage {
     this.lookupTable = lookupTable
   }
 
-  public setOptions(options: EventMatrixParams) {
-    this.minCellHeight = options.minCellHeight ?? 10
-    this.prefix = options.prefix ?? 'og-'
-    if (options.geneFillFunc !== undefined) {
-      this.customFunctions.gene.fill = options.geneFillFunc
+  public setOptions({
+    minCellHeight,
+    prefix,
+    geneFillFunc,
+    geneOpacityFunc,
+    donorFillFunc,
+    donorOpacityFunc,
+}: EventMatrixParams) {
+    if (minCellHeight !== undefined) {
+      this.minCellHeight = minCellHeight
     }
-    if (options.geneOpacityFunc !== undefined) {
-      this.customFunctions.gene.opacity = options.geneOpacityFunc
+    if (prefix !== undefined) {
+      this.prefix = prefix
     }
-    if (options.donorFillFunc !== undefined) {
-      this.customFunctions.donor.fill = options.donorFillFunc
+    if (geneFillFunc !== undefined) {
+      this.customFunctions.gene.fill = geneFillFunc
     }
-    if (options.donorOpacityFunc !== undefined) {
-      this.customFunctions.donor.opacity = options.donorOpacityFunc
+    if (geneOpacityFunc !== undefined) {
+      this.customFunctions.gene.opacity = geneOpacityFunc
+    }
+    if (donorFillFunc !== undefined) {
+      this.customFunctions.donor.fill = donorFillFunc
+    }
+    if (donorOpacityFunc !== undefined) {
+      this.customFunctions.donor.opacity = donorOpacityFunc
     }
   }
 
