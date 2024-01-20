@@ -5,6 +5,7 @@ import {BaseType, SortFn} from '../interfaces/base.interface'
 import {EventMatrixParams, ILookupTable, Observation} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import MainGrid from './MainGrid'
+import {BaseType, SortFn} from '../interfaces/base.interface'
 
 class EventMatrix extends EventEmitter {
   private params: EventMatrixParams
