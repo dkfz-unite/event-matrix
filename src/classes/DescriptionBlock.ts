@@ -13,7 +13,8 @@ class DescriptionBlock extends EventEmitter {
   svg: Selection<any, any, HTMLElement, any>
   rotated: boolean
   domain: any[]
-  width: number
+  width: number = 0
+  height: number = 0
   cellHeight: number
   cellWidth: number
   fields: DescriptionField[]

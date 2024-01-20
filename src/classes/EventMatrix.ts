@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import {ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
+import {BaseType, SortFn} from '../interfaces/base.interface'
 import {EventMatrixParams, ILookupTable, Observation} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import MainGrid from './MainGrid'
@@ -9,18 +10,18 @@ class EventMatrix extends EventEmitter {
   private params: EventMatrixParams
   private width: number
   private height: number
-  private container: any
-  private donors: any[]
-  private genes: any[]
-  private observations: Observation[]
-  private types: string[]
+  private container: d3.Selection<HTMLDivElement, any, HTMLElement, any>
+  private donors: any[] = []
+  private genes: any[] = []
+  private observations: Observation[] = []
+  private types: BaseType[] = []
   private mainGrid: any
-  private heatMapMode: boolean
-  private drawGridLines: boolean
-  private crosshairMode: boolean
-  private charts: any[]
-  private x: ScaleBand<string>
-  private y: ScaleBand<string>
+  private heatMapMode!: boolean
+  private drawGridLines!: boolean
+  private crosshairMode!: boolean
+  private charts: any[] = []
+  private x!: ScaleBand<string>
+  private y!: ScaleBand<string>
   private fullscreen = false
   private storage: Storage = Storage.getInstance()
 
@@ -74,7 +75,7 @@ class EventMatrix extends EventEmitter {
     this.mainGrid.on('resize', () => {
       this.resize(this.width, this.height, this.fullscreen)
     })
-    this.mainGrid.on('update', (donorSort) => {
+    this.mainGrid.on('update', (donorSort: any) => {
       this.update(donorSort)
     })
 
@@ -97,10 +98,10 @@ class EventMatrix extends EventEmitter {
     for (let i = 0; i < this.donors.length; i++) {
       const donor = this.donors[i]
       const donorId = donor.id
-      const positionX = getX(String(i))
+      const positionX = getX(String(i))!
       donor.x = positionX
       this.storage.lookupTable[donorId] = this.storage.lookupTable[donorId] || {}
-      this.storage.lookupTable[donorId].x = positionX
+      this.storage.lookupTable[donorId].x = positionX as any
     }
 
     for (let i = 0; i < this.genes.length; i++) {
@@ -116,16 +117,16 @@ class EventMatrix extends EventEmitter {
    */
   private createLookupTable() {
     const lookupTable: ILookupTable = {}
-    this.observations.forEach((obs) => {
-      const donorId = obs.donorId
-      const geneId = obs.geneId
+    this.observations.forEach((observation) => {
+      const donorId = observation.donorId
+      const geneId = observation.geneId
       if (lookupTable[donorId] === undefined) {
         lookupTable[donorId] = {}
       }
       if (lookupTable[donorId][geneId] === undefined) {
         lookupTable[donorId][geneId] = []
       }
-      lookupTable[donorId][geneId].push(obs.id)
+      lookupTable[donorId][geneId].push(observation.id)
     })
     this.storage.setLookupTable(lookupTable)
   }
@@ -160,7 +161,7 @@ class EventMatrix extends EventEmitter {
   /**
    * Triggers a resize of OncoGrid to desired width and height.
    */
-  public resize(width, height, fullscreen) {
+  public resize(width: number, height: number, fullscreen: boolean) {
     this.fullscreen = fullscreen
     this.mainGrid.fullscreen = fullscreen
     this.width = Number(width)
@@ -198,7 +199,7 @@ class EventMatrix extends EventEmitter {
     this.update(false)
   }
 
-  public removeDonors(func) {
+  public removeDonors(func: any) {
     const removedList = []
     // Remove donors from data
     for (let i = 0; i < this.donors.length; i++) {
@@ -227,7 +228,7 @@ class EventMatrix extends EventEmitter {
    * Removes genes and updates OncoGrid rendering.
    * @param func function describing the criteria for removing a gene.
    */
-  public removeGenes(func) {
+  public removeGenes(func: any) {
     const removedList = []
     // Remove genes from data
     for (let i = 0; i < this.genes.length; i++) {
@@ -248,7 +249,7 @@ class EventMatrix extends EventEmitter {
    * Sorts donors
    * @param func a comparator function.
    */
-  public sortDonors(func) {
+  public sortDonors(func: SortFn) {
     this.donors.sort(func)
     this.update(false)
   }
@@ -257,7 +258,7 @@ class EventMatrix extends EventEmitter {
    * Sorts genes
    * @param func a comparator function.
    */
-  public sortGenes(func) {
+  public sortGenes(func: SortFn) {
     this.computeScores()
     this.sortByScores()
     this.genes.sort(func)
@@ -267,7 +268,7 @@ class EventMatrix extends EventEmitter {
   /**
    * set oncogrid between heatmap mode and regular mode showing individual consequence types.
    */
-  public setHeatmap(active) {
+  public setHeatmap(active: boolean) {
     this.heatMapMode = active
     this.mainGrid.setHeatmap(active)
   }
@@ -279,7 +280,7 @@ class EventMatrix extends EventEmitter {
     this.setHeatmap(!this.heatMapMode)
   }
 
-  public setGridLines(active) {
+  public setGridLines(active: boolean) {
     this.drawGridLines = active
     this.mainGrid.setGridLines(active)
   }
@@ -288,7 +289,7 @@ class EventMatrix extends EventEmitter {
     this.setGridLines(!this.drawGridLines)
   }
 
-  public setCrosshair(active) {
+  public setCrosshair(active: boolean) {
     this.crosshairMode = active
     this.mainGrid.setCrosshair(active)
   }
@@ -300,7 +301,7 @@ class EventMatrix extends EventEmitter {
   /**
    * Returns 1 if at least one mutation, 0 otherwise.
    */
-  private mutationScore(donor, gene) {
+  private mutationScore(donor: any, gene: any) {
     if (this.storage.lookupTable?.[donor]?.[gene] !== undefined) {
       return 1
     } else {
@@ -311,7 +312,7 @@ class EventMatrix extends EventEmitter {
   /**
    * Returns # of mutations a gene has as it's score
    */
-  private mutationGeneScore(donor, gene) {
+  private mutationGeneScore(donor: any, gene: any) {
     if (this.storage.lookupTable?.[donor]?.[gene] !== undefined) {
       // genes are in nested arrays in the lookup table, need to flatten to get the correct count
       const totalGenes = this.storage.lookupTable[donor][gene]
@@ -377,7 +378,7 @@ class EventMatrix extends EventEmitter {
   /**
    * Comparator for scores
    */
-  private sortScore(a, b) {
+  private sortScore(a: any, b: any): 1 | -1 {
     if (a.score < b.score) {
       return 1
     } else if (a.score > b.score) {
