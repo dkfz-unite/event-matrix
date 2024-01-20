@@ -1,5 +1,7 @@
 import * as d3 from 'd3'
+import {BaseType, ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
+import {BlockType} from '../interfaces/base.interface'
 import {
   Domain,
   IDescriptionFieldsGroupParams,
@@ -8,7 +10,6 @@ import {
 } from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import DescriptionField from './DescriptionField'
-import { BlockType } from '../interfaces/base.interface'
 
 class DescriptionFieldsGroup extends EventEmitter {
   public container!: d3.Selection<SVGGElement, any, HTMLElement, any>
@@ -36,6 +37,7 @@ class DescriptionFieldsGroup extends EventEmitter {
   private row: any
   private blockType: BlockType
   private storage: Storage = Storage.getInstance()
+  private y: ScaleBand<string>
 
   constructor(
     params: IDescriptionFieldsGroupParams,
@@ -140,7 +142,7 @@ class DescriptionFieldsGroup extends EventEmitter {
       .attr('y', -11)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
-      .attr('class', this.storage.prefix + 'track-group-label')
+      .attr('class', `${this.storage.prefix}track-group-label`)
       .text(this.name)
 
     this.legendObject = this.container.append('svg:foreignObject')
@@ -220,7 +222,7 @@ class DescriptionFieldsGroup extends EventEmitter {
 
     const {width} = this.getFieldsGroupDimensions()
 
-    this.container.selectAll('.' + this.storage.prefix + 'track-data')
+    this.container.selectAll(`.${this.storage.prefix}track-data`)
       .data(this.fieldsData)
       .attr('x', (d) => {
         const domain = this.domain[d.domainIndex]
@@ -253,9 +255,11 @@ class DescriptionFieldsGroup extends EventEmitter {
   computeCoordinates() {
     const {height: cellHeight, length} = this.getFieldsGroupDimensions()
 
-    this.y = d3.scale.ordinal()
-      .domain(d3.range(length))
-      .rangeBands([0, this.height])
+    // Изменение на scaleBand
+    this.y = d3.scaleBand()
+      .domain(d3.range(length).map(String))
+      .range([0, this.height])
+      .padding(0.1) // Добавлен padding, его значение можно скорректировать
 
     // append columns
     if (this.column) {
@@ -263,13 +267,13 @@ class DescriptionFieldsGroup extends EventEmitter {
     }
 
     if (this.drawGridLines) {
-      this.column = this.container.selectAll('.' + this.storage.prefix + 'column')
+      this.column = this.container.selectAll(`.${this.storage.prefix}column`)
         .data(this.domain)
         .enter()
         .append('line')
-        .attr('class', this.storage.prefix + 'column')
+        .attr('class', `${this.storage.prefix}column`)
         .attr('donor', (d) => d.id)
-        .attr('transform', (d, i) => 'translate(' + (this.rotated ? d.y : d.x) + ')rotate(-90)')
+        .attr('transform', (d, i) => `translate(${this.rotated ? d.y : d.x})rotate(-90)`)
         .style('pointer-events', 'none')
         .attr('x1', -this.height)
     }
@@ -279,11 +283,11 @@ class DescriptionFieldsGroup extends EventEmitter {
       this.row.remove()
     }
 
-    this.row = this.container.selectAll('.' + this.storage.prefix + 'row')
+    this.row = this.container.selectAll(`.${this.storage.prefix}row`)
       .data(this.fields)
       .enter().append('g')
-      .attr('class', this.storage.prefix + 'row')
-      .attr('transform', (d, i) => 'translate(0,' + this.y(i) + ')')
+      .attr('class', `${this.storage.prefix}row`)
+      .attr('transform', (d, i) => `translate(0,${this.y(String(i))})`)
 
     if (this.drawGridLines) {
       this.row.append('line')
@@ -293,7 +297,7 @@ class DescriptionFieldsGroup extends EventEmitter {
 
     const labels = this.row.append('text')
 
-    labels.attr('class', this.storage.prefix + 'track-label ' + this.storage.prefix + 'label-text-font')
+    labels.attr('class', `${this.storage.prefix}track-label ${this.storage.prefix}label-text-font`)
       .on('click', (d) => {
         this.domain.sort(d.sort(d.fieldName))
         this.emit('update', false)
@@ -303,9 +307,7 @@ class DescriptionFieldsGroup extends EventEmitter {
       .attr('y', cellHeight / 2)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
-      .text((d, i) => {
-        return this.fields[i].name
-      })
+      .text((d, i) => this.fields[i].name)
 
     if (this.expandable) {
       setTimeout(() => {
@@ -332,13 +334,13 @@ class DescriptionFieldsGroup extends EventEmitter {
     }
 
     // append or remove add field button
-    let addButton = this.container.selectAll('.' + this.storage.prefix + 'add-track')
+    let addButton = this.container.selectAll(`.${this.storage.prefix}add-track`)
 
     if (this.collapsedFields.length && this.expandable) {
       if (addButton.empty()) {
         addButton = this.container.append('text')
           .text('+')
-          .attr('class', '' + this.storage.prefix + 'add-track')
+          .attr('class', `${this.storage.prefix}add-track`)
           .attr('x', -6)
           .attr('dy', '.32em')
           .attr('text-anchor', 'end')
@@ -347,10 +349,10 @@ class DescriptionFieldsGroup extends EventEmitter {
               hiddenTracks: this.collapsedFields.slice(),
               addTrack: this.addDescriptionFields.bind(this),
             })
-          })
+          }) as d3.Selection<BaseType, any, SVGGElement, any>
       }
 
-      addButton.attr('y', (cellHeight / 2) + (length && cellHeight + this.y(length - 1)))
+      addButton.attr('y', (cellHeight / 2) + (length && cellHeight + this.y((length - 1).toString())))
     } else {
       addButton.remove()
     }
@@ -406,11 +408,11 @@ class DescriptionFieldsGroup extends EventEmitter {
         const domain = this.domain[d.domainIndex]
         return this.rotated ? domain.y : domain.x
       })
-      .attr('y', (d) => this.y(yIndexLookup[d.fieldName]))
+      .attr('y', (d) => this.y(yIndexLookup[d.fieldName]) ?? 0)
       .attr('width', width)
       .attr('height', height)
-      .attr('fill', this.storage.customFunctions[this.blockType]?.fill)
-      .attr('opacity', this.storage.customFunctions[this.blockType]?.opacity)
+      .attr('fill', this.storage.customFunctions[this.blockType].fill)
+      .attr('opacity', this.storage.customFunctions[this.blockType].opacity)
       .attr('class', (d) => {
         return [
           `${this.storage.prefix}track-data`,

@@ -1,10 +1,10 @@
 import {Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
+import {BlockType} from '../interfaces/base.interface'
 import {IDescriptionBlockParams, IDescriptionFieldsGroupParams} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import DescriptionField from './DescriptionField'
 import DescriptionFieldsGroup from './DescriptionFieldsGroup'
-import {BlockType} from '../interfaces/base.interface'
 
 class DescriptionBlock extends EventEmitter {
   params: IDescriptionBlockParams
@@ -85,7 +85,7 @@ class DescriptionBlock extends EventEmitter {
   parseGroups(): void {
     this.fields.forEach((descriptionField) => {
       const fieldsGroupName = descriptionField.group
-      if (this.groupMap[fieldsGroupName] !== undefined) {
+      if (this.groupMap[fieldsGroupName] === undefined) {
         const fieldsGroup = new DescriptionFieldsGroup(
           this.getDescriptionFieldsGroupParams(this.isGroupExpandable(fieldsGroupName)),
           this.blockType,
