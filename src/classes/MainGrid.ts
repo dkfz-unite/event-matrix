@@ -172,7 +172,10 @@ class MainGrid extends EventEmitter {
       this.genes = genes
     }
     if (observations !== undefined) {
-      this.observations = observations
+      this.observations = observations.map((obs) => ({
+        ...obs,
+        type: obs.type ?? 'mutation',
+      }))
     }
     this.wrapper = d3.select(wrapper || 'body')
     if (colorMap !== undefined) {
@@ -751,7 +754,7 @@ class MainGrid extends EventEmitter {
   private getY(d: any) {
     const y = this.geneMap[d.geneId].y
 
-    if (!this.heatMap && d.type === 'mutation') {
+    if (!this.heatMap) {
       const yPosition = y + this.cellHeight / 2
       if (yPosition < 0) {
         return 0
@@ -765,8 +768,6 @@ class MainGrid extends EventEmitter {
    * Function that determines the x position of a mutation
    */
   private getCellX(d: any) {
-    console.log(d.type)
-    console.log(this.storage.lookupTable)
     const x = this.storage.lookupTable[d.donorId].x
 
     if (!this.heatMap) {
@@ -784,7 +785,7 @@ class MainGrid extends EventEmitter {
     if (this.heatMap === true) {
       return this.heatMapColor
     } else {
-      return this.colorMap[d.type][colorKey]
+      return this.colorMap[colorKey]
     }
   }
 
