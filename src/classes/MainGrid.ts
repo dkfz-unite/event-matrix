@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
-import { D3DragEvent, ScaleBand, Selection } from 'd3'
+import {D3DragEvent, ScaleBand, Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
+import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
 import {
   HistogramParams,
   IDescriptionBlockParams,
@@ -8,18 +9,24 @@ import {
   MainGridParams
 } from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
-import { parseTransform } from '../utils/utils'
+import {parseTransform} from '../utils/utils'
 import DescriptionBlock from './DescriptionBlock'
 
 import Histogram from './Histogram'
-import { BaseType, BlockType, ColorMap, CssMarginProps } from '../interfaces/base.interface'
+
+interface IObservation {
+  id: string,
+  code?: string,
+  consequence?: string,
+  impact?: string
+  donorId: string
+  geneId: string
+}
 
 class MainGrid extends EventEmitter {
   private params: MainGridParams
   private x: ScaleBand<string>
   private y: ScaleBand<string>
-  private lookupTable: any
-  private histogramHeight: any
   private donorDescriptionBlock: DescriptionBlock
   private geneHistogram: Histogram
   private donorHistogram: Histogram
@@ -29,7 +36,7 @@ class MainGrid extends EventEmitter {
   private donors: any[] = []
   private genes: any[] = []
   private types: BaseType[] = [BaseType.Mutation]
-  private observations: any[] = []
+  private observations: IObservation[] = []
   private wrapper!: Selection<HTMLElement, any, HTMLElement, any>
   private svg!: Selection<SVGSVGElement, any, HTMLElement, any>
   private container!: Selection<SVGGElement, any, HTMLElement, any>
@@ -43,16 +50,13 @@ class MainGrid extends EventEmitter {
     'stop_lost': '#d3ec00',
     'initiator_codon_variant': '#5abaff',
   }
-  private numDonors!: number
-  private numGenes!: number
-  private numTypes!: number
   private width = 500
   private height = 500
   private inputWidth = 500
   private inputHeight = 500
   private cellWidth!: number
   private cellHeight!: number
-  private margin: CssMarginProps = { top: 30, right: 100, bottom: 15, left: 80 }
+  private margin: CssMarginProps = {top: 30, right: 100, bottom: 15, left: 80}
   private heatMap = false
   private drawGridLines = false
   private crosshair = false
@@ -98,7 +102,7 @@ class MainGrid extends EventEmitter {
         this.container,
         true,
         params.geneTracks ?? [],
-        this.width + (this.histogramHeight * this.numTypes)
+        this.width + (this.donorHistogram.getHistogramHeight() * this.types.length)
       )
     this.geneDescriptionBlock.on('resize', this.emit)
     this.geneDescriptionBlock.on('update', this.emit)
@@ -141,24 +145,25 @@ class MainGrid extends EventEmitter {
    * @param params
    */
   private loadParams({
-    scaleToFit,
-    leftTextWidth,
-    donors,
-    genes,
-    wrapper,
-    colorMap,
-    width,
-    height,
-    margin,
-    heatMap,
-    heatMapColor,
-    grid,
-  }: MainGridParams) {
+                       scaleToFit,
+                       leftTextWidth,
+                       donors,
+                       genes,
+                       wrapper,
+                       colorMap,
+                       width,
+                       height,
+                       margin,
+                       heatMap,
+                       heatMapColor,
+                       grid,
+                       observations,
+                     }: MainGridParams) {
     if (scaleToFit !== undefined) {
       this.scaleToFit = scaleToFit
     }
-    if (scaleToFit !== undefined) {
-      this.leftTextWidth = leftTextWidth!
+    if (leftTextWidth !== undefined) {
+      this.leftTextWidth = leftTextWidth
     }
     if (donors !== undefined) {
       this.donors = donors
@@ -166,13 +171,13 @@ class MainGrid extends EventEmitter {
     if (genes !== undefined) {
       this.genes = genes
     }
+    if (observations !== undefined) {
+      this.observations = observations
+    }
     this.wrapper = d3.select(wrapper || 'body')
     if (colorMap !== undefined) {
       this.colorMap = colorMap
     }
-    this.numDonors = this.donors.length
-    this.numGenes = this.genes.length
-    this.numTypes = this.types.length
 
     if (width !== undefined) {
       this.width = width
@@ -184,11 +189,11 @@ class MainGrid extends EventEmitter {
     }
 
     this.cellWidth = this.width / this.donors.length
-    this.cellHeight = this.height / this.numGenes
+    this.cellHeight = this.height / this.genes.length
 
     if (this.cellHeight < this.storage.minCellHeight) {
       this.cellHeight = this.storage.minCellHeight
-      this.height = this.numGenes * this.storage.minCellHeight
+      this.height = this.genes.length * this.storage.minCellHeight
     }
 
     if (margin !== undefined) {
@@ -213,14 +218,14 @@ class MainGrid extends EventEmitter {
       .attr('class', `${this.storage.prefix}maingrid-svg`)
       .attr('id', `${this.storage.prefix}maingrid-svg`)
       .attr('width', '100%')
-      .style('position', 'absolute')
-      .style('top', 0)
-      .style('left', 0)
+    // .style('position', 'absolute')
+    // .style('top', 0)
+    // .style('left', 0)
 
     this.container = this.svg.append('g')
 
     this.background = this.container.append('rect')
-      .attr('class', 'background')
+      .attr('class', `${this.storage.prefix}background`)
       .attr('width', this.width)
       .attr('height', this.height)
 
@@ -290,8 +295,8 @@ class MainGrid extends EventEmitter {
       .attr('cons', (d: any) => {
         return this.getValueByType(d)
       })
-      .attr('d', (d: any) => {
-        if (d.type === 'cnv' || this.heatMap) {
+      .attr('d', (d: IObservation) => {
+        if (this.heatMap) {
           return this.getRectangularPath(d)
         }
         return this.getCircularPath(d)
@@ -305,6 +310,7 @@ class MainGrid extends EventEmitter {
 
     this.emit('render:mainGrid:end')
 
+    console.log(this.observations)
     if (this.observations.length) {
       this.emit('render:donorHistogram:start')
       this.donorHistogram.render()
@@ -337,22 +343,13 @@ class MainGrid extends EventEmitter {
     this.x = x
     this.y = y
 
-    // Recalculate positions and dimensions of cells only on change in number of elements
-    if (this.numDonors !== this.donors.length || this.numGenes !== this.genes.length) {
-      this.numDonors = this.donors.length
-      this.numGenes = this.genes.length
-      this.cellWidth = this.width / this.donors.length
-      this.cellHeight = this.height / this.genes.length
-      this.computeCoordinates()
-    } else {
-      this.row.selectAll('text').attr('style', () => {
-        if (this.cellHeight < this.storage.minCellHeight) {
-          return 'display: none;'
-        } else {
-          return ''
-        }
-      })
-    }
+    this.row.selectAll('text').attr('style', () => {
+      if (this.cellHeight < this.storage.minCellHeight) {
+        return 'display: none;'
+      } else {
+        return ''
+      }
+    })
 
     this.row
       .transition()
@@ -360,12 +357,12 @@ class MainGrid extends EventEmitter {
         return 'translate( 0, ' + d.y + ')'
       })
 
-    for (let i = 0; i < this.numTypes; i++) {
+    for (let i = 0; i < this.types.length; i++) {
       this.container
         .selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
         .transition()
         .attr('d', (d: any) => {
-          if (d.type === 'cnv' || this.heatMap) {
+          if (this.heatMap) {
             return this.getRectangularPath(d)
           }
           return this.getCircularPath(d)
@@ -394,6 +391,7 @@ class MainGrid extends EventEmitter {
         .append('line')
         .attr('x1', (d: any) => d.x)
         .attr('x2', (d: any) => d.x)
+        .attr('y1', 0)
         .attr('y2', this.height)
         .attr('class', `${this.storage.prefix}donor-column`)
         .style('pointer-events', 'none')
@@ -467,20 +465,21 @@ class MainGrid extends EventEmitter {
       this.donorHistogram.resize(width, this.height)
       this.geneHistogram.resize(width, this.height)
     }
-
+    const histogramHeight = this.donorHistogram.getHistogramHeight()
     this.donorDescriptionBlock.resize(width, this.height, this.height)
-    this.geneDescriptionBlock.resize(width, this.height, this.width + this.histogramHeight + 120)
+    this.geneDescriptionBlock.resize(width, this.height, this.width + histogramHeight + 120)
 
     this.resizeSvg()
     this.update(this.x, this.y)
 
     this.verticalCross.attr('y2', this.height + this.donorDescriptionBlock.height)
-    this.horizontalCross.attr('x2', this.width + (this.histogramHeight * this.numTypes) + this.geneDescriptionBlock.height)
+    this.horizontalCross.attr('x2', this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height)
   }
 
   private resizeSvg() {
-    const width = this.margin.left + this.leftTextWidth + this.width + (this.histogramHeight * this.numTypes) + this.geneDescriptionBlock.height + this.margin.right
-    const height = this.margin.top + (this.histogramHeight * this.numTypes) + this.height + this.donorDescriptionBlock.height + this.margin.bottom
+    const histogramHeight = this.donorHistogram.getHistogramHeight()
+    const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height + this.margin.right
+    const height = this.margin.top + (histogramHeight * this.types.length) + this.height + this.donorDescriptionBlock.height + this.margin.bottom
 
     this.svg
       .attr('width', width).attr('height', height)
@@ -488,7 +487,7 @@ class MainGrid extends EventEmitter {
     this.container
       .attr('transform', 'translate(' +
         (this.margin.left + this.leftTextWidth) + ',' +
-        (this.margin.top + (this.histogramHeight * this.numTypes)) +
+        (this.margin.top + (histogramHeight * this.types.length)) +
         ')')
   }
 
@@ -523,9 +522,11 @@ class MainGrid extends EventEmitter {
       }
     }
 
+    const histogramHeight = this.donorHistogram.getHistogramHeight()
+
     this.verticalCross = this.container.append('line')
       .attr('class', `${this.storage.prefix}vertical-cross`)
-      .attr('y1', -this.histogramHeight)
+      .attr('y1', -histogramHeight)
       .attr('y2', this.height + this.donorDescriptionBlock.height)
       .attr('opacity', 0)
       .attr('style', 'pointer-events: none')
@@ -533,7 +534,7 @@ class MainGrid extends EventEmitter {
     this.horizontalCross = this.container.append('line')
       .attr('class', `${this.storage.prefix}horizontal-cross`)
       .attr('x1', 0)
-      .attr('x2', this.width + this.histogramHeight + this.geneDescriptionBlock.height)
+      .attr('x2', this.width + histogramHeight + this.geneDescriptionBlock.height)
       .attr('opacity', 0)
       .attr('style', 'pointer-events: none')
 
@@ -684,7 +685,7 @@ class MainGrid extends EventEmitter {
    */
   private defineRowDragBehaviour() {
     const drag = d3.drag()
-      .on('dragstart', (event: D3DragEvent<any, any, any>) => {
+      .on('start', (event: D3DragEvent<any, any, any>) => {
         event.sourceEvent.stopPropagation()
       })
       .on('drag', (event: D3DragEvent<any, any, any>) => {
@@ -697,17 +698,16 @@ class MainGrid extends EventEmitter {
           return `translate( 0, ${translate[1] + trans})`
         })
       })
+      .on('end', (event: D3DragEvent<any, any, any>) => {
+        const coord = d3.pointer(event, this.container.node())
+        const dragged = this.genes.indexOf(d)
+        const yIndex = this.rangeToDomain(this.y, coord[1])
 
-    drag.on('dragend', (event: D3DragEvent<any, any, any>) => {
-      const coord = d3.pointer(event, this.container.node())
-      const dragged = this.genes.indexOf(d)
-      const yIndex = this.rangeToDomain(this.y, coord[1])
+        this.genes.splice(dragged, 1)
+        this.genes.splice(parseInt(yIndex), 0, d)
 
-      this.genes.splice(dragged, 1)
-      this.genes.splice(parseInt(yIndex), 0, d)
-
-      this.emit('update', true)
-    })
+        this.emit('update', true)
+      })
 
     const dragSelection = this.row.call(drag)
     dragSelection.on('click', (event: IEnhancedEvent) => {
@@ -742,6 +742,7 @@ class MainGrid extends EventEmitter {
       geneMap[gene.id] = gene
     }
     this.geneMap = geneMap
+    console.log(this.geneMap)
   }
 
   /**
@@ -761,12 +762,14 @@ class MainGrid extends EventEmitter {
   }
 
   /**
-   * Function that determines the x position of a mutation or cnv within a cell
+   * Function that determines the x position of a mutation
    */
   private getCellX(d: any) {
-    const x = this.storage.lookupTable[d.type][d.donorId].x
+    console.log(d.type)
+    console.log(this.storage.lookupTable)
+    const x = this.storage.lookupTable[d.donorId].x
 
-    if (!this.heatMap && d.type === 'mutation') {
+    if (!this.heatMap) {
       return x + (this.cellWidth / 4)
     }
     return x
@@ -777,7 +780,7 @@ class MainGrid extends EventEmitter {
    * @param d observation.
    */
   private getColor(d: any) {
-    const colorKey = d.type === 'cnv' ? d.cnvChange : d.consequence
+    const colorKey = d.consequence
     if (this.heatMap === true) {
       return this.heatMapColor
     } else {
@@ -803,7 +806,7 @@ class MainGrid extends EventEmitter {
    */
   private getHeight(d: any): number {
     if (typeof d !== 'undefined') {
-      if (!this.heatMap === true && d.type === 'mutation') {
+      if (!this.heatMap === true) {
         if (this.cellWidth > this.cellHeight) {
           return this.cellHeight / 2
         }
@@ -816,8 +819,8 @@ class MainGrid extends EventEmitter {
     }
   }
 
-  private getCellWidth(d: any) {
-    if (this.heatMap || d.type === 'cnv') {
+  private getCellWidth(d: IObservation) {
+    if (this.heatMap) {
       return this.cellWidth
     }
     if (this.cellWidth > this.cellHeight) {
@@ -830,16 +833,13 @@ class MainGrid extends EventEmitter {
    * Returns the correct observation value based on the data type.
    */
   private getValueByType(d: any) {
-    if (d.type === 'cnv') {
-      return d.cnvChange
-    }
     return d.consequence
   }
 
   /**
    * Returns circular path based on cell dimensions
    */
-  private getCircularPath(d: any) {
+  private getCircularPath(d: IObservation) {
     const x1 = this.getCellX(d)
     const y1 = this.getY(d)
     return 'M ' + (x1 + this.cellWidth / 4) + ', ' + y1 + ' m ' + (-1 * this.getCellWidth(d)) + ', 0 ' + 'a ' + this.getCellWidth(d) + ', ' + this.getCellWidth(d) + ' 0 1,0 ' + (2 * this.getCellWidth(d)) + ',0 a ' + this.getCellWidth(d) + ',' + this.getCellWidth(d) + ' 0 1,0 ' + (-1 * (2 * this.getCellWidth(d))) + ',0'
@@ -848,7 +848,7 @@ class MainGrid extends EventEmitter {
   /**
    * Returns rectangular path based on cell dimensions
    */
-  private getRectangularPath(d: any) {
+  private getRectangularPath(d: IObservation) {
     const x1 = this.getCellX(d)
     const y1 = this.getY(d)
     return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(d)) + ' H ' + x1 + 'Z'
@@ -861,11 +861,11 @@ class MainGrid extends EventEmitter {
     if (active === this.heatMap) return this.heatMap
     this.heatMap = active
 
-    for (let i = 0; i < this.numTypes; i++) {
-      d3.selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
+    for (const type of this.types) {
+      d3.selectAll(`.${this.storage.prefix}sortable-rect-${type}`)
         .transition()
         .attr('d', (d: any) => {
-          if (d.type === 'cnv' || this.heatMap) {
+          if (this.heatMap) {
             return this.getRectangularPath(d)
           }
           return this.getCircularPath(d)

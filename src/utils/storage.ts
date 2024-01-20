@@ -1,5 +1,5 @@
+import {BlockType} from '../interfaces/base.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
-import { BlockType } from '../interfaces/base.interface'
 
 class Storage {
   private static instance = null
@@ -26,13 +26,13 @@ class Storage {
   }
 
   public setOptions({
-    minCellHeight,
-    prefix,
-    geneFillFunc,
-    geneOpacityFunc,
-    donorFillFunc,
-    donorOpacityFunc,
-}: EventMatrixParams) {
+                      minCellHeight,
+                      prefix,
+                      geneFillFunc,
+                      geneOpacityFunc,
+                      donorFillFunc,
+                      donorOpacityFunc,
+                    }: EventMatrixParams) {
     if (minCellHeight !== undefined) {
       this.minCellHeight = minCellHeight
     }
@@ -54,7 +54,10 @@ class Storage {
   }
 
   public static getInstance(): Storage {
-    return this.instance === null ? new this() : this.instance
+    if (this.instance === null) {
+      this.instance = new this()
+    }
+    return this.instance
   }
 }
 

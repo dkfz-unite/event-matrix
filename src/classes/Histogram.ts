@@ -1,8 +1,8 @@
 import * as d3 from 'd3'
+import {Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {Domain, HistogramParams} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
-import { Selection } from 'd3'
 
 class Histogram extends EventEmitter {
   private lineWidthOffset: number
@@ -21,7 +21,7 @@ class Histogram extends EventEmitter {
   private width: number
   private height: number
   private histogramWidth: number
-  private histogramHeight: number
+  private histogramHeight = 80
   private numDomain: number
   private barWidth: number
   private totalHeight: number
@@ -49,11 +49,14 @@ class Histogram extends EventEmitter {
     this.width = params.width || 500
     this.height = params.height || 500
     this.histogramWidth = this.rotated ? this.height : this.width
-    this.histogramHeight = 80
     this.numDomain = this.domain.length
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
     this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding
     this.wrapper = d3.select<Element, unknown>(params.wrapper || 'body')
+  }
+
+  public getHistogramHeight() {
+    return this.histogramHeight
   }
 
   public render(): void {

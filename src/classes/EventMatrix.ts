@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import {ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
+import {BaseType, SortFn} from '../interfaces/base.interface'
 import {EventMatrixParams, ILookupTable, Observation} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import MainGrid from './MainGrid'
