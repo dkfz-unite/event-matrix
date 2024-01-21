@@ -1,4 +1,5 @@
 import {BlockType} from '../interfaces/base.interface'
+import {IDonor, IGene, IObservation} from '../interfaces/bioinformatics.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
 
 class Storage {
@@ -10,6 +11,9 @@ class Storage {
   public minCellHeight = 10
   public prefix = 'og-'
   public lookupTable: ILookupTable = {}
+  public genes: IGene[] = []
+  public donors: IDonor[] = []
+  public observations: IObservation[] = []
   public customFunctions = {
     [BlockType.Gene]: {
       opacity: (val: any) => 1,
@@ -26,18 +30,33 @@ class Storage {
   }
 
   public setOptions({
-                      minCellHeight,
-                      prefix,
-                      geneFillFunc,
-                      geneOpacityFunc,
-                      donorFillFunc,
-                      donorOpacityFunc,
-                    }: EventMatrixParams) {
+    minCellHeight,
+    prefix,
+    genes,
+    donors,
+    observations,
+    geneFillFunc,
+    geneOpacityFunc,
+    donorFillFunc,
+    donorOpacityFunc,
+  }: EventMatrixParams) {
     if (minCellHeight !== undefined) {
       this.minCellHeight = minCellHeight
     }
     if (prefix !== undefined) {
       this.prefix = prefix
+    }
+    if (genes !== undefined) {
+      this.genes = genes
+    }
+    if (donors !== undefined) {
+      this.donors = donors
+    }
+    if (observations !== undefined) {
+      this.observations = observations.map((obs) => ({
+        ...obs,
+        type: obs.type ?? 'mutation',
+      }))
     }
     if (geneFillFunc !== undefined) {
       this.customFunctions.gene.fill = geneFillFunc
