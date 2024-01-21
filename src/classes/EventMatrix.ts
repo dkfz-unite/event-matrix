@@ -2,19 +2,15 @@ import * as d3 from 'd3'
 import {ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {BaseType, SortFn} from '../interfaces/base.interface'
-import {EventMatrixParams, ILookupTable, Observation} from '../interfaces/main-grid.interface'
+import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import MainGrid from './MainGrid'
-import {BaseType, SortFn} from '../interfaces/base.interface'
 
 class EventMatrix extends EventEmitter {
   private params: EventMatrixParams
   private width: number
   private height: number
   private container: d3.Selection<HTMLDivElement, any, HTMLElement, any>
-  private donors: any[] = []
-  private genes: any[] = []
-  private observations: Observation[] = []
   private types: BaseType[] = []
   private mainGrid: any
   private heatMapMode!: boolean
@@ -55,9 +51,6 @@ class EventMatrix extends EventEmitter {
    * Instantiate charts
    */
   private initCharts(reloading?: boolean) {
-    this.donors = this.params.donors || []
-    this.genes = this.params.genes || []
-    this.observations = this.params.observations || []
     this.types = []
 
     this.createLookupTable()
@@ -89,15 +82,15 @@ class EventMatrix extends EventEmitter {
 
   private calculatePositions() {
     const getX = d3.scaleBand()
-      .domain(d3.range(this.donors.length).map(String))
+      .domain(d3.range(this.storage.donors.length).map(String))
       .range([0, this.width])
 
     const getY = d3.scaleBand()
-      .domain(d3.range(this.genes.length).map(String))
+      .domain(d3.range(this.storage.genes.length).map(String))
       .range([0, this.height])
 
-    for (let i = 0; i < this.donors.length; i++) {
-      const donor = this.donors[i]
+    for (let i = 0; i < this.storage.donors.length; i++) {
+      const donor = this.storage.donors[i]
       const donorId = donor.id
       const positionX = getX(String(i))!
       donor.x = positionX
@@ -105,8 +98,8 @@ class EventMatrix extends EventEmitter {
       this.storage.lookupTable[donorId].x = positionX as any
     }
 
-    for (let i = 0; i < this.genes.length; i++) {
-      this.genes[i].y = getY(String(i))
+    for (let i = 0; i < this.storage.genes.length; i++) {
+      this.storage.genes[i].y = getY(String(i))
     }
 
     this.y = getY
@@ -118,7 +111,7 @@ class EventMatrix extends EventEmitter {
    */
   private createLookupTable() {
     const lookupTable: ILookupTable = {}
-    this.observations.forEach((observation) => {
+    this.storage.observations.forEach((observation) => {
       const donorId = observation.donorId
       const geneId = observation.geneId
       if (lookupTable[donorId] === undefined) {
@@ -168,8 +161,8 @@ class EventMatrix extends EventEmitter {
     this.width = Number(width)
     this.height = Number(height)
 
-    if (this.height / this.genes.length < this.storage.minCellHeight) {
-      this.height = this.genes.length * this.storage.minCellHeight
+    if (this.height / this.storage.genes.length < this.storage.minCellHeight) {
+      this.height = this.storage.genes.length * this.storage.minCellHeight
     }
     this.calculatePositions()
     this.charts.forEach((chart) => {
@@ -182,11 +175,11 @@ class EventMatrix extends EventEmitter {
    * Sorts donors by score
    */
   private sortByScores() {
-    this.donors.sort(this.sortScore)
+    this.storage.donors.sort(this.sortScore)
   }
 
   private genesSortbyScores() {
-    this.genes.sort(this.sortScore)
+    this.storage.genes.sort(this.sortScore)
   }
 
   /**
@@ -203,20 +196,20 @@ class EventMatrix extends EventEmitter {
   public removeDonors(func: any) {
     const removedList = []
     // Remove donors from data
-    for (let i = 0; i < this.donors.length; i++) {
-      const donor = this.donors[i]
+    for (let i = 0; i < this.storage.donors.length; i++) {
+      const donor = this.storage.donors[i]
       if (func(donor)) {
         removedList.push(donor.id)
         d3.selectAll(`.${this.storage.prefix}${donor.id}-cell`).remove()
         d3.selectAll(`.${this.storage.prefix}${donor.id}-bar`).remove()
-        this.donors.splice(i, 1)
+        this.storage.donors.splice(i, 1)
         i--
       }
     }
-    for (let j = 0; j < this.observations.length; j++) {
-      const obs = this.observations[j]
-      if (this.donors.includes(obs.id)) {
-        this.observations.splice(j, 1)
+    for (let j = 0; j < this.storage.observations.length; j++) {
+      const obs = this.storage.observations[j]
+      if (this.storage.donors.find((donor) => donor.id === obs.donorId)) {
+        this.storage.observations.splice(j, 1)
         j--
       }
     }
@@ -232,13 +225,13 @@ class EventMatrix extends EventEmitter {
   public removeGenes(func: any) {
     const removedList = []
     // Remove genes from data
-    for (let i = 0; i < this.genes.length; i++) {
-      const gene = this.genes[i]
+    for (let i = 0; i < this.storage.genes.length; i++) {
+      const gene = this.storage.genes[i]
       if (func(gene)) {
         removedList.push(gene.id)
         d3.selectAll(`.${this.storage.prefix}${gene.id}-cell`).remove()
         d3.selectAll(`.${this.storage.prefix}${gene.id}-bar`).remove()
-        this.genes.splice(i, 1)
+        this.storage.genes.splice(i, 1)
         i--
       }
     }
@@ -251,7 +244,7 @@ class EventMatrix extends EventEmitter {
    * @param func a comparator function.
    */
   public sortDonors(func: SortFn) {
-    this.donors.sort(func)
+    this.storage.donors.sort(func)
     this.update(false)
   }
 
@@ -262,7 +255,7 @@ class EventMatrix extends EventEmitter {
   public sortGenes(func: SortFn) {
     this.computeScores()
     this.sortByScores()
-    this.genes.sort(func)
+    this.storage.genes.sort(func)
     this.update(false)
   }
 
@@ -327,11 +320,11 @@ class EventMatrix extends EventEmitter {
    * Computes scores for donor sorting.
    */
   private computeScores() {
-    for (const donor of this.donors) {
+    for (const donor of this.storage.donors) {
       donor.score = 0
-      for (let j = 0; j < this.genes.length; j++) {
-        const gene = this.genes[j]
-        donor.score += (this.mutationScore(donor.id, gene.id) * Math.pow(2, this.genes.length + 1 - j))
+      for (let j = 0; j < this.storage.genes.length; j++) {
+        const gene = this.storage.genes[j]
+        donor.score += (this.mutationScore(donor.id, gene.id) * Math.pow(2, this.storage.genes.length + 1 - j))
       }
     }
   }
@@ -340,9 +333,9 @@ class EventMatrix extends EventEmitter {
    * Computes scores for gene sorting.
    */
   private computeGeneScoresAndCount() {
-    for (const gene of this.genes) {
+    for (const gene of this.storage.genes) {
       gene.score = 0
-      for (const donor of this.donors) {
+      for (const donor of this.storage.donors) {
         gene.score += this.mutationGeneScore(donor.id, gene.id)
       }
       gene.count = gene.score
@@ -353,7 +346,7 @@ class EventMatrix extends EventEmitter {
    * Computes the number of observations for a given donor.
    */
   private computeDonorCounts() {
-    for (const donor of this.donors) {
+    for (const donor of this.storage.donors) {
       const genes = Object.values(this.storage.lookupTable[donor.id] ?? {})
       donor.count = 0
       for (const item of genes) {
@@ -366,9 +359,9 @@ class EventMatrix extends EventEmitter {
    * Computes the number of observations for a given gene.
    */
   private computeGeneCounts() {
-    for (const gene of this.genes) {
+    for (const gene of this.storage.genes) {
       gene.count = 0
-      for (const obs of this.observations) {
+      for (const obs of this.storage.observations) {
         if (gene.id === obs.geneId) {
           gene.count += 1
         }

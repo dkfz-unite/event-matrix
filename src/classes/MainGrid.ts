@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import {D3DragEvent, ScaleBand, Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
+import {IObservation} from '../interfaces/bioinformatics.interface'
 import {
   HistogramParams,
   IDescriptionBlockParams,
@@ -14,15 +15,6 @@ import DescriptionBlock from './DescriptionBlock'
 
 import Histogram from './Histogram'
 
-interface IObservation {
-  id: string,
-  code?: string,
-  consequence?: string,
-  impact?: string
-  donorId: string
-  geneId: string
-}
-
 class MainGrid extends EventEmitter {
   private params: MainGridParams
   private x: ScaleBand<string>
@@ -33,10 +25,7 @@ class MainGrid extends EventEmitter {
   private geneDescriptionBlock: DescriptionBlock
   private scaleToFit = true
   private leftTextWidth = 80
-  private donors: any[] = []
-  private genes: any[] = []
   private types: BaseType[] = [BaseType.Mutation]
-  private observations: IObservation[] = []
   private wrapper!: Selection<HTMLElement, any, HTMLElement, any>
   private svg!: Selection<SVGSVGElement, any, HTMLElement, any>
   private container!: Selection<SVGGElement, any, HTMLElement, any>
@@ -145,37 +134,27 @@ class MainGrid extends EventEmitter {
    * @param params
    */
   private loadParams({
-                       scaleToFit,
-                       leftTextWidth,
-                       donors,
-                       genes,
-                       wrapper,
-                       colorMap,
-                       width,
-                       height,
-                       margin,
-                       heatMap,
-                       heatMapColor,
-                       grid,
-                       observations,
-                     }: MainGridParams) {
+    scaleToFit,
+    leftTextWidth,
+    donors,
+    genes,
+    wrapper,
+    colorMap,
+    width,
+    height,
+    margin,
+    heatMap,
+    heatMapColor,
+    grid,
+    observations,
+  }: MainGridParams) {
     if (scaleToFit !== undefined) {
       this.scaleToFit = scaleToFit
     }
     if (leftTextWidth !== undefined) {
       this.leftTextWidth = leftTextWidth
     }
-    if (donors !== undefined) {
-      this.donors = donors
-    }
-    if (genes !== undefined) {
-      this.genes = genes
-    }
     if (observations !== undefined) {
-      this.observations = observations.map((obs) => ({
-        ...obs,
-        type: obs.type ?? 'mutation',
-      }))
     }
     this.wrapper = d3.select(wrapper || 'body')
     if (colorMap !== undefined) {
@@ -191,12 +170,12 @@ class MainGrid extends EventEmitter {
       this.inputHeight = height
     }
 
-    this.cellWidth = this.width / this.donors.length
-    this.cellHeight = this.height / this.genes.length
+    this.cellWidth = this.width / this.storage.donors.length
+    this.cellHeight = this.height / this.storage.genes.length
 
     if (this.cellHeight < this.storage.minCellHeight) {
       this.cellHeight = this.storage.minCellHeight
-      this.height = this.genes.length * this.storage.minCellHeight
+      this.height = this.storage.genes.length * this.storage.minCellHeight
     }
 
     if (margin !== undefined) {
@@ -254,14 +233,14 @@ class MainGrid extends EventEmitter {
         return
       }
       const obsIds = target.dataset.obsIndex.split(' ')
-      const obs = this.observations.filter((o: any) => {
+      const obs = this.storage.observations.filter((o: any) => {
         return o.donorId === obsIds[0] && o.geneId === obsIds[1]
       })
 
       this.emit('gridMouseOver', {
         observation: obs,
-        donor: this.donors[xIndex],
-        gene: this.genes[yIndex],
+        donor: this.storage.donors[xIndex],
+        gene: this.storage.genes[yIndex],
       })
     })
 
@@ -275,7 +254,7 @@ class MainGrid extends EventEmitter {
         return
       }
 
-      const observation = this.observations.filter((o: any) => {
+      const observation = this.storage.observations.filter((o: any) => {
         return o.donorId === obsIds[0] && o.geneId === obsIds[1]
       })
       if (!observation) {
@@ -286,7 +265,7 @@ class MainGrid extends EventEmitter {
 
     this.container
       .selectAll(`.${this.storage.prefix}maingrid-svg`)
-      .data(this.observations)
+      .data(this.storage.observations)
       .enter()
       .append('path')
       .attr('data-obs-index', (d: any, i: number) => {
@@ -313,8 +292,8 @@ class MainGrid extends EventEmitter {
 
     this.emit('render:mainGrid:end')
 
-    console.log(this.observations)
-    if (this.observations.length) {
+    console.log(this.storage.observations)
+    if (this.storage.observations.length) {
       this.emit('render:donorHistogram:start')
       this.donorHistogram.render()
       this.emit('render:donorHistogram:end')
@@ -372,8 +351,8 @@ class MainGrid extends EventEmitter {
         })
     }
 
-    this.donorDescriptionBlock.update(this.donors)
-    this.geneDescriptionBlock.update(this.genes)
+    this.donorDescriptionBlock.update(this.storage.donors)
+    this.geneDescriptionBlock.update(this.storage.genes)
   }
 
 
@@ -381,7 +360,7 @@ class MainGrid extends EventEmitter {
    * Updates coordinate system and renders the lines of the grid.
    */
   private computeCoordinates() {
-    this.cellWidth = this.width / this.donors.length
+    this.cellWidth = this.width / this.storage.donors.length
 
     if (typeof this.column !== 'undefined') {
       this.column.remove()
@@ -389,7 +368,7 @@ class MainGrid extends EventEmitter {
 
     if (this.drawGridLines) {
       this.column = this.gridContainer.selectAll(`.${this.storage.prefix}donor-column`)
-        .data(this.donors)
+        .data(this.storage.donors)
         .enter()
         .append('line')
         .attr('x1', (d: any) => d.x)
@@ -400,14 +379,14 @@ class MainGrid extends EventEmitter {
         .style('pointer-events', 'none')
     }
 
-    this.cellHeight = this.height / this.genes.length
+    this.cellHeight = this.height / this.storage.genes.length
 
     if (typeof this.row !== 'undefined') {
       this.row.remove()
     }
 
     this.row = this.gridContainer.selectAll(`.${this.storage.prefix}gene-row`)
-      .data(this.genes)
+      .data(this.storage.genes)
       .enter().append('g')
       .attr('class', `${this.storage.prefix}gene-row`)
       .attr('transform', (d: any) => {
@@ -436,7 +415,7 @@ class MainGrid extends EventEmitter {
         }
       })
       .text((d: any, i: number) => {
-        return this.genes[i].symbol
+        return this.storage.genes[i].symbol
       })
 
     this.defineRowDragBehaviour()
@@ -450,12 +429,12 @@ class MainGrid extends EventEmitter {
     this.width = width
     this.height = height
 
-    this.cellWidth = this.width / this.donors.length
-    this.cellHeight = this.height / this.genes.length
+    this.cellWidth = this.width / this.storage.donors.length
+    this.cellHeight = this.height / this.storage.genes.length
 
     if (this.cellHeight < this.storage.minCellHeight) {
       this.cellHeight = this.storage.minCellHeight
-      this.height = this.genes.length * this.storage.minCellHeight
+      this.height = this.storage.genes.length * this.storage.minCellHeight
     }
 
     this.background
@@ -464,7 +443,7 @@ class MainGrid extends EventEmitter {
 
     this.computeCoordinates()
 
-    if (this.observations.length) {
+    if (this.storage.observations.length) {
       this.donorHistogram.resize(width, this.height)
       this.geneHistogram.resize(width, this.height)
     }
@@ -511,8 +490,8 @@ class MainGrid extends EventEmitter {
         const xIndex = this.width < coord[0] ? -1 : this.rangeToDomain(this.x, coord[0])
         const yIndex = this.height < coord[1] ? -1 : this.rangeToDomain(this.y, coord[1])
 
-        const donor = this.donors[xIndex]
-        const gene = this.genes[yIndex]
+        const donor = this.storage.donors[xIndex]
+        const gene = this.storage.genes[yIndex]
 
         if (!donor || !gene) {
           return
@@ -651,12 +630,12 @@ class MainGrid extends EventEmitter {
    * @param stop - end index of the selection
    */
   private sliceGenes(start: number, stop: number) {
-    for (let i = 0; i < this.genes.length; i++) {
-      const gene = this.genes[i]
+    for (let i = 0; i < this.storage.genes.length; i++) {
+      const gene = this.storage.genes[i]
       if (i < start || i > stop) {
         d3.selectAll(`.${this.storage.prefix}${gene.id}-cell`).remove()
         d3.selectAll(`.${this.storage.prefix}${gene.id}-bar`).remove()
-        this.genes.splice(i, 1)
+        this.storage.genes.splice(i, 1)
         i--
         start--
         stop--
@@ -670,12 +649,12 @@ class MainGrid extends EventEmitter {
    * @param stop - end index of the selection
    */
   private sliceDonors(start: number, stop: number) {
-    for (let i = 0; i < this.donors.length; i++) {
-      const donor = this.donors[i]
+    for (let i = 0; i < this.storage.donors.length; i++) {
+      const donor = this.storage.donors[i]
       if (i < start || i > stop) {
         d3.selectAll(`.${this.storage.prefix}${donor.id}-cell`).remove()
         d3.selectAll(`.${this.storage.prefix}${donor.id}-bar`).remove()
-        this.donors.splice(i, 1)
+        this.storage.donors.splice(i, 1)
         i--
         start--
         stop--
@@ -703,11 +682,11 @@ class MainGrid extends EventEmitter {
       })
       .on('end', (event: D3DragEvent<any, any, any>) => {
         const coord = d3.pointer(event, this.container.node())
-        const dragged = this.genes.indexOf(d)
+        const dragged = this.storage.genes.indexOf(d)
         const yIndex = this.rangeToDomain(this.y, coord[1])
 
-        this.genes.splice(dragged, 1)
-        this.genes.splice(parseInt(yIndex), 0, d)
+        this.storage.genes.splice(dragged, 1)
+        this.storage.genes.splice(parseInt(yIndex), 0, d)
 
         this.emit('update', true)
       })
@@ -741,7 +720,7 @@ class MainGrid extends EventEmitter {
 
   private createGeneMap() {
     const geneMap = {}
-    for (const gene of this.genes) {
+    for (const gene of this.storage.genes) {
       geneMap[gene.id] = gene
     }
     this.geneMap = geneMap
@@ -920,11 +899,11 @@ class MainGrid extends EventEmitter {
    * @param i index of the gene to remove.
    */
   public removeGene(i: number) {
-    const gene = this.genes[i]
+    const gene = this.storage.genes[i]
     if (gene) {
       d3.selectAll(`.${this.storage.prefix}${gene.id}-cell`).remove()
       d3.selectAll(`.${this.storage.prefix}${gene.id}-bar`).remove()
-      this.genes.splice(i, 1)
+      this.storage.genes.splice(i, 1)
     }
 
     this.emit('update', true)
