@@ -278,10 +278,7 @@ class MainGrid extends EventEmitter {
         return this.getValueByType(d)
       })
       .attr('d', (d: IObservation) => {
-        if (this.heatMap) {
-          return this.getRectangularPath(d)
-        }
-        return this.getCircularPath(d)
+        return this.getRectangularPath(d)
       })
       .attr('fill', (d: any) => {
         return this.getColor(d)
@@ -344,10 +341,7 @@ class MainGrid extends EventEmitter {
         .selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
         .transition()
         .attr('d', (d: any) => {
-          if (this.heatMap) {
-            return this.getRectangularPath(d)
-          }
-          return this.getCircularPath(d)
+          return this.getRectangularPath(d)
         })
     }
 
@@ -732,14 +726,6 @@ class MainGrid extends EventEmitter {
    */
   private getY(d: any) {
     const y = this.geneMap[d.geneId].y
-
-    if (!this.heatMap) {
-      const yPosition = y + this.cellHeight / 2
-      if (yPosition < 0) {
-        return 0
-      }
-      return yPosition
-    }
     return y
   }
 
@@ -748,10 +734,6 @@ class MainGrid extends EventEmitter {
    */
   private getCellX(d: any) {
     const x = this.storage.lookupTable[d.donorId].x
-
-    if (!this.heatMap) {
-      return x + (this.cellWidth / 4)
-    }
     return x
   }
 
@@ -786,27 +768,14 @@ class MainGrid extends EventEmitter {
    */
   private getHeight(d: any): number {
     if (typeof d !== 'undefined') {
-      if (!this.heatMap === true) {
-        if (this.cellWidth > this.cellHeight) {
-          return this.cellHeight / 2
-        }
-        return (this.cellWidth / 2)
-      } else {
-        return this.cellHeight
-      }
+      return this.cellHeight
     } else {
       return 0
     }
   }
 
   private getCellWidth(d: IObservation) {
-    if (this.heatMap) {
-      return this.cellWidth
-    }
-    if (this.cellWidth > this.cellHeight) {
-      return this.cellHeight / 4
-    }
-    return this.cellWidth / 4
+    return this.cellWidth
   }
 
   /**
@@ -845,10 +814,7 @@ class MainGrid extends EventEmitter {
       d3.selectAll(`.${this.storage.prefix}sortable-rect-${type}`)
         .transition()
         .attr('d', (d: any) => {
-          if (this.heatMap) {
-            return this.getRectangularPath(d)
-          }
-          return this.getCircularPath(d)
+          return this.getRectangularPath(d)
         })
         .attr('fill', (d: any) => {
           return this.getColor(d)
