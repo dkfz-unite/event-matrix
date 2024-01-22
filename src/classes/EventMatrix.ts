@@ -29,10 +29,9 @@ class EventMatrix extends EventEmitter {
     this.params = params
     this.width = params.width ?? 500
     this.height = params.height ?? 500
-    const genes = params.genes ?? []
 
-    if (this.height / genes.length < this.storage.minCellHeight) {
-      this.height = genes.length * this.storage.minCellHeight
+    if (this.height / this.storage.genes.length < this.storage.minCellHeight) {
+      this.height = this.storage.genes.length * this.storage.minCellHeight
     }
 
     params.wrapper = `.${this.storage.prefix}container`
@@ -396,6 +395,11 @@ class EventMatrix extends EventEmitter {
     this.charts.forEach((chart) => {
       chart.destroy()
     })
+    this.storage.reset()
+    this.container = d3.select(this.params.element || 'body')
+      .append('div')
+      .attr('class', `${this.storage.prefix}container`)
+      .style('position', 'relative')
     this.initCharts(true)
     this.render()
   }

@@ -44,7 +44,7 @@ class Histogram extends EventEmitter {
     this.centerText = -6
     this.svg = svg
     this.rotated = rotated || false
-    this.domain = (this.rotated ? params.genes : params.donors) || []
+    this.domain = (this.rotated ? this.storage.genes : this.storage.donors) || []
     this.margin = params.margin || {top: 30, right: 15, bottom: 15, left: 80}
     this.width = params.width || 500
     this.height = params.height || 500
