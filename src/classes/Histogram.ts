@@ -56,7 +56,7 @@ class Histogram extends EventEmitter {
   }
 
   public getHistogramHeight() {
-    return this.histogramHeight
+    return this.totalHeight
   }
 
   public render(): void {
@@ -200,7 +200,9 @@ class Histogram extends EventEmitter {
       .text('Mutation freq.')
       .attr('class', `${this.storage.prefix}label-text-font`)
       .attr('text-anchor', 'middle')
-      .attr('rotate', 'rotate(-90)')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', '-40')
+      .attr('y', '-25')
 
     this.updateAxis(topCount)
   }

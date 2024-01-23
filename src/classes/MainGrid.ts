@@ -199,6 +199,8 @@ class MainGrid extends EventEmitter {
     // .style('top', 0)
     // .style('left', 0)
 
+    // n=t.margin.left+t.leftTextWidth+t.width+t.histogramHeight+t.geneTrack.height+t.margin.right
+
     this.container = this.svg.append('g')
 
     this.background = this.container.append('rect')
@@ -452,8 +454,12 @@ class MainGrid extends EventEmitter {
     const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height + this.margin.right
     const height = this.margin.top + (histogramHeight * this.types.length) + this.height + this.donorDescriptionBlock.height + this.margin.bottom
 
+    console.log('width: ', width)
+    console.log(this.margin.left, this.leftTextWidth, this.width, (histogramHeight * this.types.length), this.geneDescriptionBlock.height, this.margin.right)
     this.svg
-      .attr('width', width).attr('height', height)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('viewBox', `0 0 ${width} ${height}`)
 
     this.container
       .attr('transform', 'translate(' +
