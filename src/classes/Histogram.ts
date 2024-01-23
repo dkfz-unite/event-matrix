@@ -11,7 +11,7 @@ class Histogram extends EventEmitter {
   private centerText: number
   private svg: Selection<any, any, HTMLElement, any>
   private rotated: boolean
-  private domain: Domain[]
+  private domain: IGene[] | IDonor[]
   private margin: {
     top: number
     right: number
@@ -128,7 +128,7 @@ class Histogram extends EventEmitter {
       .attr('fill', '#1693C0')
   }
 
-  public update(domain: Domain[]): void {
+  public update(domain: IGene[] | IDonor[]): void {
     this.domain = domain
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
 

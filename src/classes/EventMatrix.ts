@@ -16,7 +16,7 @@ class EventMatrix extends EventEmitter {
   private heatMapMode!: boolean
   private drawGridLines!: boolean
   private crosshairMode!: boolean
-  private charts: any[] = []
+  private charts: MainGrid[] = []
   private x!: ScaleBand<string>
   private y!: ScaleBand<string>
   private fullscreen = false
@@ -101,8 +101,8 @@ class EventMatrix extends EventEmitter {
       this.storage.genes[i].y = getY(String(i))
     }
 
-    this.y = getY
     this.x = getX
+    this.y = getY
   }
 
   /**
@@ -145,6 +145,7 @@ class EventMatrix extends EventEmitter {
       this.computeScores()
       this.sortByScores()
     }
+
     this.calculatePositions()
     this.charts.forEach((chart) => {
       chart.update(this.x, this.y)

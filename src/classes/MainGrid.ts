@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import {D3DragEvent, ScaleBand, Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
-import {IObservation} from '../interfaces/bioinformatics.interface'
+import {IDonor, IGene, IObservation} from '../interfaces/bioinformatics.interface'
 import {
   HistogramParams,
   IDescriptionBlockParams,
@@ -223,8 +223,8 @@ class MainGrid extends EventEmitter {
       const target = event.target
       const coord = d3.pointer(event, target)
 
-      const xIndex = this.rangeToDomain(this.x, coord[0])
-      const yIndex = this.rangeToDomain(this.y, coord[1])
+      const xIndex = this.getIndexFromScaleBand(this.x, coord[0])
+      const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
 
       if (!target.dataset.obsIndex || this.crosshair) {
         return
@@ -265,22 +265,22 @@ class MainGrid extends EventEmitter {
       .data(this.storage.observations)
       .enter()
       .append('path')
-      .attr('data-obs-index', (d: any, i: number) => {
+      .attr('data-obs-index', (d: IObservation, i: number) => {
         return `${d.donorId} ${d.geneId}`
       })
-      .attr('class', (d: any) => {
+      .attr('class', (d: IObservation) => {
         return `${this.storage.prefix}sortable-rect-${d.type} ${this.storage.prefix}${d.donorId}-cell ${this.storage.prefix}${d.geneId}-cell`
       })
-      .attr('cons', (d: any) => {
+      .attr('cons', (d: IObservation) => {
         return this.getValueByType(d)
       })
       .attr('d', (d: IObservation) => {
         return this.getRectangularPath(d)
       })
-      .attr('fill', (d: any) => {
+      .attr('fill', (d: IObservation) => {
         return this.getColor(d)
       })
-      .attr('opacity', (d: any) => {
+      .attr('opacity', (d: IObservation) => {
         return this.getOpacity(d)
       })
 
@@ -314,6 +314,7 @@ class MainGrid extends EventEmitter {
    * Render function ensures presentation matches the data. Called after modifying data.
    */
   public update(x: ScaleBand<string>, y: ScaleBand<string>) {
+    this.computeCoordinates()
     this.createGeneMap()
 
     this.x = x
@@ -337,13 +338,15 @@ class MainGrid extends EventEmitter {
       this.container
         .selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
         .transition()
-        .attr('d', (d: any) => {
+        .attr('d', (d: IObservation) => {
           return this.getRectangularPath(d)
         })
     }
 
     this.donorDescriptionBlock.update(this.storage.donors)
     this.geneDescriptionBlock.update(this.storage.genes)
+    this.donorHistogram.update(this.storage.donors)
+    this.geneHistogram.update(this.storage.genes)
   }
 
 
@@ -353,7 +356,8 @@ class MainGrid extends EventEmitter {
   private computeCoordinates() {
     this.cellWidth = this.width / this.storage.donors.length
 
-    if (typeof this.column !== 'undefined') {
+    console.log('columns', this.column)
+    if (this.column !== undefined) {
       this.column.remove()
     }
 
@@ -362,8 +366,8 @@ class MainGrid extends EventEmitter {
         .data(this.storage.donors)
         .enter()
         .append('line')
-        .attr('x1', (d: any) => d.x)
-        .attr('x2', (d: any) => d.x)
+        .attr('x1', (d: IDonor) => d.x)
+        .attr('x2', (d: IDonor) => d.x)
         .attr('y1', 0)
         .attr('y2', this.height)
         .attr('class', `${this.storage.prefix}donor-column`)
@@ -372,15 +376,17 @@ class MainGrid extends EventEmitter {
 
     this.cellHeight = this.height / this.storage.genes.length
 
-    if (typeof this.row !== 'undefined') {
+    console.log('rows', this.row)
+    if (this.row !== undefined) {
       this.row.remove()
     }
 
     this.row = this.gridContainer.selectAll(`.${this.storage.prefix}gene-row`)
       .data(this.storage.genes)
-      .enter().append('g')
+      .enter()
+      .append('g')
       .attr('class', `${this.storage.prefix}gene-row`)
-      .attr('transform', (d: any) => {
+      .attr('transform', (d: IGene) => {
         return 'translate(0,' + d.y + ')'
       })
 
@@ -478,12 +484,12 @@ class MainGrid extends EventEmitter {
         this.horizontalCross.attr('y1', coord[1]).attr('opacity', 1)
         this.horizontalCross.attr('y2', coord[1]).attr('opacity', 1)
 
-        if (eventType === 'mousemove' && typeof this.selectionRegion !== 'undefined') {
+        if (eventType === 'mousemove' && this.selectionRegion !== undefined) {
           this.changeSelection(coord)
         }
 
-        const xIndex = this.width < coord[0] ? -1 : this.rangeToDomain(this.x, coord[0])
-        const yIndex = this.height < coord[1] ? -1 : this.rangeToDomain(this.y, coord[1])
+        const xIndex = this.width < coord[0] ? -1 : this.getIndexFromScaleBand(this.x, coord[0])
+        const yIndex = this.height < coord[1] ? -1 : this.getIndexFromScaleBand(this.y, coord[1])
 
         const donor = this.storage.donors[xIndex]
         const gene = this.storage.genes[yIndex]
@@ -541,7 +547,7 @@ class MainGrid extends EventEmitter {
    * Event behavior when pressing down on the mouse to make a selection
    */
   private startSelection(event: IEnhancedEvent) {
-    if (this.crosshair && typeof this.selectionRegion === 'undefined') {
+    if (this.crosshair && this.selectionRegion === undefined) {
       event.stopPropagation()
       const coord = d3.pointer(event, event.target)
 
@@ -561,6 +567,10 @@ class MainGrid extends EventEmitter {
    * Event behavior as you drag selected region around
    */
   private changeSelection(coord: number[]) {
+    console.log(this.selectionRegion.attr('x'))
+    console.log(this.selectionRegion.attr('y'))
+    console.log(this.selectionRegion.attr('width'))
+    console.log(this.selectionRegion.attr('height'))
     const rect = {
       x: parseInt(this.selectionRegion.attr('x'), 10),
       y: parseInt(this.selectionRegion.attr('y'), 10),
@@ -587,14 +597,23 @@ class MainGrid extends EventEmitter {
       rect.height = move.y
     }
 
-    this.selectionRegion.attr(rect)
+    this.selectionRegion.attr('x', rect.x)
+    this.selectionRegion.attr('y', rect.y)
+    this.selectionRegion.attr('width', rect.width)
+    this.selectionRegion.attr('height', rect.height)
+  }
+
+  private getIndexFromScaleBand(scaleBand: ScaleBand<string>, coord: number) {
+    const step = scaleBand.step()
+    const index = Math.floor(coord / step)
+    return scaleBand.domain()[index]
   }
 
   /**
    * Event behavior when releasing mouse when finishing with a selection
    */
   private finishSelection(event: IEnhancedEvent) {
-    if (this.crosshair && typeof this.selectionRegion !== 'undefined') {
+    if (this.crosshair && this.selectionRegion !== undefined) {
       event.stopPropagation()
 
       const x1 = Number(this.selectionRegion.attr('x'))
@@ -603,11 +622,11 @@ class MainGrid extends EventEmitter {
       const y1 = Number(this.selectionRegion.attr('y'))
       const y2 = y1 + Number(this.selectionRegion.attr('height'))
 
-      const xStart = this.rangeToDomain(this.x, x1)
-      const xStop = this.rangeToDomain(this.x, x2)
+      const xStart = this.getIndexFromScaleBand(this.x, x1)
+      const xStop = this.getIndexFromScaleBand(this.x, x2)
 
-      const yStart = this.rangeToDomain(this.y, y1)
-      const yStop = this.rangeToDomain(this.y, y2)
+      const yStart = this.getIndexFromScaleBand(this.y, y1)
+      const yStop = this.getIndexFromScaleBand(this.y, y2)
 
       this.sliceDonors(parseInt(xStart), parseInt(xStop))
       this.sliceGenes(parseInt(yStart), parseInt(yStop))
@@ -667,7 +686,8 @@ class MainGrid extends EventEmitter {
       })
       .on('drag', (event: D3DragEvent<any, any, any>) => {
         const trans = event.dy
-        const selection = d3.select(event.sourceEvent.target) // изменено на event.target
+        const selection = d3.select(event.sourceEvent.target)
+        console.log(selection)
 
         selection.attr('transform', () => {
           const transform = d3.select(event.sourceEvent.target).attr('transform')
@@ -676,9 +696,10 @@ class MainGrid extends EventEmitter {
         })
       })
       .on('end', (event: D3DragEvent<any, any, any>) => {
+        console.log('end', event)
         const coord = d3.pointer(event, this.container.node())
-        const dragged = this.storage.genes.indexOf(d)
-        const yIndex = this.rangeToDomain(this.y, coord[1])
+        const dragged = this.storage.genes.indexOf(event)
+        const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
 
         this.storage.genes.splice(dragged, 1)
         this.storage.genes.splice(parseInt(yIndex), 0, d)
@@ -809,13 +830,13 @@ class MainGrid extends EventEmitter {
     for (const type of this.types) {
       d3.selectAll(`.${this.storage.prefix}sortable-rect-${type}`)
         .transition()
-        .attr('d', (d: any) => {
+        .attr('d', (d: IObservation) => {
           return this.getRectangularPath(d)
         })
-        .attr('fill', (d: any) => {
+        .attr('fill', (d: IObservation) => {
           return this.getColor(d)
         })
-        .attr('opacity', (d: any) => {
+        .attr('opacity', (d: IObservation) => {
           return this.getOpacity(d)
         })
     }
@@ -870,12 +891,6 @@ class MainGrid extends EventEmitter {
 
     this.emit('update', true)
   }
-
-
-  private rangeToDomain(scale: ScaleBand<string>, value: number) {
-    return scale.domain()[d3.bisect(scale.range(), value) - 1]
-  }
-
 
   private nullableObsLookup(donor: any, gene: any) {
     if (!donor || typeof donor !== 'object') return null
