@@ -1,4 +1,4 @@
-import { ColorMap, CssMarginProps } from './base.interface'
+import {ColorMap, CssMarginProps} from './base.interface'
 
 export type MainGridParams = {
   scaleToFit?: boolean
@@ -118,8 +118,8 @@ export interface IDescriptionFieldsGroupParams {
 export type ILookupTable = {
   [donorId: string]: {
     [geneId: string]: Observation['id'][]
-  }
-} & { x?: number }
+  } & { x?: number }
+}
 
 export interface Observation {
   id: string

@@ -3,7 +3,7 @@ import {IDonor, IGene, IObservation} from '../interfaces/bioinformatics.interfac
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
 
 class Storage {
-  private static instance = null
+  private static instance: Storage | null = null
 
   private constructor() {
   }
@@ -11,7 +11,9 @@ class Storage {
   public minCellHeight = 10
   public prefix = 'og-'
   public lookupTable: ILookupTable = {}
+  public genesOriginal: IGene[] = []
   public genes: IGene[] = []
+  public donorsOriginal: IDonor[] = []
   public donors: IDonor[] = []
   public observations: IObservation[] = []
   public customFunctions = {
@@ -47,9 +49,11 @@ class Storage {
       this.prefix = prefix
     }
     if (genes !== undefined) {
+      this.genesOriginal = [...genes]
       this.genes = genes
     }
     if (donors !== undefined) {
+      this.donorsOriginal = [...donors]
       this.donors = donors
     }
     if (observations !== undefined) {
@@ -70,6 +74,11 @@ class Storage {
     if (donorOpacityFunc !== undefined) {
       this.customFunctions.donor.opacity = donorOpacityFunc
     }
+  }
+
+  public reset() {
+    this.genes = [...this.genesOriginal]
+    this.donors = [...this.donorsOriginal]
   }
 
   public static getInstance(): Storage {

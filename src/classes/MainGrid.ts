@@ -136,8 +136,6 @@ class MainGrid extends EventEmitter {
   private loadParams({
     scaleToFit,
     leftTextWidth,
-    donors,
-    genes,
     wrapper,
     colorMap,
     width,
@@ -146,15 +144,12 @@ class MainGrid extends EventEmitter {
     heatMap,
     heatMapColor,
     grid,
-    observations,
   }: MainGridParams) {
     if (scaleToFit !== undefined) {
       this.scaleToFit = scaleToFit
     }
     if (leftTextWidth !== undefined) {
       this.leftTextWidth = leftTextWidth
-    }
-    if (observations !== undefined) {
     }
     this.wrapper = d3.select(wrapper || 'body')
     if (colorMap !== undefined) {
@@ -203,6 +198,8 @@ class MainGrid extends EventEmitter {
     // .style('position', 'absolute')
     // .style('top', 0)
     // .style('left', 0)
+
+    // n=t.margin.left+t.leftTextWidth+t.width+t.histogramHeight+t.geneTrack.height+t.margin.right
 
     this.container = this.svg.append('g')
 
@@ -278,10 +275,7 @@ class MainGrid extends EventEmitter {
         return this.getValueByType(d)
       })
       .attr('d', (d: IObservation) => {
-        if (this.heatMap) {
-          return this.getRectangularPath(d)
-        }
-        return this.getCircularPath(d)
+        return this.getRectangularPath(d)
       })
       .attr('fill', (d: any) => {
         return this.getColor(d)
@@ -344,10 +338,7 @@ class MainGrid extends EventEmitter {
         .selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
         .transition()
         .attr('d', (d: any) => {
-          if (this.heatMap) {
-            return this.getRectangularPath(d)
-          }
-          return this.getCircularPath(d)
+          return this.getRectangularPath(d)
         })
     }
 
@@ -463,8 +454,12 @@ class MainGrid extends EventEmitter {
     const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height + this.margin.right
     const height = this.margin.top + (histogramHeight * this.types.length) + this.height + this.donorDescriptionBlock.height + this.margin.bottom
 
+    console.log('width: ', width)
+    console.log(this.margin.left, this.leftTextWidth, this.width, (histogramHeight * this.types.length), this.geneDescriptionBlock.height, this.margin.right)
     this.svg
-      .attr('width', width).attr('height', height)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('viewBox', `0 0 ${width} ${height}`)
 
     this.container
       .attr('transform', 'translate(' +
@@ -720,6 +715,7 @@ class MainGrid extends EventEmitter {
 
   private createGeneMap() {
     const geneMap = {}
+    console.log(this.storage.genes)
     for (const gene of this.storage.genes) {
       geneMap[gene.id] = gene
     }
@@ -730,38 +726,24 @@ class MainGrid extends EventEmitter {
   /**
    * Function that determines the y position of a mutation within a cell
    */
-  private getY(d: any) {
-    const y = this.geneMap[d.geneId].y
-
-    if (!this.heatMap) {
-      const yPosition = y + this.cellHeight / 2
-      if (yPosition < 0) {
-        return 0
-      }
-      return yPosition
-    }
-    return y
+  private getY(observation: IObservation): number {
+    return this.geneMap[observation.geneId].y ?? 0
   }
 
   /**
    * Function that determines the x position of a mutation
    */
-  private getCellX(d: any) {
-    const x = this.storage.lookupTable[d.donorId].x
-
-    if (!this.heatMap) {
-      return x + (this.cellWidth / 4)
-    }
-    return x
+  private getCellX(observation: IObservation): number {
+    return this.storage.lookupTable[observation.donorId].x ?? 0
   }
 
   /**
    * Returns the color for the given observation.
-   * @param d observation.
+   * @param observation.
    */
-  private getColor(d: any) {
-    const colorKey = d.consequence
-    if (this.heatMap === true) {
+  private getColor(observation: IObservation) {
+    const colorKey = observation.consequence
+    if (this.heatMap) {
       return this.heatMapColor
     } else {
       return this.colorMap[colorKey]
@@ -772,8 +754,8 @@ class MainGrid extends EventEmitter {
    * Returns the desired opacity of observation rects. This changes between heatmap and regular mode.
    * @returns {number}
    */
-  private getOpacity(d: any) {
-    if (this.heatMap === true) {
+  private getOpacity(observation: IObservation) {
+    if (this.heatMap) {
       return 0.25
     } else {
       return 1
@@ -784,54 +766,37 @@ class MainGrid extends EventEmitter {
    * Returns the height of an observation cell.
    * @returns {number}
    */
-  private getHeight(d: any): number {
-    if (typeof d !== 'undefined') {
-      if (!this.heatMap === true) {
-        if (this.cellWidth > this.cellHeight) {
-          return this.cellHeight / 2
-        }
-        return (this.cellWidth / 2)
-      } else {
-        return this.cellHeight
-      }
-    } else {
-      return 0
-    }
+  private getHeight(observation: IObservation): number {
+    return this.cellHeight ?? 0
   }
 
-  private getCellWidth(d: IObservation) {
-    if (this.heatMap) {
-      return this.cellWidth
-    }
-    if (this.cellWidth > this.cellHeight) {
-      return this.cellHeight / 4
-    }
-    return this.cellWidth / 4
+  private getCellWidth(observation: IObservation) {
+    return this.cellWidth ?? 0
   }
 
   /**
    * Returns the correct observation value based on the data type.
    */
-  private getValueByType(d: any) {
-    return d.consequence
+  private getValueByType(observation: IObservation) {
+    return observation.consequence
   }
 
   /**
    * Returns circular path based on cell dimensions
    */
-  private getCircularPath(d: IObservation) {
-    const x1 = this.getCellX(d)
-    const y1 = this.getY(d)
-    return 'M ' + (x1 + this.cellWidth / 4) + ', ' + y1 + ' m ' + (-1 * this.getCellWidth(d)) + ', 0 ' + 'a ' + this.getCellWidth(d) + ', ' + this.getCellWidth(d) + ' 0 1,0 ' + (2 * this.getCellWidth(d)) + ',0 a ' + this.getCellWidth(d) + ',' + this.getCellWidth(d) + ' 0 1,0 ' + (-1 * (2 * this.getCellWidth(d))) + ',0'
+  private getCircularPath(observation: IObservation) {
+    const x1 = this.getCellX(observation)
+    const y1 = this.getY(observation)
+    return 'M ' + (x1 + this.cellWidth / 4) + ', ' + y1 + ' m ' + (-1 * this.getCellWidth(observation)) + ', 0 ' + 'a ' + this.getCellWidth(observation) + ', ' + this.getCellWidth(observation) + ' 0 1,0 ' + (2 * this.getCellWidth(observation)) + ',0 a ' + this.getCellWidth(observation) + ',' + this.getCellWidth(observation) + ' 0 1,0 ' + (-1 * (2 * this.getCellWidth(observation))) + ',0'
   }
 
   /**
    * Returns rectangular path based on cell dimensions
    */
-  private getRectangularPath(d: IObservation) {
-    const x1 = this.getCellX(d)
-    const y1 = this.getY(d)
-    return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(d)) + ' H ' + x1 + 'Z'
+  private getRectangularPath(observation: IObservation) {
+    const x1 = this.getCellX(observation)
+    const y1 = this.getY(observation)
+    return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(observation)) + ' H ' + x1 + 'Z'
   }
 
   /**
@@ -845,10 +810,7 @@ class MainGrid extends EventEmitter {
       d3.selectAll(`.${this.storage.prefix}sortable-rect-${type}`)
         .transition()
         .attr('d', (d: any) => {
-          if (this.heatMap) {
-            return this.getRectangularPath(d)
-          }
-          return this.getCircularPath(d)
+          return this.getRectangularPath(d)
         })
         .attr('fill', (d: any) => {
           return this.getColor(d)

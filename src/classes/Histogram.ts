@@ -44,7 +44,7 @@ class Histogram extends EventEmitter {
     this.centerText = -6
     this.svg = svg
     this.rotated = rotated || false
-    this.domain = (this.rotated ? params.genes : params.donors) || []
+    this.domain = (this.rotated ? this.storage.genes : this.storage.donors) || []
     this.margin = params.margin || {top: 30, right: 15, bottom: 15, left: 80}
     this.width = params.width || 500
     this.height = params.height || 500
@@ -56,7 +56,7 @@ class Histogram extends EventEmitter {
   }
 
   public getHistogramHeight() {
-    return this.histogramHeight
+    return this.totalHeight
   }
 
   public render(): void {
@@ -200,7 +200,9 @@ class Histogram extends EventEmitter {
       .text('Mutation freq.')
       .attr('class', `${this.storage.prefix}label-text-font`)
       .attr('text-anchor', 'middle')
-      .attr('rotate', 'rotate(-90)')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', '-40')
+      .attr('y', '-25')
 
     this.updateAxis(topCount)
   }
