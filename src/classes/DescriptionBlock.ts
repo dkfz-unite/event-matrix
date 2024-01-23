@@ -1,6 +1,7 @@
 import {Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {BlockType} from '../interfaces/base.interface'
+import {IDonor, IGene} from '../interfaces/bioinformatics.interface'
 import {IDescriptionBlockParams, IDescriptionFieldsGroupParams} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import DescriptionField from './DescriptionField'
@@ -12,7 +13,7 @@ class DescriptionBlock extends EventEmitter {
   offset: number
   svg: Selection<any, any, HTMLElement, any>
   rotated: boolean
-  domain: any[]
+  domain: IGene[] | IDonor[]
   width: number = 0
   height: number = 0
   cellHeight: number
@@ -170,7 +171,7 @@ class DescriptionBlock extends EventEmitter {
   /**
    * Updates the rendering of the fields.
    */
-  update(domain: any[]): void {
+  update(domain: IGene[] | IDonor[]): void {
     this.domain = domain
 
     for (const group of this.groups) {
