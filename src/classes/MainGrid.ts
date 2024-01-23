@@ -269,7 +269,7 @@ class MainGrid extends EventEmitter {
         return `${d.donorId} ${d.geneId}`
       })
       .attr('class', (d: IObservation) => {
-        return `${this.storage.prefix}sortable-rect-${d.type} ${this.storage.prefix}${d.donorId}-cell ${this.storage.prefix}${d.geneId}-cell`
+        return `${this.storage.prefix}sortable-rect ${this.storage.prefix}${d.donorId}-cell ${this.storage.prefix}${d.geneId}-cell`
       })
       .attr('cons', (d: IObservation) => {
         return this.getValueByType(d)
@@ -286,7 +286,6 @@ class MainGrid extends EventEmitter {
 
     this.emit('render:mainGrid:end')
 
-    console.log(this.storage.observations)
     if (this.storage.observations.length) {
       this.emit('render:donorHistogram:start')
       this.donorHistogram.render()
@@ -336,7 +335,7 @@ class MainGrid extends EventEmitter {
 
     for (let i = 0; i < this.types.length; i++) {
       this.container
-        .selectAll(`.${this.storage.prefix}sortable-rect-${this.types[i]}`)
+        .selectAll(`.${this.storage.prefix}sortable-rect`)
         .transition()
         .attr('d', (d: IObservation) => {
           return this.getRectangularPath(d)
@@ -747,15 +746,24 @@ class MainGrid extends EventEmitter {
   /**
    * Function that determines the y position of a mutation within a cell
    */
-  private getY(observation: IObservation): number {
-    return this.geneMap[observation.geneId].y ?? 0
+  private getY({id, geneId, donorId}: IObservation): number {
+    const y = this.geneMap[geneId].y ?? 0
+    if (this.heatMap) {
+      return y
+    }
+    const obs = this.storage.lookupTable[donorId][geneId]
+    if (obs.length === 0) {
+      return y
+    }
+    return y + this.cellHeight / obs.length * obs.indexOf(id)
   }
 
   /**
    * Function that determines the x position of a mutation
    */
   private getCellX(observation: IObservation): number {
-    return this.storage.lookupTable[observation.donorId].x ?? 0
+    const x = this.storage.lookupTable[observation.donorId].x ?? 0
+    return x
   }
 
   /**
@@ -787,8 +795,17 @@ class MainGrid extends EventEmitter {
    * Returns the height of an observation cell.
    * @returns {number}
    */
-  private getHeight(observation: IObservation): number {
-    return this.cellHeight ?? 0
+  private getHeight({donorId, geneId}: IObservation): number {
+    const height = this.cellHeight ?? 0
+    if (this.heatMap) {
+      return height
+    }
+    const count = this.storage.lookupTable[donorId][geneId].length
+    if (count === 0) {
+      return height
+    }
+
+    return height / count
   }
 
   private getCellWidth(observation: IObservation) {
@@ -828,7 +845,7 @@ class MainGrid extends EventEmitter {
     this.heatMap = active
 
     for (const type of this.types) {
-      d3.selectAll(`.${this.storage.prefix}sortable-rect-${type}`)
+      d3.selectAll(`.${this.storage.prefix}sortable-rect`)
         .transition()
         .attr('d', (d: IObservation) => {
           return this.getRectangularPath(d)
