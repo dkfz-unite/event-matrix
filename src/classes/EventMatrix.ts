@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import {ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
-import {BaseType, SortFn} from '../interfaces/base.interface'
+import {SortFn} from '../interfaces/base.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import MainGrid from './MainGrid'
@@ -11,7 +11,6 @@ class EventMatrix extends EventEmitter {
   private width: number
   private height: number
   private container: d3.Selection<HTMLDivElement, any, HTMLElement, any>
-  private types: BaseType[] = []
   private mainGrid: any
   private heatMapMode!: boolean
   private drawGridLines!: boolean
@@ -50,8 +49,6 @@ class EventMatrix extends EventEmitter {
    * Instantiate charts
    */
   private initCharts(reloading?: boolean) {
-    this.types = []
-
     this.createLookupTable()
     this.computeDonorCounts()
     this.computeGeneScoresAndCount()
@@ -98,7 +95,7 @@ class EventMatrix extends EventEmitter {
     }
 
     for (let i = 0; i < this.storage.genes.length; i++) {
-      this.storage.genes[i].y = getY(String(i))
+      this.storage.genes[i].y = getY(String(i)) ?? 0
     }
 
     this.x = getX

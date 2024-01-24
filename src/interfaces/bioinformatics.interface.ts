@@ -12,9 +12,9 @@ export interface IGene {
   symbol: string
 
   // situational params
-  y?: number
-  score?: number
-  count?: number
+  y: number
+  score: number
+  count: number
 }
 
 export interface IDonor {
@@ -23,8 +23,9 @@ export interface IDonor {
   gender?: string
   age?: number
 
-  count?: number
-  
+  count: number
+  score: number
+
   // situational params
-  x?: number
+  x: number
 }
