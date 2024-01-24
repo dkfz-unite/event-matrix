@@ -7,7 +7,7 @@ import {
   IEnhancedEvent,
   IPreparedFieldData
 } from '../interfaces/main-grid.interface'
-import {eventBus} from '../utils/event-bus'
+import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import DescriptionField from './DescriptionField'
 
@@ -82,7 +82,7 @@ class DescriptionFieldsGroup {
 
     if (this.rendered) {
       this.refreshData()
-      eventBus.emit('inner:resize')
+      eventBus.emit(innerEvents.INNER_RESIZE)
     }
   }
 
@@ -94,7 +94,7 @@ class DescriptionFieldsGroup {
     this.collapsedFields = this.collapsedFields.concat(removed)
 
     this.refreshData()
-    eventBus.emit('inner:resize')
+    eventBus.emit(innerEvents.INNER_RESIZE)
   }
 
   /**
@@ -173,12 +173,12 @@ class DescriptionFieldsGroup {
     this.renderData()
     this.legend
       .on('mouseover', () => {
-        eventBus.emit('description:legend:hover', {
+        eventBus.emit(publicEvents.DESCRIPTION_LEGEND_HOVER, {
           group: this.name,
         })
       })
       .on('mouseout', () => {
-        eventBus.emit('description:legend:out')
+        eventBus.emit(publicEvents.DESCRIPTION_LEGEND_OUT)
       })
   }
 
@@ -305,7 +305,7 @@ class DescriptionFieldsGroup {
     labels.attr('class', `${storage.prefix}track-label ${storage.prefix}label-text-font`)
       .on('click', (d) => {
         this.domain.sort(d.sort(d.fieldName))
-        eventBus.emit('inner:update', false)
+        eventBus.emit(innerEvents.INNER_UPDATE, false)
       })
       .transition()
       .attr('x', -6)
@@ -350,7 +350,7 @@ class DescriptionFieldsGroup {
           .attr('dy', '.32em')
           .attr('text-anchor', 'end')
           .on('click', () => {
-            eventBus.emit('description:buttons:add-btn:click', {
+            eventBus.emit(publicEvents.DESCRIPTION_BUTTONS_ADD_CLICK, {
               hiddenTracks: this.collapsedFields.slice(),
               addTrack: this.addDescriptionFields.bind(this),
             })
@@ -380,7 +380,7 @@ class DescriptionFieldsGroup {
         const target = event.target
         const fieldData = this.fieldsData[target.dataset.fieldDataIndex]
         if (!fieldData) return
-        eventBus.emit('description:field:click', {
+        eventBus.emit(publicEvents.DESCRIPTION_FIELD_CLICK, {
           domain: fieldData,
           type: this.rotated ? 'gene' : 'donor',
         })
@@ -390,13 +390,13 @@ class DescriptionFieldsGroup {
         const fieldData = this.fieldsData[target.dataset.fieldDataIndex]
         if (!fieldData) return
 
-        eventBus.emit('description:cell:hover', {
+        eventBus.emit(publicEvents.DESCRIPTION_CELL_HOVER, {
           domain: fieldData,
           type: this.rotated ? 'gene' : 'donor',
         })
       })
       .on('mouseout', () => {
-        eventBus.emit('description:cell:out')
+        eventBus.emit(publicEvents.DESCRIPTION_CELL_OUT)
       })
 
     const {height, width} = this.getFieldDimensions()

@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import {Selection} from 'd3'
 import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
-import {eventBus} from '../utils/event-bus'
+import {eventBus, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 
 class Histogram {
@@ -88,18 +88,18 @@ class Histogram {
         const target = event.target
         const domain = this.domain[target.dataset.domainIndex]
         if (!domain) return
-        eventBus.emit('histogram:hover', {
+        eventBus.emit(publicEvents.HISTOGRAM_HOVER, {
           domain: domain,
         })
       })
       .on('mouseout', () => {
-        eventBus.emit('histogram:out')
+        eventBus.emit(publicEvents.HISTOGRAM_OUT)
       })
       .on('click', (event) => {
         const target = event.target
         const domain = this.domain[target.dataset.domainIndex]
         if (!domain) return
-        eventBus.emit('histogram:click', {
+        eventBus.emit(publicEvents.HISTOGRAM_CLICK, {
           type: this.rotated ? 'gene' : 'donor',
           domain: domain,
         })

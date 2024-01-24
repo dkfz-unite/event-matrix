@@ -3,7 +3,7 @@ import {ScaleBand} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {SortFn} from '../interfaces/base.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
-import {eventBus} from '../utils/event-bus'
+import {eventBus, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import MainGrid from './MainGrid'
 
@@ -129,12 +129,12 @@ class EventMatrix extends EventEmitter {
    * Initializes and creates the main SVG with rows and columns. Does prelim sort on data
    */
   public render() {
-    eventBus.emit('render:all:start')
+    eventBus.emit(renderEvents.RENDER_ALL_START)
     setTimeout(() => {
       this.charts.forEach((chart) => {
         chart.render()
       })
-      eventBus.emit('render:all:end')
+      eventBus.emit(renderEvents.RENDER_ALL_END)
     })
   }
 
