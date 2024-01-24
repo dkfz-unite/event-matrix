@@ -686,7 +686,6 @@ class MainGrid extends EventEmitter {
       .on('drag', (event: D3DragEvent<any, any, any>) => {
         const trans = event.dy
         const selection = d3.select(event.sourceEvent.target)
-        console.log(selection)
 
         selection.attr('transform', () => {
           const transform = d3.select(event.sourceEvent.target).attr('transform')
@@ -697,7 +696,8 @@ class MainGrid extends EventEmitter {
       .on('end', (event: D3DragEvent<any, any, any>) => {
         console.log('end', event)
         const coord = d3.pointer(event, this.container.node())
-        const dragged = this.storage.genes.indexOf(event)
+        console.log(event.subject)
+        const dragged = this.storage.genes.indexOf(event.subject)
         const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
 
         this.storage.genes.splice(dragged, 1)

@@ -1,8 +1,7 @@
 import {Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
 import {BlockType} from '../interfaces/base.interface'
-import {IDonor, IGene} from '../interfaces/bioinformatics.interface'
-import {IDescriptionBlockParams, IDescriptionFieldsGroupParams} from '../interfaces/main-grid.interface'
+import {IDescriptionBlockParams, IDescriptionFieldsGroupParams, IDomainEntity} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 import DescriptionField from './DescriptionField'
 import DescriptionFieldsGroup from './DescriptionFieldsGroup'
@@ -13,7 +12,7 @@ class DescriptionBlock extends EventEmitter {
   offset: number
   svg: Selection<any, any, HTMLElement, any>
   rotated: boolean
-  domain: IGene[] | IDonor[]
+  domain: IDomainEntity[]
   width: number = 0
   height: number = 0
   cellHeight: number
@@ -113,30 +112,31 @@ class DescriptionBlock extends EventEmitter {
     this.container = this.svg.append('g')
 
     const labelHeight = this.rotated ? 16.5 : 0
-    this.parentHeight = 0
+    this.height = 0
     const {padding} = this.getDimensions()
 
     for (const group of this.groups) {
       const descriptionBlockContainer = this.container.append('g').attr('transform', 'translate(0,' + this.parentHeight + ')')
       group.init(descriptionBlockContainer)
-      this.parentHeight += group.getTotalHeight() + padding
+      this.height += group.getTotalHeight() + padding
     }
 
     const translateDown = this.rotated ? -(this.offset + this.parentHeight) : padding + this.offset
 
     this.container
       .attr('width', this.width)
-      .attr('height', this.parentHeight)
+      .attr('height', this.height)
       .attr('class', `${this.storage.prefix}track`)
       .attr('transform', () => {
         return `${this.rotated ? 'rotate(90) ' : ''}translate(0,${translateDown})`
       })
 
-    this.parentHeight += labelHeight
+    this.height += labelHeight
   }
 
   /** Calls render on all field groups */
   render(): void {
+    console.log(this.groups)
     for (const group of this.groups) {
       group.render()
     }
@@ -171,7 +171,7 @@ class DescriptionBlock extends EventEmitter {
   /**
    * Updates the rendering of the fields.
    */
-  update(domain: IGene[] | IDonor[]): void {
+  update(domain: IDomainEntity[]): void {
     this.domain = domain
 
     for (const group of this.groups) {
