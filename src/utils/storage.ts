@@ -89,4 +89,4 @@ class Storage {
   }
 }
 
-export default Storage
+export const storage = Storage.getInstance()

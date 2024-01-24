@@ -1,12 +1,11 @@
 import {Selection} from 'd3'
-import EventEmitter from 'eventemitter3'
 import {BlockType} from '../interfaces/base.interface'
 import {IDescriptionBlockParams, IDescriptionFieldsGroupParams, IDomainEntity} from '../interfaces/main-grid.interface'
-import Storage from '../utils/storage'
+import {storage} from '../utils/storage'
 import DescriptionField from './DescriptionField'
 import DescriptionFieldsGroup from './DescriptionFieldsGroup'
 
-class DescriptionBlock extends EventEmitter {
+class DescriptionBlock {
   params: IDescriptionBlockParams
   blockType: BlockType
   offset: number
@@ -24,7 +23,6 @@ class DescriptionBlock extends EventEmitter {
   groups: DescriptionFieldsGroup[] = []
   container!: Selection<SVGGElement, any, HTMLElement, any>
   parentHeight = 0
-  private storage: Storage = Storage.getInstance()
 
   constructor(
     params: IDescriptionBlockParams,
@@ -34,7 +32,6 @@ class DescriptionBlock extends EventEmitter {
     fields: DescriptionField[],
     offset: any
   ) {
-    super()
     this.blockType = blockType
     this.offset = offset
     this.params = params
@@ -95,9 +92,6 @@ class DescriptionBlock extends EventEmitter {
         )
         this.groupMap[fieldsGroupName] = fieldsGroup
         this.groups.push(fieldsGroup)
-
-        fieldsGroup.on('resize', this.emit)
-        fieldsGroup.on('update', this.emit)
       }
 
       this.groupMap[fieldsGroupName].addDescriptionFields([descriptionField])
@@ -126,7 +120,7 @@ class DescriptionBlock extends EventEmitter {
     this.container
       .attr('width', this.width)
       .attr('height', this.height)
-      .attr('class', `${this.storage.prefix}track`)
+      .attr('class', `${storage.prefix}track`)
       .attr('transform', () => {
         return `${this.rotated ? 'rotate(90) ' : ''}translate(0,${translateDown})`
       })
