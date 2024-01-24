@@ -6,6 +6,7 @@ import {IDonor, IGene, IObservation} from '../interfaces/bioinformatics.interfac
 import {
   HistogramParams,
   IDescriptionBlockParams,
+  IDomainEntity,
   IEnhancedEvent,
   MainGridParams
 } from '../interfaces/main-grid.interface'
@@ -57,6 +58,7 @@ class MainGrid extends EventEmitter {
   private row: any
   private geneMap: any
   private storage: Storage = Storage.getInstance()
+  public fullscreen = false
 
   constructor(params: MainGridParams, x: ScaleBand<string>, y: ScaleBand<string>) {
     super()
@@ -265,23 +267,23 @@ class MainGrid extends EventEmitter {
       .data(this.storage.observations)
       .enter()
       .append('path')
-      .attr('data-obs-index', (d: IObservation, i: number) => {
-        return `${d.donorId} ${d.geneId}`
+      .attr('data-obs-index', (obs: IObservation, i: number) => {
+        return `${obs.donorId} ${obs.geneId}`
       })
-      .attr('class', (d: IObservation) => {
-        return `${this.storage.prefix}sortable-rect ${this.storage.prefix}${d.donorId}-cell ${this.storage.prefix}${d.geneId}-cell`
+      .attr('class', (obs: IObservation) => {
+        return `${this.storage.prefix}sortable-rect ${this.storage.prefix}${obs.donorId}-cell ${this.storage.prefix}${obs.geneId}-cell`
       })
-      .attr('cons', (d: IObservation) => {
-        return this.getValueByType(d)
+      .attr('cons', (obs: IObservation) => {
+        return this.getValueByType(obs)
       })
-      .attr('d', (d: IObservation) => {
-        return this.getRectangularPath(d)
+      .attr('d', (obs: IObservation) => {
+        return this.getRectangularPath(obs)
       })
-      .attr('fill', (d: IObservation) => {
-        return this.getColor(d)
+      .attr('fill', (obs: IObservation) => {
+        return this.getColor(obs)
       })
-      .attr('opacity', (d: IObservation) => {
-        return this.getOpacity(d)
+      .attr('opacity', (obs: IObservation) => {
+        return this.getOpacity(obs)
       })
 
     this.emit('render:mainGrid:end')
@@ -337,13 +339,13 @@ class MainGrid extends EventEmitter {
       this.container
         .selectAll(`.${this.storage.prefix}sortable-rect`)
         .transition()
-        .attr('d', (d: IObservation) => {
-          return this.getRectangularPath(d)
+        .attr('d', (obs: IObservation) => {
+          return this.getRectangularPath(obs)
         })
     }
 
-    this.donorDescriptionBlock.update(this.storage.donors)
-    this.geneDescriptionBlock.update(this.storage.genes)
+    this.donorDescriptionBlock.update(this.storage.donors as IDomainEntity[])
+    this.geneDescriptionBlock.update(this.storage.genes as IDomainEntity[])
     this.donorHistogram.update(this.storage.donors)
     this.geneHistogram.update(this.storage.genes)
   }
@@ -355,7 +357,6 @@ class MainGrid extends EventEmitter {
   private computeCoordinates() {
     this.cellWidth = this.width / this.storage.donors.length
 
-    console.log('columns', this.column)
     if (this.column !== undefined) {
       this.column.remove()
     }
@@ -365,8 +366,8 @@ class MainGrid extends EventEmitter {
         .data(this.storage.donors)
         .enter()
         .append('line')
-        .attr('x1', (d: IDonor) => d.x)
-        .attr('x2', (d: IDonor) => d.x)
+        .attr('x1', (donor: IDonor) => donor.x)
+        .attr('x2', (donor: IDonor) => donor.x)
         .attr('y1', 0)
         .attr('y2', this.height)
         .attr('class', `${this.storage.prefix}donor-column`)
@@ -375,7 +376,6 @@ class MainGrid extends EventEmitter {
 
     this.cellHeight = this.height / this.storage.genes.length
 
-    console.log('rows', this.row)
     if (this.row !== undefined) {
       this.row.remove()
     }
@@ -459,8 +459,6 @@ class MainGrid extends EventEmitter {
     const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height + this.margin.right
     const height = this.margin.top + (histogramHeight * this.types.length) + this.height + this.donorDescriptionBlock.height + this.margin.bottom
 
-    console.log('width: ', width)
-    console.log(this.margin.left, this.leftTextWidth, this.width, (histogramHeight * this.types.length), this.geneDescriptionBlock.height, this.margin.right)
     this.svg
       .attr('width', width)
       .attr('height', height)
@@ -566,10 +564,6 @@ class MainGrid extends EventEmitter {
    * Event behavior as you drag selected region around
    */
   private changeSelection(coord: number[]) {
-    console.log(this.selectionRegion.attr('x'))
-    console.log(this.selectionRegion.attr('y'))
-    console.log(this.selectionRegion.attr('width'))
-    console.log(this.selectionRegion.attr('height'))
     const rect = {
       x: parseInt(this.selectionRegion.attr('x'), 10),
       y: parseInt(this.selectionRegion.attr('y'), 10),
@@ -687,21 +681,25 @@ class MainGrid extends EventEmitter {
         const trans = event.dy
         const selection = d3.select(event.sourceEvent.target)
 
-        selection.attr('transform', () => {
-          const transform = d3.select(event.sourceEvent.target).attr('transform')
-          const {translate} = parseTransform(transform)
+        selection.attr('transform', (element) => {
+          const transform = selection.attr('transform')
+          let translate = [0, 0]
+          if (transform !== null) {
+            const parsedTransform = parseTransform(transform)
+            translate = parsedTransform.translate
+          }
+
           return `translate( 0, ${translate[1] + trans})`
         })
       })
       .on('end', (event: D3DragEvent<any, any, any>) => {
         console.log('end', event)
         const coord = d3.pointer(event, this.container.node())
-        console.log(event.subject)
         const dragged = this.storage.genes.indexOf(event.subject)
         const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
 
         this.storage.genes.splice(dragged, 1)
-        this.storage.genes.splice(parseInt(yIndex), 0, d)
+        this.storage.genes.splice(parseInt(yIndex), 0, event.subject)
 
         this.emit('update', true)
       })
@@ -735,12 +733,10 @@ class MainGrid extends EventEmitter {
 
   private createGeneMap() {
     const geneMap = {}
-    console.log(this.storage.genes)
     for (const gene of this.storage.genes) {
       geneMap[gene.id] = gene
     }
     this.geneMap = geneMap
-    console.log(this.geneMap)
   }
 
   /**
@@ -816,7 +812,7 @@ class MainGrid extends EventEmitter {
    * Returns the correct observation value based on the data type.
    */
   private getValueByType(observation: IObservation) {
-    return observation.consequence
+    return observation.consequence ?? ''
   }
 
   /**
@@ -847,14 +843,14 @@ class MainGrid extends EventEmitter {
     for (const type of this.types) {
       d3.selectAll(`.${this.storage.prefix}sortable-rect`)
         .transition()
-        .attr('d', (d: IObservation) => {
-          return this.getRectangularPath(d)
+        .attr('d', (obs: IObservation) => {
+          return this.getRectangularPath(obs)
         })
-        .attr('fill', (d: IObservation) => {
-          return this.getColor(d)
+        .attr('fill', (obs: IObservation) => {
+          return this.getColor(obs)
         })
-        .attr('opacity', (d: IObservation) => {
-          return this.getOpacity(d)
+        .attr('opacity', (obs: IObservation) => {
+          return this.getOpacity(obs)
         })
     }
 
