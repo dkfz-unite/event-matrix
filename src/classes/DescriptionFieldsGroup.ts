@@ -104,7 +104,6 @@ class DescriptionFieldsGroup {
     this.fieldsData = []
     for (let i = 0; i < this.domain.length; i++) {
       const domain = this.domain[i]
-
       for (const field of this.fields) {
         const value = domain[field.fieldName]
         const isNullSentinel = value === this.nullSentinel
@@ -378,20 +377,22 @@ class DescriptionFieldsGroup {
     this.container
       .on('click', (event: IEnhancedEvent) => {
         const target = event.target
-        const fieldData = this.fieldsData[target.dataset.fieldDataIndex]
+        const fieldData = this.fieldsData[target.dataset.trackDataIndex]
         if (!fieldData) return
         eventBus.emit(publicEvents.DESCRIPTION_FIELD_CLICK, {
           domain: fieldData,
+          target: target,
           type: this.rotated ? 'gene' : 'donor',
         })
       })
       .on('mouseover', (event: IEnhancedEvent) => {
         const target = event.target
-        const fieldData = this.fieldsData[target.dataset.fieldDataIndex]
+        const fieldData = this.fieldsData[target.dataset.trackDataIndex]
         if (!fieldData) return
 
         eventBus.emit(publicEvents.DESCRIPTION_CELL_HOVER, {
           domain: fieldData,
+          target: target,
           type: this.rotated ? 'gene' : 'donor',
         })
       })
