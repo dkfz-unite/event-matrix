@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import {Selection} from 'd3'
 import EventEmitter from 'eventemitter3'
-import {Domain, HistogramParams} from '../interfaces/main-grid.interface'
+import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
 import Storage from '../utils/storage'
 
 class Histogram extends EventEmitter {
@@ -111,18 +111,18 @@ class Histogram extends EventEmitter {
       .data(this.domain)
       .enter()
       .append('rect')
-      .attr('class', (d: Domain) => {
+      .attr('class', (d: IDomainEntity) => {
         return `${this.storage.prefix}sortable-bar ${this.storage.prefix}${d.id}-bar`
       })
-      .attr('data-domain-index', (d: Domain, i: number) => i)
+      .attr('data-domain-index', (d: IDomainEntity, i: number) => i)
       .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-      .attr('height', (d: Domain) => {
+      .attr('height', (d: IDomainEntity) => {
         return this.histogramHeight * d.count / topCount
       })
-      .attr('x', (d: Domain) => {
+      .attr('x', (d: IDomainEntity) => {
         return this.rotated ? d.y : d.x
       })
-      .attr('y', (d: Domain) => {
+      .attr('y', (d: IDomainEntity) => {
         return this.histogramHeight - this.histogramHeight * d.count / topCount
       })
       .attr('fill', '#1693C0')
@@ -138,16 +138,16 @@ class Histogram extends EventEmitter {
 
     this.histogram.selectAll('rect')
       .data(this.domain)
-      .attr('data-domain-index', (d: Domain, i: number) => i)
+      .attr('data-domain-index', (d: IDomainEntity, i: number) => i)
       .transition()
       .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-      .attr('height', (d: Domain) => {
+      .attr('height', (d: IDomainEntity) => {
         return this.histogramHeight * d.count / topCount
       })
-      .attr('y', (d: Domain) => {
+      .attr('y', (d: IDomainEntity) => {
         return this.histogramHeight - this.histogramHeight * d.count / topCount
       })
-      .attr('x', (d: Domain) => {
+      .attr('x', (d: IDomainEntity) => {
         return this.rotated ? d.y : d.x
       })
   }
@@ -239,7 +239,7 @@ class Histogram extends EventEmitter {
       })
   }
 
-  private getLargestCount(domain: Domain[]): number {
+  private getLargestCount(domain: IDomainEntity[]): number {
     let retVal = 1
 
     for (const item of domain) {

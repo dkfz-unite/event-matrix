@@ -1,4 +1,5 @@
 import {ColorMap, CssMarginProps} from './base.interface'
+import {IDonor, IGene} from './bioinformatics.interface'
 
 export type MainGridParams = {
   scaleToFit?: boolean
@@ -36,23 +37,15 @@ export interface HistogramParams {
     bottom?: number
   }
   type?: string
-  genes?: Domain[]
-  donors?: Domain[]
+  genes?: IGene[]
+  donors?: IDonor[]
   margin?: CssMarginProps
   width?: number
   height?: number
   wrapper?: string
 }
 
-export interface Domain {
-  cnv: number
-  count: number
-  displayId?: string
-  symbol?: string
-  id: string
-  x: number
-  y: number
-}
+export type IDomainEntity = IGene & IDonor
 
 export type EventMatrixParams = {
   prefix?: string
@@ -106,7 +99,7 @@ export interface IPreparedFieldData {
 
 export interface IDescriptionFieldsGroupParams {
   expandable: boolean
-  cellHeight?: number
+  cellHeight: number
   width: number
   nullSentinel?: number
   grid?: boolean

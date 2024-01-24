@@ -24,4 +24,7 @@ export interface IDonor {
   age?: number
 
   count?: number
+  
+  // situational params
+  x?: number
 }
