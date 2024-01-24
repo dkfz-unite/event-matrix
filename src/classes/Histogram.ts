@@ -1,17 +1,17 @@
 import * as d3 from 'd3'
 import {Selection} from 'd3'
-import EventEmitter from 'eventemitter3'
 import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
-import Storage from '../utils/storage'
+import {eventBus} from '../utils/event-bus'
+import {storage} from '../utils/storage'
 
-class Histogram extends EventEmitter {
+class Histogram {
   private lineWidthOffset: number
   private lineHeightOffset: number
-  private padding: number
-  private centerText: number
+  private padding = 20
+  private centerText = -6
   private svg: Selection<any, any, HTMLElement, any>
   private rotated: boolean
-  private domain: IGene[] | IDonor[]
+  private domain: IDomainEntity[]
   private margin: {
     top: number
     right: number
@@ -34,17 +34,13 @@ class Histogram extends EventEmitter {
   private topText: any
   private middleText: any
   private leftLabel: any
-  private storage: Storage = Storage.getInstance()
 
   constructor(params: HistogramParams, svg: Selection<any, any, HTMLElement, any>, rotated?: boolean) {
-    super()
     this.lineWidthOffset = params.histogramBorderPadding?.left || 10
     this.lineHeightOffset = params.histogramBorderPadding?.bottom || 5
-    this.padding = 20
-    this.centerText = -6
     this.svg = svg
     this.rotated = rotated || false
-    this.domain = (this.rotated ? this.storage.genes : this.storage.donors) || []
+    this.domain = (this.rotated ? storage.genes : storage.donors) as IDomainEntity[]
     this.margin = params.margin || {top: 30, right: 15, bottom: 15, left: 80}
     this.width = params.width || 500
     this.height = params.height || 500
@@ -64,7 +60,7 @@ class Histogram extends EventEmitter {
     this.topCount = topCount
 
     this.container = this.svg.append('g')
-      .attr('class', `${this.storage.prefix}histogram`)
+      .attr('class', `${storage.prefix}histogram`)
       .attr('width', () => {
         if (this.rotated) {
           return this.height
@@ -92,16 +88,18 @@ class Histogram extends EventEmitter {
         const target = event.target
         const domain = this.domain[target.dataset.domainIndex]
         if (!domain) return
-        this.emit('histogramMouseOver', {domain: domain})
+        eventBus.emit('histogram:hover', {
+          domain: domain,
+        })
       })
       .on('mouseout', () => {
-        this.emit('histogramMouseOut')
+        eventBus.emit('histogram:out')
       })
       .on('click', (event) => {
         const target = event.target
         const domain = this.domain[target.dataset.domainIndex]
         if (!domain) return
-        this.emit('histogramClick', {
+        eventBus.emit('histogram:click', {
           type: this.rotated ? 'gene' : 'donor',
           domain: domain,
         })
@@ -112,7 +110,7 @@ class Histogram extends EventEmitter {
       .enter()
       .append('rect')
       .attr('class', (d: IDomainEntity) => {
-        return `${this.storage.prefix}sortable-bar ${this.storage.prefix}${d.id}-bar`
+        return `${storage.prefix}sortable-bar ${storage.prefix}${d.id}-bar`
       })
       .attr('data-domain-index', (d: IDomainEntity, i: number) => i)
       .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
@@ -128,7 +126,7 @@ class Histogram extends EventEmitter {
       .attr('fill', '#1693C0')
   }
 
-  public update(domain: IGene[] | IDonor[]): void {
+  public update(domain: IDomainEntity[]): void {
     this.domain = domain
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
 
@@ -181,24 +179,24 @@ class Histogram extends EventEmitter {
 
   private renderAxis(topCount: number): void {
     this.bottomAxis = this.histogram.append('line')
-      .attr('class', `${this.storage.prefix}histogram-axis`)
+      .attr('class', `${storage.prefix}histogram-axis`)
 
     this.leftAxis = this.histogram.append('line')
-      .attr('class', `${this.storage.prefix}histogram-axis`)
+      .attr('class', `${storage.prefix}histogram-axis`)
 
     this.topText = this.histogram.append('text')
-      .attr('class', `${this.storage.prefix}label-text-font`)
+      .attr('class', `${storage.prefix}label-text-font`)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
 
     this.middleText = this.histogram.append('text')
-      .attr('class', `${this.storage.prefix}label-text-font`)
+      .attr('class', `${storage.prefix}label-text-font`)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
 
     this.leftLabel = this.histogram.append('text')
       .text('Mutation freq.')
-      .attr('class', `${this.storage.prefix}label-text-font`)
+      .attr('class', `${storage.prefix}label-text-font`)
       .attr('text-anchor', 'middle')
       .attr('transform', 'rotate(-90)')
       .attr('x', '-40')

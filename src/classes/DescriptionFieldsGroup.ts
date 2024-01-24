@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
 import {BaseType, ScaleBand} from 'd3'
-import EventEmitter from 'eventemitter3'
 import {BlockType} from '../interfaces/base.interface'
 import {
   IDescriptionFieldsGroupParams,
@@ -8,10 +7,11 @@ import {
   IEnhancedEvent,
   IPreparedFieldData
 } from '../interfaces/main-grid.interface'
-import Storage from '../utils/storage'
+import {eventBus} from '../utils/event-bus'
+import {storage} from '../utils/storage'
 import DescriptionField from './DescriptionField'
 
-class DescriptionFieldsGroup extends EventEmitter {
+class DescriptionFieldsGroup {
   public container!: d3.Selection<SVGGElement, any, HTMLElement, any>
 
   private rendered = false
@@ -36,7 +36,6 @@ class DescriptionFieldsGroup extends EventEmitter {
   private column: any
   private row: any
   private blockType: BlockType
-  private storage: Storage = Storage.getInstance()
   private y: ScaleBand<string>
 
   constructor(
@@ -45,7 +44,6 @@ class DescriptionFieldsGroup extends EventEmitter {
     name: string,
     rotated: boolean
   ) {
-    super()
     this.params = params
     this.expandable = params.expandable
     this.name = name
@@ -84,7 +82,7 @@ class DescriptionFieldsGroup extends EventEmitter {
 
     if (this.rendered) {
       this.refreshData()
-      this.emit('resize')
+      eventBus.emit('inner:resize')
     }
   }
 
@@ -96,7 +94,7 @@ class DescriptionFieldsGroup extends EventEmitter {
     this.collapsedFields = this.collapsedFields.concat(removed)
 
     this.refreshData()
-    this.emit('resize')
+    eventBus.emit('inner:resize')
   }
 
   /**
@@ -142,7 +140,7 @@ class DescriptionFieldsGroup extends EventEmitter {
       .attr('y', -11)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
-      .attr('class', `${this.storage.prefix}track-group-label`)
+      .attr('class', `${storage.prefix}track-group-label`)
       .text(this.name)
 
     this.legendObject = this.container.append('svg:foreignObject')
@@ -158,7 +156,7 @@ class DescriptionFieldsGroup extends EventEmitter {
     const {height, width} = this.getFieldsGroupDimensions()
 
     this.background = this.container.append('rect')
-      .attr('class', `${this.storage.prefix}background`)
+      .attr('class', `${storage.prefix}background`)
       .attr('width', width)
       .attr('height', height)
 
@@ -175,12 +173,12 @@ class DescriptionFieldsGroup extends EventEmitter {
     this.renderData()
     this.legend
       .on('mouseover', () => {
-        this.emit('trackLegendMouseOver', {
+        eventBus.emit('description:legend:hover', {
           group: this.name,
         })
       })
       .on('mouseout', () => {
-        this.emit('trackLegendMouseOut')
+        eventBus.emit('description:legend:out')
       })
   }
 
@@ -224,7 +222,7 @@ class DescriptionFieldsGroup extends EventEmitter {
 
     const {width} = this.getFieldsGroupDimensions()
 
-    this.container.selectAll(`.${this.storage.prefix}track-data`)
+    this.container.selectAll(`.${storage.prefix}track-data`)
       .data(this.fieldsData)
       .attr('x', ({domainIndex}: IPreparedFieldData) => {
         const domain = this.domain[domainIndex]
@@ -270,11 +268,11 @@ class DescriptionFieldsGroup extends EventEmitter {
     }
 
     if (this.drawGridLines) {
-      this.column = this.container.selectAll(`.${this.storage.prefix}column`)
+      this.column = this.container.selectAll(`.${storage.prefix}column`)
         .data(this.domain)
         .enter()
         .append('line')
-        .attr('class', `${this.storage.prefix}column`)
+        .attr('class', `${storage.prefix}column`)
         .attr('donor', (d) => d.id)
         .attr('transform', (d: IDomainEntity, i) => `translate(${this.rotated ? d.y : d.x}),rotate(-90)`)
         .style('pointer-events', 'none')
@@ -286,10 +284,10 @@ class DescriptionFieldsGroup extends EventEmitter {
       this.row.remove()
     }
 
-    this.row = this.container.selectAll(`.${this.storage.prefix}row`)
+    this.row = this.container.selectAll(`.${storage.prefix}row`)
       .data(this.fields)
       .enter().append('g')
-      .attr('class', `${this.storage.prefix}row`)
+      .attr('class', `${storage.prefix}row`)
       .attr('transform', (d: DescriptionField, i) => {
         console.log(i)
         console.log(this.y(String(i)))
@@ -304,10 +302,10 @@ class DescriptionFieldsGroup extends EventEmitter {
 
     const labels = this.row.append('text')
 
-    labels.attr('class', `${this.storage.prefix}track-label ${this.storage.prefix}label-text-font`)
+    labels.attr('class', `${storage.prefix}track-label ${storage.prefix}label-text-font`)
       .on('click', (d) => {
         this.domain.sort(d.sort(d.fieldName))
-        this.emit('update', false)
+        eventBus.emit('inner:update', false)
       })
       .transition()
       .attr('x', -6)
@@ -318,7 +316,7 @@ class DescriptionFieldsGroup extends EventEmitter {
 
     if (this.expandable) {
       setTimeout(() => {
-        const removeFieldClass = `${this.storage.prefix}remove-track`
+        const removeFieldClass = `${storage.prefix}remove-track`
         this.container.selectAll(`.${removeFieldClass}`).remove()
 
         const textLengths = {}
@@ -341,18 +339,18 @@ class DescriptionFieldsGroup extends EventEmitter {
     }
 
     // append or remove add field button
-    let addButton = this.container.selectAll(`.${this.storage.prefix}add-track`)
+    let addButton = this.container.selectAll(`.${storage.prefix}add-track`)
 
     if (this.collapsedFields.length && this.expandable) {
       if (addButton.empty()) {
         addButton = this.container.append('text')
           .text('+')
-          .attr('class', `${this.storage.prefix}add-track`)
+          .attr('class', `${storage.prefix}add-track`)
           .attr('x', -6)
           .attr('dy', '.32em')
           .attr('text-anchor', 'end')
           .on('click', () => {
-            this.emit('addTrackClick', {
+            eventBus.emit('description:buttons:add-btn:click', {
               hiddenTracks: this.collapsedFields.slice(),
               addTrack: this.addDescriptionFields.bind(this),
             })
@@ -380,30 +378,30 @@ class DescriptionFieldsGroup extends EventEmitter {
     this.container
       .on('click', (event: IEnhancedEvent) => {
         const target = event.target
-        const d = this.fieldsData[target.dataset.fieldDataIndex]
-        if (!d) return
-        this.emit('trackClick', {
-          domain: d,
+        const fieldData = this.fieldsData[target.dataset.fieldDataIndex]
+        if (!fieldData) return
+        eventBus.emit('description:field:click', {
+          domain: fieldData,
           type: this.rotated ? 'gene' : 'donor',
         })
       })
       .on('mouseover', (event: IEnhancedEvent) => {
         const target = event.target
-        const d = this.fieldsData[target.dataset.fieldDataIndex]
-        if (!d) return
+        const fieldData = this.fieldsData[target.dataset.fieldDataIndex]
+        if (!fieldData) return
 
-        this.emit('trackMouseOver', {
-          domain: d,
+        eventBus.emit('description:cell:hover', {
+          domain: fieldData,
           type: this.rotated ? 'gene' : 'donor',
         })
       })
       .on('mouseout', () => {
-        this.emit('trackMouseOut')
+        eventBus.emit('description:cell:out')
       })
 
     const {height, width} = this.getFieldDimensions()
 
-    const selection = this.container.selectAll(`.${this.storage.prefix}track-data`)
+    const selection = this.container.selectAll(`.${storage.prefix}track-data`)
       .data(this.fieldsData)
 
     selection.enter()
@@ -418,14 +416,14 @@ class DescriptionFieldsGroup extends EventEmitter {
       })
       .attr('width', width)
       .attr('height', height)
-      .attr('fill', this.storage.customFunctions[this.blockType].fill)
-      .attr('opacity', this.storage.customFunctions[this.blockType].opacity)
+      .attr('fill', storage.customFunctions[this.blockType].fill)
+      .attr('opacity', storage.customFunctions[this.blockType].opacity)
       .attr('class', ({id, value, fieldName}: IPreparedFieldData) => {
         return [
-          `${this.storage.prefix}track-data`,
-          `${this.storage.prefix}track-${fieldName}`,
-          `${this.storage.prefix}track-${value}`,
-          `${this.storage.prefix}${id}-cell`,
+          `${storage.prefix}track-data`,
+          `${storage.prefix}track-${fieldName}`,
+          `${storage.prefix}track-${value}`,
+          `${storage.prefix}${id}-cell`,
         ].join(' ')
       })
 
