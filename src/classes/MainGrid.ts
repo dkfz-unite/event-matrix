@@ -9,7 +9,7 @@ import {
   IEnhancedEvent,
   MainGridParams
 } from '../interfaces/main-grid.interface'
-import {eventBus} from '../utils/event-bus'
+import {eventBus, innerEvents, publicEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import {parseTransform} from '../utils/utils'
 import DescriptionBlock from './DescriptionBlock'
@@ -212,13 +212,12 @@ class MainGrid {
    * mutation occurrences.
    */
   public render() {
-    eventBus.emit('render:grid:start')
+    eventBus.emit(renderEvents.RENDER_GRID_START)
     this.computeCoordinates()
 
     this.svg.on('mouseover', (event: IEnhancedEvent) => {
       const target = event.target
       const coord = d3.pointer(event, target)
-      console.log(target)
 
       const xIndex = this.getIndexFromScaleBand(this.x, coord[0])
       const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
@@ -234,7 +233,7 @@ class MainGrid {
         return observation.id == obsIds[2]
       })
 
-      eventBus.emit('grid:cell:hover', {
+      eventBus.emit(publicEvents.GRID_CELL_HOVER, {
         target: target,
         observations: obs,
         observation: targetObservation,
@@ -244,7 +243,7 @@ class MainGrid {
     })
 
     this.svg.on('mouseout', () => {
-      eventBus.emit('grid:out')
+      eventBus.emit(publicEvents.GRID_OUT)
     })
 
     this.svg.on('click', (event: IEnhancedEvent) => {
@@ -260,7 +259,7 @@ class MainGrid {
         return observation.id == obsIds[2]
       })
 
-      eventBus.emit('grid:cell:click', {
+      eventBus.emit(publicEvents.GRID_CELL_CLICK, {
         target: event.target,
         donorId: obsIds[0],
         geneId: obsIds[1],
@@ -292,25 +291,25 @@ class MainGrid {
         return this.getOpacity(obs)
       })
 
-    eventBus.emit('render:grid:end')
+    eventBus.emit(renderEvents.RENDER_GRID_END)
 
     if (storage.observations.length) {
-      eventBus.emit('render:x-histogram:start')
+      eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_START)
       this.donorHistogram.render()
-      eventBus.emit('render:x-histogram:end')
+      eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_END)
 
-      eventBus.emit('render:y-histogram:start')
+      eventBus.emit(renderEvents.RENDER_Y_HISTOGRAM_START)
       this.geneHistogram.render()
-      eventBus.emit('render:y-histogram:end')
+      eventBus.emit(renderEvents.RENDER_Y_HISTOGRAM_END)
     }
 
-    eventBus.emit('render:x-description-block:start')
+    eventBus.emit(renderEvents.RENDER_X_DESCRIPTION_BLOCK_START)
     this.donorDescriptionBlock.render()
-    eventBus.emit('render:x-description-block:end')
+    eventBus.emit(renderEvents.RENDER_X_DESCRIPTION_BLOCK_END)
 
-    eventBus.emit('render:y-description-block:start')
+    eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_START)
     this.geneDescriptionBlock.render()
-    eventBus.emit('render:y-description-block:end')
+    eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_END)
 
     this.defineCrosshairBehaviour()
 
@@ -501,7 +500,7 @@ class MainGrid {
           return
         }
 
-        eventBus.emit('grid:crosshair:hover', {
+        eventBus.emit(publicEvents.GRID_CROSSHAIR_HOVER, {
           donor: donor,
           gene: gene,
         })
@@ -539,7 +538,7 @@ class MainGrid {
           this.verticalCross.attr('opacity', 0)
           this.horizontalCross.attr('opacity', 0)
 
-          eventBus.emit('grid:crosshair:out')
+          eventBus.emit(publicEvents.GRID_CROSSHAIR_OUT)
         }
       })
       .on('mouseup', (event: IEnhancedEvent) => {
@@ -634,7 +633,7 @@ class MainGrid {
       this.selectionRegion.remove()
       delete this.selectionRegion
 
-      eventBus.emit('inner:update', true)
+      eventBus.emit(innerEvents.INNER_UPDATE, true)
     }
   }
 
@@ -708,7 +707,7 @@ class MainGrid {
         storage.genes.splice(dragged, 1)
         storage.genes.splice(parseInt(yIndex), 0, event.subject)
 
-        eventBus.emit('inner:update', true)
+        eventBus.emit(innerEvents.INNER_UPDATE, true)
       })
 
     const dragSelection = this.row.call(drag)
@@ -909,7 +908,7 @@ class MainGrid {
       storage.genes.splice(i, 1)
     }
 
-    eventBus.emit('inner:update', true)
+    eventBus.emit(innerEvents.INNER_UPDATE, true)
   }
 
   private nullableObsLookup(donor: any, gene: any) {
