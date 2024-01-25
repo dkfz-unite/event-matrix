@@ -27,6 +27,9 @@ class Storage {
     },
   }
 
+  private genesOrder: 'ASC' | 'DESC' | null = null
+  private donorsOrder: 'ASC' | 'DESC' | null = null
+
   public setLookupTable(lookupTable: ILookupTable) {
     this.lookupTable = lookupTable
   }
@@ -79,6 +82,8 @@ class Storage {
   public reset() {
     this.genes = [...this.genesOriginal]
     this.donors = [...this.donorsOriginal]
+    this.genesOrder = null
+    this.donorsOrder = null
   }
 
   public static getInstance(): Storage {
@@ -86,6 +91,28 @@ class Storage {
       this.instance = new this()
     }
     return this.instance
+  }
+
+  public sortGenes(fieldName = 'id') {
+    if (this.genesOrder === null) {
+      this.genesOrder = 'ASC'
+    } else {
+      this.genesOrder = this.genesOrder === 'ASC' ? 'DESC' : 'ASC'
+    }
+    this.genes.sort((a, b) => {
+      return this.genesOrder === 'ASC' ? (a[fieldName] < b[fieldName] ? 1 : -1) : (a[fieldName] > b[fieldName] ? 1 : -1)
+    })
+  }
+
+  public sortDonors(fieldName = 'id') {
+    if (this.donorsOrder === null) {
+      this.donorsOrder = 'ASC'
+    } else {
+      this.donorsOrder = this.donorsOrder === 'ASC' ? 'DESC' : 'ASC'
+    }
+    this.donors.sort((a, b) => {
+      return this.donorsOrder === 'ASC' ? (a[fieldName] < b[fieldName] ? 1 : -1) : (a[fieldName] > b[fieldName] ? 1 : -1)
+    })
   }
 }
 
