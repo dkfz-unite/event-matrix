@@ -303,7 +303,11 @@ class DescriptionFieldsGroup {
 
     labels.attr('class', `${storage.prefix}track-label ${storage.prefix}label-text-font`)
       .on('click', (d) => {
-        this.domain.sort(d.sort(d.fieldName))
+        if (this.rotated) {
+          storage.sortGenes(d.fieldName)
+        } else {
+          storage.sortDonors(d.fieldName)
+        }
         eventBus.emit(innerEvents.INNER_UPDATE, false)
       })
       .transition()
