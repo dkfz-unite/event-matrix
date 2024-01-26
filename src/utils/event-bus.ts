@@ -15,6 +15,8 @@ export enum publicEvents {
   GRID_CELL_CLICK = 'grid:cell:click',
   GRID_CROSSHAIR_HOVER = 'grid:crosshair:hover',
   GRID_CROSSHAIR_OUT = 'grid:crosshair:out',
+  GRID_SELECTION_STARTED = 'grid:selection:started',
+  GRID_SELECTION_FINISHED = 'grid:selection:finished',
 }
 
 export enum innerEvents {
