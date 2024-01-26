@@ -68,6 +68,8 @@ class EventMatrix extends EventEmitter {
     }
     this.mainGrid = new MainGrid(this.params, this.x, this.y)
 
+    eventBus.off(innerEvents.INNER_RESIZE)
+    eventBus.off(innerEvents.INNER_UPDATE)
     eventBus.on(innerEvents.INNER_RESIZE, () => {
       this.resize(this.width, this.height, this.fullscreen)
     })

@@ -542,6 +542,8 @@ class MainGrid {
         }
       })
       .on('mouseup', (event: IEnhancedEvent) => {
+        this.verticalCross.attr('opacity', 0)
+        this.horizontalCross.attr('opacity', 0)
         this.finishSelection(event)
       })
   }
@@ -551,6 +553,7 @@ class MainGrid {
    */
   private startSelection(event: IEnhancedEvent) {
     if (this.crosshair && this.selectionRegion === undefined) {
+      eventBus.emit(publicEvents.GRID_SELECTION_STARTED)
       event.stopPropagation()
       const coord = d3.pointer(event, event.target)
 
@@ -633,6 +636,7 @@ class MainGrid {
       this.selectionRegion.remove()
       delete this.selectionRegion
 
+      eventBus.emit(publicEvents.GRID_SELECTION_FINISHED)
       eventBus.emit(innerEvents.INNER_UPDATE, true)
     }
   }

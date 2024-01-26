@@ -130,7 +130,6 @@ class DescriptionBlock {
 
   /** Calls render on all field groups */
   render(): void {
-    console.log(this.groups)
     for (const group of this.groups) {
       group.render()
     }

@@ -120,7 +120,6 @@ class DescriptionFieldsGroup {
         })
       }
     }
-    console.log(this.fieldsData[0])
   }
 
   public getTotalHeight() {
@@ -191,9 +190,6 @@ class DescriptionFieldsGroup {
   }
 
   private getFieldDimensions() {
-    console.log(this.width)
-    console.log(this.domain)
-    console.log(this.domain.length > 0 ? this.width / this.domain.length : 0)
     return {
       width: this.domain.length > 0 ? this.width / this.domain.length : 0,
       height: this.params.cellHeight,
@@ -220,8 +216,6 @@ class DescriptionFieldsGroup {
       }
     }
     this.fieldsData = groupData
-    console.log(this.fieldsData)
-
     this.computeCoordinates()
 
     const {width} = this.getFieldDimensions()
@@ -293,8 +287,6 @@ class DescriptionFieldsGroup {
       .enter().append('g')
       .attr('class', `${storage.prefix}row`)
       .attr('transform', (d: DescriptionField, i) => {
-        console.log(i)
-        console.log(this.y(String(i)))
         return `translate(0,${this.y(String(i))})`
       })
 
