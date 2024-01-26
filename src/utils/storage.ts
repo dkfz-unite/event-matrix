@@ -99,8 +99,16 @@ class Storage {
     } else {
       this.genesOrder = this.genesOrder === 'ASC' ? 'DESC' : 'ASC'
     }
+    console.log(fieldName)
     this.genes.sort((a, b) => {
-      return this.genesOrder === 'ASC' ? (a[fieldName] < b[fieldName] ? 1 : -1) : (a[fieldName] > b[fieldName] ? 1 : -1)
+      const aVal = a[fieldName] ?? 0
+      const bVal = b[fieldName] ?? 0
+      if (aVal === bVal) return 0
+      if (this.genesOrder === 'ASC') {
+        return aVal < bVal ? 1 : -1
+      } else {
+        return aVal > bVal ? 1 : -1
+      }
     })
   }
 
@@ -110,8 +118,16 @@ class Storage {
     } else {
       this.donorsOrder = this.donorsOrder === 'ASC' ? 'DESC' : 'ASC'
     }
+    console.log(fieldName)
     this.donors.sort((a, b) => {
-      return this.donorsOrder === 'ASC' ? (a[fieldName] < b[fieldName] ? 1 : -1) : (a[fieldName] > b[fieldName] ? 1 : -1)
+      const aVal = a[fieldName] ?? 0
+      const bVal = b[fieldName] ?? 0
+      if (aVal === bVal) return 0
+      if (this.donorsOrder === 'ASC') {
+        return aVal < bVal ? 1 : -1
+      } else {
+        return aVal > bVal ? 1 : -1
+      }
     })
   }
 }

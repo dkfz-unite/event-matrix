@@ -120,6 +120,7 @@ class DescriptionFieldsGroup {
         })
       }
     }
+    console.log(this.fieldsData[0])
   }
 
   public getTotalHeight() {
@@ -190,6 +191,9 @@ class DescriptionFieldsGroup {
   }
 
   private getFieldDimensions() {
+    console.log(this.width)
+    console.log(this.domain)
+    console.log(this.domain.length > 0 ? this.width / this.domain.length : 0)
     return {
       width: this.domain.length > 0 ? this.width / this.domain.length : 0,
       height: this.params.cellHeight,
@@ -216,10 +220,11 @@ class DescriptionFieldsGroup {
       }
     }
     this.fieldsData = groupData
+    console.log(this.fieldsData)
 
     this.computeCoordinates()
 
-    const {width} = this.getFieldsGroupDimensions()
+    const {width} = this.getFieldDimensions()
 
     this.container.selectAll(`.${storage.prefix}track-data`)
       .data(this.fieldsData)
@@ -279,7 +284,7 @@ class DescriptionFieldsGroup {
     }
 
     // append rows
-    if (typeof this.row !== 'undefined') {
+    if (this.row !== undefined) {
       this.row.remove()
     }
 
@@ -301,13 +306,16 @@ class DescriptionFieldsGroup {
 
     const labels = this.row.append('text')
 
-    labels.attr('class', `${storage.prefix}track-label ${storage.prefix}label-text-font`)
-      .on('click', (d) => {
+    labels
+      .attr('class', `${storage.prefix}track-label ${storage.prefix}label-text-font`)
+      .attr('data-field', (d) => d.fieldName)
+      .on('click', (event: IEnhancedEvent) => {
         if (this.rotated) {
-          storage.sortGenes(d.fieldName)
+          storage.sortGenes(event.target.dataset.field)
         } else {
-          storage.sortDonors(d.fieldName)
+          storage.sortDonors(event.target.dataset.field)
         }
+
         eventBus.emit(innerEvents.INNER_UPDATE, false)
       })
       .transition()
