@@ -9,7 +9,7 @@ class Histogram {
   private lineWidthOffset: number
   private lineHeightOffset: number
   private padding = 10
-  private centerText = 0
+  private centerText = -10
   private svg: Selection<any, any, HTMLElement, any>
   private rotated: boolean
   private domain: IDomainEntity[]

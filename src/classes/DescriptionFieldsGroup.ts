@@ -259,7 +259,6 @@ class DescriptionFieldsGroup {
     this.y = d3.scaleBand()
       .domain(d3.range(this.fields.length).map(String))
       .range([0, height])
-      .padding(0.1) // Добавлен padding, его значение можно скорректировать
 
     // append columns
     if (this.column) {
