@@ -1,5 +1,5 @@
 import {BlockType} from '../interfaces/base.interface'
-import {IDonor, IGene, IObservation} from '../interfaces/bioinformatics.interface'
+import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
 
 class Storage {
@@ -11,26 +11,26 @@ class Storage {
   public minCellHeight = 10
   public prefix = 'og-'
   public lookupTable: ILookupTable = {}
-  public genesOriginal: IGene[] = []
-  public genes: IGene[] = []
-  public donorsOriginal: IDonor[] = []
-  public donors: IDonor[] = []
-  public observations: IObservation[] = []
+  public rowsOriginal: IRow[] = []
+  public rows: IRow[] = []
+  public columnsOriginal: IColumn[] = []
+  public columns: IColumn[] = []
+  public entries: IEntry[] = []
   public customFunctions = {
-    [BlockType.Gene]: {
+    [BlockType.Rows]: {
       opacity: (val: any) => 1,
       fill: (val: any) => 'black',
     },
-    [BlockType.Donor]: {
+    [BlockType.Columns]: {
       opacity: (val: any) => 1,
       fill: (val: any) => 'black',
     },
   }
 
-  private genesPrevIndex: null
-  private genesOrder: 'ASC' | 'DESC' | null = null
-  private donorsPrevIndex: null
-  private donorsOrder: 'ASC' | 'DESC' | null = null
+  private rowsPrevIndex: null
+  private rowsOrder: 'ASC' | 'DESC' | null = null
+  private columnsPrevIndex: null
+  private columnsOrder: 'ASC' | 'DESC' | null = null
 
   public setLookupTable(lookupTable: ILookupTable) {
     this.lookupTable = lookupTable
@@ -39,13 +39,13 @@ class Storage {
   public setOptions({
     minCellHeight,
     prefix,
-    genes,
-    donors,
-    observations,
-    geneFillFunc,
-    geneOpacityFunc,
-    donorFillFunc,
-    donorOpacityFunc,
+    rows,
+    columns,
+    entries,
+    columnsFillFunc,
+    genesOpacityFunc,
+    columnFillFunc,
+    columnOpacityFunc,
   }: EventMatrixParams) {
     if (minCellHeight !== undefined) {
       this.minCellHeight = minCellHeight
@@ -53,41 +53,41 @@ class Storage {
     if (prefix !== undefined) {
       this.prefix = prefix
     }
-    if (genes !== undefined) {
-      this.genesOriginal = [...genes]
-      this.genes = genes
+    if (rows !== undefined) {
+      this.rowsOriginal = [...rows]
+      this.rows = rows
     }
-    if (donors !== undefined) {
-      this.donorsOriginal = [...donors]
-      this.donors = donors
+    if (columns !== undefined) {
+      this.columnsOriginal = [...columns]
+      this.columns = columns
     }
-    if (observations !== undefined) {
-      this.observations = observations.map((obs) => ({
+    if (entries !== undefined) {
+      this.entries = entries.map((obs) => ({
         ...obs,
         type: obs.type ?? 'mutation',
       }))
     }
-    if (geneFillFunc !== undefined) {
-      this.customFunctions.gene.fill = geneFillFunc
+    if (columnsFillFunc !== undefined) {
+      this.customFunctions[BlockType.Rows].fill = columnsFillFunc
     }
-    if (geneOpacityFunc !== undefined) {
-      this.customFunctions.gene.opacity = geneOpacityFunc
+    if (genesOpacityFunc !== undefined) {
+      this.customFunctions[BlockType.Rows].opacity = genesOpacityFunc
     }
-    if (donorFillFunc !== undefined) {
-      this.customFunctions.donor.fill = donorFillFunc
+    if (columnFillFunc !== undefined) {
+      this.customFunctions[BlockType.Columns].fill = columnFillFunc
     }
-    if (donorOpacityFunc !== undefined) {
-      this.customFunctions.donor.opacity = donorOpacityFunc
+    if (columnOpacityFunc !== undefined) {
+      this.customFunctions[BlockType.Columns].opacity = columnOpacityFunc
     }
   }
 
   public reset() {
-    this.genes = [...this.genesOriginal]
-    this.donors = [...this.donorsOriginal]
-    this.genesOrder = null
-    this.genesPrevIndex = null
-    this.donorsOrder = null
-    this.donorsPrevIndex = null
+    this.rows = [...this.rowsOriginal]
+    this.columns = [...this.columnsOriginal]
+    this.rowsOrder = null
+    this.rowsPrevIndex = null
+    this.columnsOrder = null
+    this.columnsPrevIndex = null
   }
 
   public static getInstance(): Storage {
@@ -97,21 +97,21 @@ class Storage {
     return this.instance
   }
 
-  public sortGenes(fieldName = 'id', index = null) {
-    if (index === null || index === this.genesPrevIndex) {
-      if (this.genesOrder === null) {
-        this.genesOrder = 'ASC'
+  public sortRows(fieldName = 'id', index = null) {
+    if (index === null || index === this.rowsPrevIndex) {
+      if (this.rowsOrder === null) {
+        this.rowsOrder = 'ASC'
       } else {
-        this.genesOrder = this.genesOrder === 'ASC' ? 'DESC' : 'ASC'
+        this.rowsOrder = this.rowsOrder === 'ASC' ? 'DESC' : 'ASC'
       }
     }
-    this.genesPrevIndex = index
+    this.rowsPrevIndex = index
 
-    this.genes.sort((a, b) => {
+    this.rows.sort((a, b) => {
       const aVal = (index === null ? a[fieldName] : a[fieldName][index]) ?? '0'
       const bVal = (index === null ? b[fieldName] : b[fieldName][index]) ?? '0'
       if (aVal === bVal) return 0
-      if (this.genesOrder === 'ASC') {
+      if (this.rowsOrder === 'ASC') {
         return aVal < bVal ? 1 : -1
       } else {
         return aVal > bVal ? 1 : -1
@@ -119,21 +119,21 @@ class Storage {
     })
   }
 
-  public sortDonors(fieldName = 'id', index = null) {
-    if (index === null || index === this.donorsPrevIndex) {
-      if (this.donorsOrder === null) {
-        this.donorsOrder = 'ASC'
+  public sortColumns(fieldName = 'id', index = null) {
+    if (index === null || index === this.columnsPrevIndex) {
+      if (this.columnsOrder === null) {
+        this.columnsOrder = 'ASC'
       } else {
-        this.donorsOrder = this.donorsOrder === 'ASC' ? 'DESC' : 'ASC'
+        this.columnsOrder = this.columnsOrder === 'ASC' ? 'DESC' : 'ASC'
       }
     }
-    this.donorsPrevIndex = index
+    this.columnsPrevIndex = index
 
-    this.donors.sort((a, b) => {
+    this.columns.sort((a, b) => {
       const aVal = (index === null ? a[fieldName] : a[fieldName][index]) ?? '0'
       const bVal = (index === null ? b[fieldName] : b[fieldName][index]) ?? '0'
       if (aVal === bVal) return 0
-      if (this.donorsOrder === 'ASC') {
+      if (this.columnsOrder === 'ASC') {
         return aVal < bVal ? 1 : -1
       } else {
         return aVal > bVal ? 1 : -1

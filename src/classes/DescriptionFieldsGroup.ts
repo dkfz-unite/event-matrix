@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import {BaseType, ScaleBand} from 'd3'
 import {BlockType} from '../interfaces/base.interface'
 import {
+  IDescriptionField,
   IDescriptionFieldsGroupParams,
   IDomainEntity,
   IEnhancedEvent,
@@ -9,7 +10,6 @@ import {
 } from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
-import DescriptionField from './DescriptionField'
 
 class DescriptionFieldsGroup {
   public container!: d3.Selection<SVGGElement, any, HTMLElement, any>
@@ -20,8 +20,8 @@ class DescriptionFieldsGroup {
   private name: string
   private height: number
   private width: number
-  private fields: DescriptionField[] = []
-  private collapsedFields: DescriptionField[] = []
+  private fields: IDescriptionField[] = []
+  private collapsedFields: IDescriptionField[] = []
   private length: number
   private nullSentinel: number
   private rotated: boolean
@@ -59,7 +59,7 @@ class DescriptionFieldsGroup {
   /**
    * Method for adding a field to the field group.
    */
-  addDescriptionFields(fields: DescriptionField[]) {
+  addDescriptionFields(fields: IDescriptionField[]) {
     for (const descriptionField of fields) {
       if (!this.rendered && descriptionField.collapsed && this.expandable) {
         this.collapsedFields.push(descriptionField)
@@ -287,7 +287,7 @@ class DescriptionFieldsGroup {
       .data(this.fields)
       .enter().append('g')
       .attr('class', `${storage.prefix}row`)
-      .attr('transform', (d: DescriptionField, i) => {
+      .attr('transform', (d: IDescriptionField, i) => {
         return `translate(0,${this.y(String(i))})`
       })
 
@@ -304,9 +304,9 @@ class DescriptionFieldsGroup {
       .attr('data-field', (d) => d.fieldName)
       .on('click', (event: IEnhancedEvent) => {
         if (this.rotated) {
-          storage.sortGenes(event.target.dataset.field)
+          storage.sortRows(event.target.dataset.field)
         } else {
-          storage.sortDonors(event.target.dataset.field)
+          storage.sortColumns(event.target.dataset.field)
         }
 
         eventBus.emit(innerEvents.INNER_UPDATE, false)
@@ -387,7 +387,7 @@ class DescriptionFieldsGroup {
         eventBus.emit(publicEvents.DESCRIPTION_FIELD_CLICK, {
           domain: fieldData,
           target: target,
-          type: this.rotated ? 'gene' : 'donor',
+          type: this.rotated ? BlockType.Rows : BlockType.Columns,
         })
       })
       .on('mouseover', (event: IEnhancedEvent) => {
@@ -398,7 +398,7 @@ class DescriptionFieldsGroup {
         eventBus.emit(publicEvents.DESCRIPTION_CELL_HOVER, {
           domainId: fieldData.id,
           target: target,
-          type: this.rotated ? 'gene' : 'donor',
+          type: this.rotated ? BlockType.Rows : BlockType.Columns,
           field: fieldData.fieldName,
         })
       })

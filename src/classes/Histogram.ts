@@ -1,8 +1,8 @@
 import * as d3 from 'd3'
 import {Selection} from 'd3'
-import {innerEvents} from 'event-matrix/src/utils/event-bus'
+import {BlockType} from '../interfaces/base.interface'
 import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
-import {eventBus, publicEvents} from '../utils/event-bus'
+import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 
 class Histogram {
@@ -41,7 +41,7 @@ class Histogram {
     this.lineHeightOffset = params.histogramBorderPadding?.bottom || 5
     this.svg = svg
     this.rotated = rotated || false
-    this.domain = (this.rotated ? storage.genes : storage.donors) as IDomainEntity[]
+    this.domain = (this.rotated ? storage.rows : storage.columns) as IDomainEntity[]
     this.margin = params.margin || {top: 15, right: 15, bottom: 15, left: 80}
     this.width = params.width || 500
     this.height = params.height || 500
@@ -94,7 +94,7 @@ class Histogram {
         if (!domain) return
         eventBus.emit(publicEvents.HISTOGRAM_HOVER, {
           domainId: domain.id,
-          type: this.rotated ? 'gene' : 'donor',
+          type: this.rotated ? BlockType.Rows : BlockType.Columns,
           target,
         })
       })
@@ -108,13 +108,13 @@ class Histogram {
           return
         }
         if (this.rotated) {
-          storage.sortDonors('countByGene', domain.id)
+          storage.sortColumns('countByRow', domain.id)
         } else {
-          storage.sortGenes('countByDonor', domain.id)
+          storage.sortRows('countByColumn', domain.id)
         }
         eventBus.emit(innerEvents.INNER_UPDATE, false)
         eventBus.emit(publicEvents.HISTOGRAM_CLICK, {
-          type: this.rotated ? 'gene' : 'donor',
+          type: this.rotated ? BlockType.Rows : BlockType.Columns,
           domainId: domain.id,
           target,
         })

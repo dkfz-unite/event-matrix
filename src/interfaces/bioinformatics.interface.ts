@@ -1,13 +1,13 @@
-export interface IObservation {
+export interface IEntry {
   id: string,
-  donorId: string
-  geneId: string
+  columnId: string
+  rowId: string
   code?: string,
   consequence?: string,
   impact?: string
 }
 
-export interface IGene {
+export interface IRow {
   id: string
   symbol: string
 
@@ -15,17 +15,17 @@ export interface IGene {
   y: number
   score: number
   count: number
-  countByDonor: Record<string, number>
+  countByColumn: Record<string, number>
 }
 
-export interface IDonor {
+export interface IColumn {
   id: string
   displayId?: string
   gender?: string
   age?: number
 
   count: number
-  countByGene: Record<string, number>
+  countByRow: Record<string, number>
   score: number
 
   // situational params
