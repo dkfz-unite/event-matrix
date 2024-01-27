@@ -272,7 +272,7 @@ class DescriptionFieldsGroup {
         .enter()
         .append('line')
         .attr('class', `${storage.prefix}column`)
-        .attr('donor', (d) => d.id)
+        .attr('column', (d) => d.id)
         .attr('transform', (d: IDomainEntity, i) => `translate(${this.rotated ? d.y : d.x}),rotate(-90)`)
         .style('pointer-events', 'none')
         .attr('x1', -height)

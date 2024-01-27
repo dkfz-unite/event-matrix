@@ -43,9 +43,9 @@ class Storage {
     columns,
     entries,
     columnsFillFunc,
-    genesOpacityFunc,
-    columnFillFunc,
-    columnOpacityFunc,
+    rowsOpacityFunc,
+    rowsFillFunc,
+    columnsOpacityFunc,
   }: EventMatrixParams) {
     if (minCellHeight !== undefined) {
       this.minCellHeight = minCellHeight
@@ -67,17 +67,17 @@ class Storage {
         type: obs.type ?? 'mutation',
       }))
     }
+    if (rowsFillFunc !== undefined) {
+      this.customFunctions[BlockType.Rows].fill = rowsFillFunc
+    }
+    if (rowsOpacityFunc !== undefined) {
+      this.customFunctions[BlockType.Rows].opacity = rowsOpacityFunc
+    }
     if (columnsFillFunc !== undefined) {
-      this.customFunctions[BlockType.Rows].fill = columnsFillFunc
+      this.customFunctions[BlockType.Columns].fill = columnsFillFunc
     }
-    if (genesOpacityFunc !== undefined) {
-      this.customFunctions[BlockType.Rows].opacity = genesOpacityFunc
-    }
-    if (columnFillFunc !== undefined) {
-      this.customFunctions[BlockType.Columns].fill = columnFillFunc
-    }
-    if (columnOpacityFunc !== undefined) {
-      this.customFunctions[BlockType.Columns].opacity = columnOpacityFunc
+    if (columnsOpacityFunc !== undefined) {
+      this.customFunctions[BlockType.Columns].opacity = columnsOpacityFunc
     }
   }
 

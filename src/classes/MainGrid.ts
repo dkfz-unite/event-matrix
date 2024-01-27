@@ -55,7 +55,7 @@ class MainGrid {
   private selectionRegion: any
   private column: any
   private row: any
-  private geneMap: any
+  private rowMap: any
   public fullscreen = false
 
   constructor(params: MainGridParams, x: ScaleBand<string>, y: ScaleBand<string>) {
@@ -64,7 +64,7 @@ class MainGrid {
     this.y = y
 
     this.loadParams(params)
-    this.createGeneMap()
+    this.createRowMap()
     this.init()
 
     const descriptionBlockParams = this.getDescriptionBlockParams()
@@ -194,7 +194,7 @@ class MainGrid {
     // .style('top', 0)
     // .style('left', 0)
 
-    // n=t.margin.left+t.leftTextWidth+t.width+t.histogramHeight+t.geneTrack.height+t.margin.right
+    // n=t.margin.left+t.leftTextWidth+t.width+t.histogramHeight+t.rowTrack.height+t.margin.right
 
     this.container = this.svg.append('g')
 
@@ -236,8 +236,8 @@ class MainGrid {
         target: target,
         entryIds: obs.map((ob) => ob.id),
         entryId: targetEntry.id,
-        donorId: storage.columns[xIndex].id,
-        geneId: storage.rows[yIndex].id,
+        columnId: storage.columns[xIndex].id,
+        rowId: storage.rows[yIndex].id,
       })
     })
 
@@ -260,8 +260,8 @@ class MainGrid {
 
       eventBus.emit(publicEvents.GRID_CELL_CLICK, {
         target: event.target,
-        donorId: obsIds[0],
-        geneId: obsIds[1],
+        columnId: obsIds[0],
+        rowId: obsIds[1],
         entry: targetEntry,
       })
     })
@@ -320,7 +320,7 @@ class MainGrid {
    */
   public update(x: ScaleBand<string>, y: ScaleBand<string>) {
     this.computeCoordinates()
-    this.createGeneMap()
+    this.createRowMap()
 
     this.x = x
     this.y = y
@@ -366,15 +366,15 @@ class MainGrid {
     }
 
     if (this.drawGridLines) {
-      this.column = this.gridContainer.selectAll(`.${storage.prefix}donor-column`)
+      this.column = this.gridContainer.selectAll(`.${storage.prefix}column-column`)
         .data(storage.columns)
         .enter()
         .append('line')
-        .attr('x1', (donor: IColumn) => donor.x)
-        .attr('x2', (donor: IColumn) => donor.x)
+        .attr('x1', (column: IColumn) => column.x)
+        .attr('x2', (column: IColumn) => column.x)
         .attr('y1', 0)
         .attr('y2', this.height)
-        .attr('class', `${storage.prefix}donor-column`)
+        .attr('class', `${storage.prefix}column-column`)
         .style('pointer-events', 'none')
     }
 
@@ -384,11 +384,11 @@ class MainGrid {
       this.row.remove()
     }
 
-    this.row = this.gridContainer.selectAll(`.${storage.prefix}gene-row`)
+    this.row = this.gridContainer.selectAll(`.${storage.prefix}row-row`)
       .data(storage.rows)
       .enter()
       .append('g')
-      .attr('class', `${storage.prefix}gene-row`)
+      .attr('class', `${storage.prefix}row-row`)
       .attr('transform', (d: IRow) => {
         return 'translate(0,' + d.y + ')'
       })
@@ -402,9 +402,9 @@ class MainGrid {
     this.row
       .append('text')
       .attr('class', (g: any) => {
-        return `${storage.prefix}${g.id}-label ${storage.prefix}gene-label ${storage.prefix}label-text-font`
+        return `${storage.prefix}${g.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font`
       })
-      .attr('data-gene', (d) => d.id)
+      .attr('data-row', (d) => d.id)
       .attr('x', -8)
       .attr('y', this.cellHeight / 2)
       .attr('dy', '.32em')
@@ -421,21 +421,21 @@ class MainGrid {
       })
       .on('click', (event: IEnhancedEvent) => {
         const target = event.target
-        const geneId = target.dataset.gene
-        if (!geneId) {
+        const rowId = target.dataset.row
+        if (!rowId) {
           return
         }
-        storage.sortColumns('countByRow', geneId)
+        storage.sortColumns('countByRow', rowId)
         eventBus.emit(innerEvents.INNER_UPDATE, false)
 
         eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
-          geneId,
+          rowId,
         })
       })
   }
 
   public resize(width: number, height: number, x: ScaleBand<string>, y: ScaleBand<string>) {
-    this.createGeneMap()
+    this.createRowMap()
 
     this.x = x
     this.y = y
@@ -505,16 +505,16 @@ class MainGrid {
         const xIndex = this.width < coord[0] ? -1 : this.getIndexFromScaleBand(this.x, coord[0])
         const yIndex = this.height < coord[1] ? -1 : this.getIndexFromScaleBand(this.y, coord[1])
 
-        const donor = storage.columns[xIndex]
-        const gene = storage.rows[yIndex]
+        const column = storage.columns[xIndex]
+        const row = storage.rows[yIndex]
 
-        if (!donor || !gene) {
+        if (!column || !row) {
           return
         }
 
         eventBus.emit(publicEvents.GRID_CROSSHAIR_HOVER, {
-          donorId: donor.id,
-          geneId: gene.id,
+          columnId: column.id,
+          rowId: row.id,
         })
       }
     }
@@ -642,8 +642,8 @@ class MainGrid {
       const yStart = this.getIndexFromScaleBand(this.y, y1)
       const yStop = this.getIndexFromScaleBand(this.y, y2)
 
-      this.sliceDonors(parseInt(xStart), parseInt(xStop))
-      this.sliceGenes(parseInt(yStart), parseInt(yStop))
+      this.sliceColumns(parseInt(xStart), parseInt(xStop))
+      this.sliceRows(parseInt(yStart), parseInt(yStop))
 
       this.selectionRegion.remove()
       delete this.selectionRegion
@@ -658,12 +658,12 @@ class MainGrid {
    * @param start - start index of the selection
    * @param stop - end index of the selection
    */
-  private sliceGenes(start: number, stop: number) {
+  private sliceRows(start: number, stop: number) {
     for (let i = 0; i < storage.rows.length; i++) {
-      const gene = storage.rows[i]
+      const row = storage.rows[i]
       if (i < start || i > stop) {
-        d3.selectAll(`.${storage.prefix}${gene.id}-cell`).remove()
-        d3.selectAll(`.${storage.prefix}${gene.id}-bar`).remove()
+        d3.selectAll(`.${storage.prefix}${row.id}-cell`).remove()
+        d3.selectAll(`.${storage.prefix}${row.id}-bar`).remove()
         storage.rows.splice(i, 1)
         i--
         start--
@@ -677,12 +677,12 @@ class MainGrid {
    * @param start - start index of the selection
    * @param stop - end index of the selection
    */
-  private sliceDonors(start: number, stop: number) {
+  private sliceColumns(start: number, stop: number) {
     for (let i = 0; i < storage.columns.length; i++) {
-      const donor = storage.columns[i]
+      const column = storage.columns[i]
       if (i < start || i > stop) {
-        d3.selectAll(`.${storage.prefix}${donor.id}-cell`).remove()
-        d3.selectAll(`.${storage.prefix}${donor.id}-bar`).remove()
+        d3.selectAll(`.${storage.prefix}${column.id}-cell`).remove()
+        d3.selectAll(`.${storage.prefix}${column.id}-bar`).remove()
         storage.columns.splice(i, 1)
         i--
         start--
@@ -691,23 +691,23 @@ class MainGrid {
     }
   }
 
-  private createGeneMap() {
-    const geneMap = {}
-    for (const gene of storage.rows) {
-      geneMap[gene.id] = gene
+  private createRowMap() {
+    const rowMap = {}
+    for (const row of storage.rows) {
+      rowMap[row.id] = row
     }
-    this.geneMap = geneMap
+    this.rowMap = rowMap
   }
 
   /**
    * Function that determines the y position of a mutation within a cell
    */
-  private getY({id, geneId, donorId}: IEntry): number {
-    const y = this.geneMap[geneId].y ?? 0
+  private getY({id, rowId, columnId}: IEntry): number {
+    const y = this.rowMap[rowId].y ?? 0
     if (this.heatMap) {
       return y
     }
-    const obs = storage.lookupTable[donorId][geneId]
+    const obs = storage.lookupTable[columnId][rowId]
     if (obs.length === 0) {
       return y
     }
@@ -751,12 +751,12 @@ class MainGrid {
    * Returns the height of an entry cell.
    * @returns {number}
    */
-  private getHeight({donorId, geneId}: IEntry): number {
+  private getHeight({columnId, rowId}: IEntry): number {
     const height = this.cellHeight ?? 0
     if (this.heatMap) {
       return height
     }
-    const count = storage.lookupTable[donorId][geneId].length
+    const count = storage.lookupTable[columnId][rowId].length
     if (count === 0) {
       return height
     }
@@ -837,12 +837,12 @@ class MainGrid {
   }
 
   /**
-   * Helper for getting donor index position
+   * Helper for getting column index position
    */
-  private getDonorIndex(donors: any[], donorId: any) {
-    for (let i = 0; i < donors.length; i++) {
-      const donor = donors[i]
-      if (donor.id === donorId) {
+  private getColumnIndex(columns: any[], columnId: any) {
+    for (let i = 0; i < columns.length; i++) {
+      const column = columns[i]
+      if (column.id === columnId) {
         return i
       }
     }
@@ -851,26 +851,26 @@ class MainGrid {
   }
 
   /**
-   * Removes all elements corresponding to the given gene and then removes it from the gene list.
-   * @param i index of the gene to remove.
+   * Removes all elements corresponding to the given row and then removes it from the row list.
+   * @param i index of the row to remove.
    */
-  public removeGene(i: number) {
-    const gene = storage.rows[i]
-    if (gene) {
-      d3.selectAll(`.${storage.prefix}${gene.id}-cell`).remove()
-      d3.selectAll(`.${storage.prefix}${gene.id}-bar`).remove()
+  public removeRow(i: number) {
+    const row = storage.rows[i]
+    if (row) {
+      d3.selectAll(`.${storage.prefix}${row.id}-cell`).remove()
+      d3.selectAll(`.${storage.prefix}${row.id}-bar`).remove()
       storage.rows.splice(i, 1)
     }
 
     eventBus.emit(innerEvents.INNER_UPDATE, true)
   }
 
-  private nullableObsLookup(donor: any, gene: any) {
-    if (!donor || typeof donor !== 'object') return null
-    if (!gene || typeof gene !== 'object') return null
+  private nullableObsLookup(column: any, row: any) {
+    if (!column || typeof column !== 'object') return null
+    if (!row || typeof row !== 'object') return null
 
-    if (storage.lookupTable?.[donor.id]?.[gene.id]) {
-      return storage.lookupTable[donor.id][gene.id].join(', ') // Table stores arrays and we want to return a string;
+    if (storage.lookupTable?.[column.id]?.[row.id]) {
+      return storage.lookupTable[column.id][row.id].join(', ') // Table stores arrays and we want to return a string;
     } else {
       return null
     }
