@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import {ScaleBand, Selection} from 'd3'
 import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
-import {IDonor, IGene, IObservation} from '../interfaces/bioinformatics.interface'
+import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {
   HistogramParams,
   IDescriptionBlockParams,
@@ -19,10 +19,10 @@ class MainGrid {
   private params: MainGridParams
   private x: ScaleBand<string>
   private y: ScaleBand<string>
-  private donorDescriptionBlock: DescriptionBlock
-  private geneHistogram: Histogram
-  private donorHistogram: Histogram
-  private geneDescriptionBlock: DescriptionBlock
+  private horizontalDescriptionBlock: DescriptionBlock
+  private verticalHistogram: Histogram
+  private horizontalHistogram: Histogram
+  private verticalDescriptionBlock: DescriptionBlock
   private scaleToFit = true
   private leftTextWidth = 80
   private types: BaseType[] = [BaseType.Mutation]
@@ -69,38 +69,38 @@ class MainGrid {
 
     const descriptionBlockParams = this.getDescriptionBlockParams()
     const histogramParams = this.getHistogramParams()
-    this.donorHistogram = new Histogram(histogramParams, this.container, false)
-    this.donorDescriptionBlock = new DescriptionBlock(
+    this.horizontalHistogram = new Histogram(histogramParams, this.container, false)
+    this.horizontalDescriptionBlock = new DescriptionBlock(
       descriptionBlockParams,
-      BlockType.Donor,
+      BlockType.Columns,
       this.container,
       false,
-      params.donorTracks ?? [],
+      params.columnFields ?? [],
       this.height + 10
     )
-    this.donorDescriptionBlock.init()
+    this.horizontalDescriptionBlock.init()
 
-    this.geneHistogram = new Histogram(histogramParams, this.container, true)
-    this.geneDescriptionBlock =
+    this.verticalHistogram = new Histogram(histogramParams, this.container, true)
+    this.verticalDescriptionBlock =
       new DescriptionBlock(
         descriptionBlockParams,
-        BlockType.Gene,
+        BlockType.Rows,
         this.container,
         true,
-        params.geneTracks ?? [],
-        this.width + 10 + this.geneHistogram.getHistogramHeight() + 10 + storage.minCellHeight * (this.types.length)
+        params.rowFields ?? [],
+        this.width + 10 + this.verticalHistogram.getHistogramHeight() + 10 + storage.minCellHeight * (this.types.length)
       )
-    this.geneDescriptionBlock.init()
+    this.verticalDescriptionBlock.init()
   }
 
   private getDescriptionBlockParams(): IDescriptionBlockParams {
     return {
       padding: this.params.trackPadding,
       offset: this.params.offset,
-      label: this.params.trackLegendLabel,
+      label: this.params.fieldLegendLabel,
       margin: this.params.margin,
-      genes: this.params.genes,
-      donors: this.params.donors,
+      rows: this.params.rows,
+      columns: this.params.columns,
       width: this.params.width,
       parentHeight: this.params.height,
       height: this.params.trackHeight,
@@ -115,8 +115,8 @@ class MainGrid {
     return {
       histogramBorderPadding: this.params.histogramBorderPadding,
       type: this.params.type,
-      genes: this.params.genes,
-      donors: this.params.donors,
+      rows: this.params.rows,
+      columns: this.params.columns,
       margin: this.params.margin,
       width: this.params.width,
       height: this.params.height,
@@ -160,12 +160,12 @@ class MainGrid {
       this.inputHeight = height
     }
 
-    this.cellWidth = this.width / storage.donors.length
-    this.cellHeight = this.height / storage.genes.length
+    this.cellWidth = this.width / storage.columns.length
+    this.cellHeight = this.height / storage.rows.length
 
     if (this.cellHeight < storage.minCellHeight) {
       this.cellHeight = storage.minCellHeight
-      this.height = storage.genes.length * storage.minCellHeight
+      this.height = storage.rows.length * storage.minCellHeight
     }
 
     if (margin !== undefined) {
@@ -225,19 +225,19 @@ class MainGrid {
         return
       }
       const obsIds = target.dataset.obsIndex.split(' ')
-      const obs = storage.observations.filter((observation: IObservation) => {
-        return observation.donorId === obsIds[0] && observation.geneId === obsIds[1]
+      const obs = storage.entries.filter((entry: IEntry) => {
+        return entry.columnId === obsIds[0] && entry.rowId === obsIds[1]
       })
-      const targetObservation = obs.find((observation: IObservation) => {
-        return observation.id == obsIds[2]
+      const targetEntry = obs.find((entry: IEntry) => {
+        return entry.id == obsIds[2]
       })
 
       eventBus.emit(publicEvents.GRID_CELL_HOVER, {
         target: target,
-        observationIds: obs.map((ob) => ob.id),
-        observationId: targetObservation.id,
-        donorId: storage.donors[xIndex].id,
-        geneId: storage.genes[yIndex].id,
+        entryIds: obs.map((ob) => ob.id),
+        entryId: targetEntry.id,
+        donorId: storage.columns[xIndex].id,
+        geneId: storage.rows[yIndex].id,
       })
     })
 
@@ -251,63 +251,63 @@ class MainGrid {
         return
       }
 
-      const obs = storage.observations.filter((observation: IObservation) => {
-        return observation.donorId === obsIds[0] && observation.geneId === obsIds[1]
+      const obs = storage.entries.filter((entry: IEntry) => {
+        return entry.columnId === obsIds[0] && entry.rowId === obsIds[1]
       })
-      const targetObservation = obs.find((observation: IObservation) => {
-        return observation.id == obsIds[2]
+      const targetEntry = obs.find((entry: IEntry) => {
+        return entry.id == obsIds[2]
       })
 
       eventBus.emit(publicEvents.GRID_CELL_CLICK, {
         target: event.target,
         donorId: obsIds[0],
         geneId: obsIds[1],
-        observation: targetObservation,
+        entry: targetEntry,
       })
     })
 
     this.container
       .selectAll(`.${storage.prefix}maingrid-svg`)
-      .data(storage.observations)
+      .data(storage.entries)
       .enter()
       .append('path')
-      .attr('data-obs-index', (obs: IObservation, i: number) => {
-        return `${obs.donorId} ${obs.geneId} ${obs.id}`
+      .attr('data-obs-index', (obs: IEntry, i: number) => {
+        return `${obs.columnId} ${obs.rowId} ${obs.id}`
       })
-      .attr('class', (obs: IObservation) => {
-        return `${storage.prefix}sortable-rect ${storage.prefix}${obs.donorId}-cell ${storage.prefix}${obs.geneId}-cell`
+      .attr('class', (obs: IEntry) => {
+        return `${storage.prefix}sortable-rect ${storage.prefix}${obs.columnId}-cell ${storage.prefix}${obs.rowId}-cell`
       })
-      .attr('cons', (obs: IObservation) => {
+      .attr('cons', (obs: IEntry) => {
         return this.getValueByType(obs)
       })
-      .attr('d', (obs: IObservation) => {
+      .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
       })
-      .attr('fill', (obs: IObservation) => {
+      .attr('fill', (obs: IEntry) => {
         return this.getColor(obs)
       })
-      .attr('opacity', (obs: IObservation) => {
+      .attr('opacity', (obs: IEntry) => {
         return this.getOpacity(obs)
       })
 
     eventBus.emit(renderEvents.RENDER_GRID_END)
 
-    if (storage.observations.length) {
+    if (storage.entries.length) {
       eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_START)
-      this.donorHistogram.render()
+      this.horizontalHistogram.render()
       eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_END)
 
       eventBus.emit(renderEvents.RENDER_Y_HISTOGRAM_START)
-      this.geneHistogram.render()
+      this.verticalHistogram.render()
       eventBus.emit(renderEvents.RENDER_Y_HISTOGRAM_END)
     }
 
     eventBus.emit(renderEvents.RENDER_X_DESCRIPTION_BLOCK_START)
-    this.donorDescriptionBlock.render()
+    this.horizontalDescriptionBlock.render()
     eventBus.emit(renderEvents.RENDER_X_DESCRIPTION_BLOCK_END)
 
     eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_START)
-    this.geneDescriptionBlock.render()
+    this.verticalDescriptionBlock.render()
     eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_END)
 
     this.defineCrosshairBehaviour()
@@ -343,15 +343,15 @@ class MainGrid {
       this.container
         .selectAll(`.${storage.prefix}sortable-rect`)
         .transition()
-        .attr('d', (obs: IObservation) => {
+        .attr('d', (obs: IEntry) => {
           return this.getRectangularPath(obs)
         })
     }
 
-    this.donorDescriptionBlock.update(storage.donors as IDomainEntity[])
-    this.geneDescriptionBlock.update(storage.genes as IDomainEntity[])
-    this.donorHistogram.update(storage.donors as IDomainEntity[])
-    this.geneHistogram.update(storage.genes as IDomainEntity[])
+    this.horizontalDescriptionBlock.update(storage.columns as IDomainEntity[])
+    this.verticalDescriptionBlock.update(storage.rows as IDomainEntity[])
+    this.horizontalHistogram.update(storage.columns as IDomainEntity[])
+    this.verticalHistogram.update(storage.rows as IDomainEntity[])
   }
 
 
@@ -359,7 +359,7 @@ class MainGrid {
    * Updates coordinate system and renders the lines of the grid.
    */
   private computeCoordinates() {
-    this.cellWidth = this.width / storage.donors.length
+    this.cellWidth = this.width / storage.columns.length
 
     if (this.column !== undefined) {
       this.column.remove()
@@ -367,29 +367,29 @@ class MainGrid {
 
     if (this.drawGridLines) {
       this.column = this.gridContainer.selectAll(`.${storage.prefix}donor-column`)
-        .data(storage.donors)
+        .data(storage.columns)
         .enter()
         .append('line')
-        .attr('x1', (donor: IDonor) => donor.x)
-        .attr('x2', (donor: IDonor) => donor.x)
+        .attr('x1', (donor: IColumn) => donor.x)
+        .attr('x2', (donor: IColumn) => donor.x)
         .attr('y1', 0)
         .attr('y2', this.height)
         .attr('class', `${storage.prefix}donor-column`)
         .style('pointer-events', 'none')
     }
 
-    this.cellHeight = this.height / storage.genes.length
+    this.cellHeight = this.height / storage.rows.length
 
     if (this.row !== undefined) {
       this.row.remove()
     }
 
     this.row = this.gridContainer.selectAll(`.${storage.prefix}gene-row`)
-      .data(storage.genes)
+      .data(storage.rows)
       .enter()
       .append('g')
       .attr('class', `${storage.prefix}gene-row`)
-      .attr('transform', (d: IGene) => {
+      .attr('transform', (d: IRow) => {
         return 'translate(0,' + d.y + ')'
       })
 
@@ -417,7 +417,7 @@ class MainGrid {
         }
       })
       .text((d: any, i: number) => {
-        return storage.genes[i].symbol
+        return storage.rows[i].symbol
       })
       .on('click', (event: IEnhancedEvent) => {
         const target = event.target
@@ -425,7 +425,7 @@ class MainGrid {
         if (!geneId) {
           return
         }
-        storage.sortDonors('countByGene', geneId)
+        storage.sortColumns('countByRow', geneId)
         eventBus.emit(innerEvents.INNER_UPDATE, false)
 
         eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
@@ -442,12 +442,12 @@ class MainGrid {
     this.width = width
     this.height = height
 
-    this.cellWidth = this.width / storage.donors.length
-    this.cellHeight = this.height / storage.genes.length
+    this.cellWidth = this.width / storage.columns.length
+    this.cellHeight = this.height / storage.rows.length
 
     if (this.cellHeight < storage.minCellHeight) {
       this.cellHeight = storage.minCellHeight
-      this.height = storage.genes.length * storage.minCellHeight
+      this.height = storage.rows.length * storage.minCellHeight
     }
 
     this.background
@@ -456,25 +456,25 @@ class MainGrid {
 
     this.computeCoordinates()
 
-    if (storage.observations.length) {
-      this.donorHistogram.resize(width, this.height)
-      this.geneHistogram.resize(width, this.height)
+    if (storage.entries.length) {
+      this.horizontalHistogram.resize(width, this.height)
+      this.verticalHistogram.resize(width, this.height)
     }
-    const histogramHeight = this.donorHistogram.getHistogramHeight()
-    this.donorDescriptionBlock.resize(width, this.height, this.height)
-    this.geneDescriptionBlock.resize(width, this.height, this.width + histogramHeight + 120)
+    const histogramHeight = this.horizontalHistogram.getHistogramHeight()
+    this.horizontalDescriptionBlock.resize(width, this.height, this.height)
+    this.verticalDescriptionBlock.resize(width, this.height, this.width + histogramHeight + 120)
 
     this.resizeSvg()
     this.update(this.x, this.y)
 
-    this.verticalCross.attr('y2', this.height + this.donorDescriptionBlock.height)
-    this.horizontalCross.attr('x2', this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height)
+    this.verticalCross.attr('y2', this.height + this.horizontalDescriptionBlock.height)
+    this.horizontalCross.attr('x2', this.width + (histogramHeight * this.types.length) + this.verticalDescriptionBlock.height)
   }
 
   private resizeSvg() {
-    const histogramHeight = this.donorHistogram.getHistogramHeight()
-    const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height + this.margin.right
-    const height = this.margin.top + 10 + histogramHeight + 10 + this.height + this.donorDescriptionBlock.height + this.margin.bottom
+    const histogramHeight = this.horizontalHistogram.getHistogramHeight()
+    const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.verticalDescriptionBlock.height + this.margin.right
+    const height = this.margin.top + 10 + histogramHeight + 10 + this.height + this.horizontalDescriptionBlock.height + this.margin.bottom
 
     this.svg
       .attr('width', width)
@@ -505,8 +505,8 @@ class MainGrid {
         const xIndex = this.width < coord[0] ? -1 : this.getIndexFromScaleBand(this.x, coord[0])
         const yIndex = this.height < coord[1] ? -1 : this.getIndexFromScaleBand(this.y, coord[1])
 
-        const donor = storage.donors[xIndex]
-        const gene = storage.genes[yIndex]
+        const donor = storage.columns[xIndex]
+        const gene = storage.rows[yIndex]
 
         if (!donor || !gene) {
           return
@@ -519,19 +519,19 @@ class MainGrid {
       }
     }
 
-    const histogramHeight = this.donorHistogram.getHistogramHeight()
+    const histogramHeight = this.horizontalHistogram.getHistogramHeight()
 
     this.verticalCross = this.container.append('line')
       .attr('class', `${storage.prefix}vertical-cross`)
       .attr('y1', -histogramHeight)
-      .attr('y2', this.height + this.donorDescriptionBlock.height)
+      .attr('y2', this.height + this.horizontalDescriptionBlock.height)
       .attr('opacity', 0)
       .attr('style', 'pointer-events: none')
 
     this.horizontalCross = this.container.append('line')
       .attr('class', `${storage.prefix}horizontal-cross`)
       .attr('x1', 0)
-      .attr('x2', this.width + histogramHeight + this.geneDescriptionBlock.height)
+      .attr('x2', this.width + histogramHeight + this.verticalDescriptionBlock.height)
       .attr('opacity', 0)
       .attr('style', 'pointer-events: none')
 
@@ -659,12 +659,12 @@ class MainGrid {
    * @param stop - end index of the selection
    */
   private sliceGenes(start: number, stop: number) {
-    for (let i = 0; i < storage.genes.length; i++) {
-      const gene = storage.genes[i]
+    for (let i = 0; i < storage.rows.length; i++) {
+      const gene = storage.rows[i]
       if (i < start || i > stop) {
         d3.selectAll(`.${storage.prefix}${gene.id}-cell`).remove()
         d3.selectAll(`.${storage.prefix}${gene.id}-bar`).remove()
-        storage.genes.splice(i, 1)
+        storage.rows.splice(i, 1)
         i--
         start--
         stop--
@@ -678,12 +678,12 @@ class MainGrid {
    * @param stop - end index of the selection
    */
   private sliceDonors(start: number, stop: number) {
-    for (let i = 0; i < storage.donors.length; i++) {
-      const donor = storage.donors[i]
+    for (let i = 0; i < storage.columns.length; i++) {
+      const donor = storage.columns[i]
       if (i < start || i > stop) {
         d3.selectAll(`.${storage.prefix}${donor.id}-cell`).remove()
         d3.selectAll(`.${storage.prefix}${donor.id}-bar`).remove()
-        storage.donors.splice(i, 1)
+        storage.columns.splice(i, 1)
         i--
         start--
         stop--
@@ -693,7 +693,7 @@ class MainGrid {
 
   private createGeneMap() {
     const geneMap = {}
-    for (const gene of storage.genes) {
+    for (const gene of storage.rows) {
       geneMap[gene.id] = gene
     }
     this.geneMap = geneMap
@@ -702,7 +702,7 @@ class MainGrid {
   /**
    * Function that determines the y position of a mutation within a cell
    */
-  private getY({id, geneId, donorId}: IObservation): number {
+  private getY({id, geneId, donorId}: IEntry): number {
     const y = this.geneMap[geneId].y ?? 0
     if (this.heatMap) {
       return y
@@ -717,17 +717,17 @@ class MainGrid {
   /**
    * Function that determines the x position of a mutation
    */
-  private getCellX(observation: IObservation): number {
-    const x = storage.lookupTable[observation.donorId].x ?? 0
+  private getCellX(entry: IEntry): number {
+    const x = storage.lookupTable[entry.columnId].x ?? 0
     return x
   }
 
   /**
-   * Returns the color for the given observation.
-   * @param observation.
+   * Returns the color for the given entry.
+   * @param entry.
    */
-  private getColor(observation: IObservation) {
-    const colorKey = observation.consequence
+  private getColor(entry: IEntry) {
+    const colorKey = entry.consequence
     if (this.heatMap) {
       return this.heatMapColor
     } else {
@@ -736,10 +736,10 @@ class MainGrid {
   }
 
   /**
-   * Returns the desired opacity of observation rects. This changes between heatmap and regular mode.
+   * Returns the desired opacity of entry rects. This changes between heatmap and regular mode.
    * @returns {number}
    */
-  private getOpacity(observation: IObservation) {
+  private getOpacity(entry: IEntry) {
     if (this.heatMap) {
       return 0.25
     } else {
@@ -748,10 +748,10 @@ class MainGrid {
   }
 
   /**
-   * Returns the height of an observation cell.
+   * Returns the height of an entry cell.
    * @returns {number}
    */
-  private getHeight({donorId, geneId}: IObservation): number {
+  private getHeight({donorId, geneId}: IEntry): number {
     const height = this.cellHeight ?? 0
     if (this.heatMap) {
       return height
@@ -764,37 +764,37 @@ class MainGrid {
     return height / count
   }
 
-  private getCellWidth(observation: IObservation) {
+  private getCellWidth(entry: IEntry) {
     return this.cellWidth ?? 0
   }
 
   /**
-   * Returns the correct observation value based on the data type.
+   * Returns the correct entry value based on the data type.
    */
-  private getValueByType(observation: IObservation) {
-    return observation.consequence ?? ''
+  private getValueByType(entry: IEntry) {
+    return entry.consequence ?? ''
   }
 
   /**
    * Returns circular path based on cell dimensions
    */
-  private getCircularPath(observation: IObservation) {
-    const x1 = this.getCellX(observation)
-    const y1 = this.getY(observation)
-    return 'M ' + (x1 + this.cellWidth / 4) + ', ' + y1 + ' m ' + (-1 * this.getCellWidth(observation)) + ', 0 ' + 'a ' + this.getCellWidth(observation) + ', ' + this.getCellWidth(observation) + ' 0 1,0 ' + (2 * this.getCellWidth(observation)) + ',0 a ' + this.getCellWidth(observation) + ',' + this.getCellWidth(observation) + ' 0 1,0 ' + (-1 * (2 * this.getCellWidth(observation))) + ',0'
+  private getCircularPath(entry: IEntry) {
+    const x1 = this.getCellX(entry)
+    const y1 = this.getY(entry)
+    return 'M ' + (x1 + this.cellWidth / 4) + ', ' + y1 + ' m ' + (-1 * this.getCellWidth(entry)) + ', 0 ' + 'a ' + this.getCellWidth(entry) + ', ' + this.getCellWidth(entry) + ' 0 1,0 ' + (2 * this.getCellWidth(entry)) + ',0 a ' + this.getCellWidth(entry) + ',' + this.getCellWidth(entry) + ' 0 1,0 ' + (-1 * (2 * this.getCellWidth(entry))) + ',0'
   }
 
   /**
    * Returns rectangular path based on cell dimensions
    */
-  private getRectangularPath(observation: IObservation) {
-    const x1 = this.getCellX(observation)
-    const y1 = this.getY(observation)
-    return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(observation)) + ' H ' + x1 + 'Z'
+  private getRectangularPath(entry: IEntry) {
+    const x1 = this.getCellX(entry)
+    const y1 = this.getY(entry)
+    return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(entry)) + ' H ' + x1 + 'Z'
   }
 
   /**
-   * set the observation rects between heatmap and regular mode.
+   * set the entry rects between heatmap and regular mode.
    */
   public setHeatmap(active: boolean) {
     if (active === this.heatMap) return this.heatMap
@@ -803,13 +803,13 @@ class MainGrid {
     for (const type of this.types) {
       d3.selectAll(`.${storage.prefix}sortable-rect`)
         .transition()
-        .attr('d', (obs: IObservation) => {
+        .attr('d', (obs: IEntry) => {
           return this.getRectangularPath(obs)
         })
-        .attr('fill', (obs: IObservation) => {
+        .attr('fill', (obs: IEntry) => {
           return this.getColor(obs)
         })
-        .attr('opacity', (obs: IObservation) => {
+        .attr('opacity', (obs: IEntry) => {
           return this.getOpacity(obs)
         })
     }
@@ -822,8 +822,8 @@ class MainGrid {
     if (this.drawGridLines === active) return this.drawGridLines
     this.drawGridLines = active
 
-    this.geneDescriptionBlock.setGridLines(this.drawGridLines)
-    this.donorDescriptionBlock.setGridLines(this.drawGridLines)
+    this.verticalDescriptionBlock.setGridLines(this.drawGridLines)
+    this.horizontalDescriptionBlock.setGridLines(this.drawGridLines)
 
     this.computeCoordinates()
 
@@ -855,11 +855,11 @@ class MainGrid {
    * @param i index of the gene to remove.
    */
   public removeGene(i: number) {
-    const gene = storage.genes[i]
+    const gene = storage.rows[i]
     if (gene) {
       d3.selectAll(`.${storage.prefix}${gene.id}-cell`).remove()
       d3.selectAll(`.${storage.prefix}${gene.id}-bar`).remove()
-      storage.genes.splice(i, 1)
+      storage.rows.splice(i, 1)
     }
 
     eventBus.emit(innerEvents.INNER_UPDATE, true)

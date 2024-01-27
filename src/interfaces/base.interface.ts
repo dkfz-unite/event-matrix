@@ -1,6 +1,6 @@
 export enum BlockType {
-  Gene = 'gene',
-  Donor = 'donor',
+  Rows = 'rows',
+  Columns = 'columns',
 }
 
 export enum BaseType {

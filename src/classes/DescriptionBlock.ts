@@ -1,8 +1,12 @@
 import {Selection} from 'd3'
 import {BlockType} from '../interfaces/base.interface'
-import {IDescriptionBlockParams, IDescriptionFieldsGroupParams, IDomainEntity} from '../interfaces/main-grid.interface'
+import {
+  IDescriptionBlockParams,
+  IDescriptionField,
+  IDescriptionFieldsGroupParams,
+  IDomainEntity
+} from '../interfaces/main-grid.interface'
 import {storage} from '../utils/storage'
-import DescriptionField from './DescriptionField'
 import DescriptionFieldsGroup from './DescriptionFieldsGroup'
 
 class DescriptionBlock {
@@ -16,7 +20,7 @@ class DescriptionBlock {
   height: number = 0
   cellHeight: number
   cellWidth: number
-  fields: DescriptionField[]
+  fields: IDescriptionField[]
   drawGridLines: boolean
   nullSentinel: number
   groupMap: Record<string, DescriptionFieldsGroup> = {}
@@ -29,7 +33,7 @@ class DescriptionBlock {
     blockType: BlockType,
     svg: any,
     rotated: boolean,
-    fields: DescriptionField[],
+    fields: IDescriptionField[],
     offset: any
   ) {
     this.blockType = blockType
@@ -38,7 +42,7 @@ class DescriptionBlock {
     this.svg = svg
     this.rotated = rotated || false
 
-    this.domain = (this.rotated ? params.genes : params.donors) || []
+    this.domain = (this.rotated ? params.rows : params.columns) as IDomainEntity[] || []
 
     this.width = (this.rotated ? params.parentHeight : params.width) || 500
 
