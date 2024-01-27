@@ -1,10 +1,11 @@
 import * as d3 from 'd3'
 import {ScaleBand} from 'd3'
+import {innerEvents} from 'event-matrix/src/utils/event-bus'
 import EventEmitter from 'eventemitter3'
 import {SortFn} from '../interfaces/base.interface'
 import {IDonor, IGene} from '../interfaces/bioinformatics.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
-import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
+import {eventBus, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import MainGrid from './MainGrid'
 

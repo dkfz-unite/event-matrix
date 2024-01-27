@@ -76,7 +76,7 @@ class MainGrid {
       this.container,
       false,
       params.donorTracks ?? [],
-      this.height
+      this.height + 10
     )
     this.donorDescriptionBlock.init()
 
@@ -88,7 +88,7 @@ class MainGrid {
         this.container,
         true,
         params.geneTracks ?? [],
-        this.width + (this.donorHistogram.getHistogramHeight() * this.types.length)
+        this.width + 10 + this.geneHistogram.getHistogramHeight() + 10 + storage.minCellHeight * (this.types.length)
       )
     this.geneDescriptionBlock.init()
   }
@@ -474,7 +474,7 @@ class MainGrid {
   private resizeSvg() {
     const histogramHeight = this.donorHistogram.getHistogramHeight()
     const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.geneDescriptionBlock.height + this.margin.right
-    const height = this.margin.top + (histogramHeight * this.types.length) + this.height + this.donorDescriptionBlock.height + this.margin.bottom
+    const height = this.margin.top + 10 + histogramHeight + 10 + this.height + this.donorDescriptionBlock.height + this.margin.bottom
 
     this.svg
       .attr('width', width)
@@ -484,7 +484,7 @@ class MainGrid {
     this.container
       .attr('transform', 'translate(' +
         (this.margin.left + this.leftTextWidth) + ',' +
-        (this.margin.top + (histogramHeight * this.types.length)) +
+        (this.margin.top + (histogramHeight * this.types.length) + 10) +
         ')')
   }
 

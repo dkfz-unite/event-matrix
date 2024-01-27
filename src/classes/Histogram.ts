@@ -1,14 +1,15 @@
 import * as d3 from 'd3'
 import {Selection} from 'd3'
+import {innerEvents} from 'event-matrix/src/utils/event-bus'
 import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
-import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
+import {eventBus, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 
 class Histogram {
   private lineWidthOffset: number
   private lineHeightOffset: number
-  private padding = 20
-  private centerText = -6
+  private padding = 10
+  private centerText = 0
   private svg: Selection<any, any, HTMLElement, any>
   private rotated: boolean
   private domain: IDomainEntity[]
@@ -41,12 +42,14 @@ class Histogram {
     this.svg = svg
     this.rotated = rotated || false
     this.domain = (this.rotated ? storage.genes : storage.donors) as IDomainEntity[]
-    this.margin = params.margin || {top: 30, right: 15, bottom: 15, left: 80}
+    this.margin = params.margin || {top: 15, right: 15, bottom: 15, left: 80}
     this.width = params.width || 500
     this.height = params.height || 500
     this.histogramWidth = this.rotated ? this.height : this.width
     this.numDomain = this.domain.length
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
+
+    console.log(this.histogramHeight, this.lineHeightOffset, this.padding)
     this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding
     this.wrapper = d3.select<Element, unknown>(params.wrapper || 'body')
   }
@@ -78,6 +81,7 @@ class Histogram {
         }
       })
 
+    console.log(this.totalHeight, this.centerText)
     this.histogram = this.container.append('g')
       .attr('transform', 'translate(0,-' + (this.totalHeight + this.centerText) + ')')
 
