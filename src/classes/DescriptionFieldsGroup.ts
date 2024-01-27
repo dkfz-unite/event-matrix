@@ -171,8 +171,9 @@ class DescriptionFieldsGroup {
 
     this.renderData()
     this.legend
-      .on('mouseover', () => {
+      .on('mouseover', (event) => {
         eventBus.emit(publicEvents.DESCRIPTION_LEGEND_HOVER, {
+          target: event.target,
           group: this.name,
         })
       })
@@ -395,9 +396,10 @@ class DescriptionFieldsGroup {
         if (!fieldData) return
 
         eventBus.emit(publicEvents.DESCRIPTION_CELL_HOVER, {
-          domain: fieldData,
+          domainId: fieldData.id,
           target: target,
           type: this.rotated ? 'gene' : 'donor',
+          field: fieldData.fieldName,
         })
       })
       .on('mouseout', () => {

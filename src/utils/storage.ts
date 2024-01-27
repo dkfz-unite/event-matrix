@@ -27,7 +27,9 @@ class Storage {
     },
   }
 
+  private genesPrevIndex: null
   private genesOrder: 'ASC' | 'DESC' | null = null
+  private donorsPrevIndex: null
   private donorsOrder: 'ASC' | 'DESC' | null = null
 
   public setLookupTable(lookupTable: ILookupTable) {
@@ -83,7 +85,9 @@ class Storage {
     this.genes = [...this.genesOriginal]
     this.donors = [...this.donorsOriginal]
     this.genesOrder = null
+    this.genesPrevIndex = null
     this.donorsOrder = null
+    this.donorsPrevIndex = null
   }
 
   public static getInstance(): Storage {
@@ -93,16 +97,19 @@ class Storage {
     return this.instance
   }
 
-  public sortGenes(fieldName = 'id') {
-    if (this.genesOrder === null) {
-      this.genesOrder = 'ASC'
-    } else {
-      this.genesOrder = this.genesOrder === 'ASC' ? 'DESC' : 'ASC'
+  public sortGenes(fieldName = 'id', index = null) {
+    if (index === null || index === this.genesPrevIndex) {
+      if (this.genesOrder === null) {
+        this.genesOrder = 'ASC'
+      } else {
+        this.genesOrder = this.genesOrder === 'ASC' ? 'DESC' : 'ASC'
+      }
     }
+    this.genesPrevIndex = index
 
     this.genes.sort((a, b) => {
-      const aVal = a[fieldName] ?? '0'
-      const bVal = b[fieldName] ?? '0'
+      const aVal = (index === null ? a[fieldName] : a[fieldName][index]) ?? '0'
+      const bVal = (index === null ? b[fieldName] : b[fieldName][index]) ?? '0'
       if (aVal === bVal) return 0
       if (this.genesOrder === 'ASC') {
         return aVal < bVal ? 1 : -1
@@ -112,16 +119,19 @@ class Storage {
     })
   }
 
-  public sortDonors(fieldName = 'id') {
-    if (this.donorsOrder === null) {
-      this.donorsOrder = 'ASC'
-    } else {
-      this.donorsOrder = this.donorsOrder === 'ASC' ? 'DESC' : 'ASC'
+  public sortDonors(fieldName = 'id', index = null) {
+    if (index === null || index === this.donorsPrevIndex) {
+      if (this.donorsOrder === null) {
+        this.donorsOrder = 'ASC'
+      } else {
+        this.donorsOrder = this.donorsOrder === 'ASC' ? 'DESC' : 'ASC'
+      }
     }
+    this.donorsPrevIndex = index
 
     this.donors.sort((a, b) => {
-      const aVal = a[fieldName] ?? '0'
-      const bVal = b[fieldName] ?? '0'
+      const aVal = (index === null ? a[fieldName] : a[fieldName][index]) ?? '0'
+      const bVal = (index === null ? b[fieldName] : b[fieldName][index]) ?? '0'
       if (aVal === bVal) return 0
       if (this.donorsOrder === 'ASC') {
         return aVal < bVal ? 1 : -1

@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import {D3DragEvent, ScaleBand, Selection} from 'd3'
+import {ScaleBand, Selection} from 'd3'
 import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
 import {IDonor, IGene, IObservation} from '../interfaces/bioinformatics.interface'
 import {
@@ -11,7 +11,6 @@ import {
 } from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
-import {parseTransform} from '../utils/utils'
 import DescriptionBlock from './DescriptionBlock'
 
 import Histogram from './Histogram'
@@ -235,10 +234,10 @@ class MainGrid {
 
       eventBus.emit(publicEvents.GRID_CELL_HOVER, {
         target: target,
-        observations: obs,
-        observation: targetObservation,
-        donor: storage.donors[xIndex],
-        gene: storage.genes[yIndex],
+        observationIds: obs.map((ob) => ob.id),
+        observationId: targetObservation.id,
+        donorId: storage.donors[xIndex].id,
+        geneId: storage.genes[yIndex].id,
       })
     })
 
@@ -400,10 +399,12 @@ class MainGrid {
         .style('pointer-events', 'none')
     }
 
-    this.row.append('text')
+    this.row
+      .append('text')
       .attr('class', (g: any) => {
         return `${storage.prefix}${g.id}-label ${storage.prefix}gene-label ${storage.prefix}label-text-font`
       })
+      .attr('data-gene', (d) => d.id)
       .attr('x', -8)
       .attr('y', this.cellHeight / 2)
       .attr('dy', '.32em')
@@ -418,8 +419,19 @@ class MainGrid {
       .text((d: any, i: number) => {
         return storage.genes[i].symbol
       })
+      .on('click', (event: IEnhancedEvent) => {
+        const target = event.target
+        const geneId = target.dataset.gene
+        if (!geneId) {
+          return
+        }
+        storage.sortDonors('countByGene', geneId)
+        eventBus.emit(innerEvents.INNER_UPDATE, false)
 
-    this.defineRowDragBehaviour()
+        eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
+          geneId,
+        })
+      })
   }
 
   public resize(width: number, height: number, x: ScaleBand<string>, y: ScaleBand<string>) {
@@ -501,8 +513,8 @@ class MainGrid {
         }
 
         eventBus.emit(publicEvents.GRID_CROSSHAIR_HOVER, {
-          donor: donor,
-          gene: gene,
+          donorId: donor.id,
+          geneId: gene.id,
         })
       }
     }
@@ -677,68 +689,6 @@ class MainGrid {
         stop--
       }
     }
-  }
-
-  /**
-   * Defines the row drag behaviour for moving genes and binds it to the row elements.
-   */
-  private defineRowDragBehaviour() {
-    const drag = d3.drag()
-      .on('start', (event: D3DragEvent<any, any, any>) => {
-        event.sourceEvent.stopPropagation()
-      })
-      .on('drag', (event: D3DragEvent<any, any, any>) => {
-        const trans = event.dy
-        const selection = d3.select(event.sourceEvent.target)
-
-        selection.attr('transform', (element) => {
-          const transform = selection.attr('transform')
-          let translate = [0, 0]
-          if (transform !== null) {
-            const parsedTransform = parseTransform(transform)
-            translate = parsedTransform.translate
-          }
-
-          return `translate( 0, ${translate[1] + trans})`
-        })
-      })
-      .on('end', (event: D3DragEvent<any, any, any>) => {
-        console.log('end', event)
-        const coord = d3.pointer(event, this.container.node())
-        const dragged = storage.genes.indexOf(event.subject)
-        const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
-
-        storage.genes.splice(dragged, 1)
-        storage.genes.splice(parseInt(yIndex), 0, event.subject)
-
-        eventBus.emit(innerEvents.INNER_UPDATE, true)
-      })
-
-    const dragSelection = this.row.call(drag)
-    dragSelection.on('click', (event: IEnhancedEvent) => {
-      if (event.defaultPrevented) {
-        //
-      }
-    })
-
-    this.row.on('mouseover', (event: IEnhancedEvent) => {
-      const curElement = event.target
-      if (curElement.timeout !== undefined) {
-        clearTimeout(curElement.timeout)
-      }
-
-      d3.select(event.target)
-        .select(`.${storage.prefix}remove-gene`)
-        .attr('style', 'display: block')
-    })
-
-    this.row.on('mouseout', (event: IEnhancedEvent) => {
-      const curElement = event.target
-      curElement.timeout = setTimeout(() => {
-        d3.select(curElement).select(`.${storage.prefix}remove-gene`)
-          .attr('style', 'display: none')
-      }, 500)
-    })
   }
 
   private createGeneMap() {

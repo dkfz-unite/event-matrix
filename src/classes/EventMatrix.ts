@@ -1,11 +1,10 @@
 import * as d3 from 'd3'
 import {ScaleBand} from 'd3'
-import {innerEvents} from 'event-matrix/src/utils/event-bus'
 import EventEmitter from 'eventemitter3'
 import {SortFn} from '../interfaces/base.interface'
 import {IDonor, IGene} from '../interfaces/bioinformatics.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
-import {eventBus, renderEvents} from '../utils/event-bus'
+import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import MainGrid from './MainGrid'
 
@@ -57,6 +56,7 @@ class EventMatrix extends EventEmitter {
   private initCharts(reloading?: boolean) {
     this.createLookupTable()
     this.computeDonorCounts()
+    this.computeGeneCounts()
     this.computeGeneScoresAndCount()
     this.genesSortbyScores()
     this.computeScores()
@@ -218,6 +218,7 @@ class EventMatrix extends EventEmitter {
         j--
       }
     }
+    this.computeGeneCounts()
     this.computeGeneScoresAndCount()
     this.update(false)
     this.resize(this.width, this.height, false)
@@ -357,6 +358,16 @@ class EventMatrix extends EventEmitter {
       for (const item of genes) {
         donor.count += item.length
       }
+
+      donor.countByGene = {}
+      for (const obs of storage.observations) {
+        if (donor.id === obs.donorId) {
+          if (donor.countByGene[obs.geneId] === undefined) {
+            donor.countByGene[obs.geneId] = 0
+          }
+          donor.countByGene[obs.geneId]++
+        }
+      }
     }
   }
 
@@ -366,9 +377,14 @@ class EventMatrix extends EventEmitter {
   private computeGeneCounts() {
     for (const gene of storage.genes) {
       gene.count = 0
+      gene.countByDonor = {}
       for (const obs of storage.observations) {
         if (gene.id === obs.geneId) {
-          gene.count += 1
+          gene.count++
+          if (gene.countByDonor[obs.donorId] === undefined) {
+            gene.countByDonor[obs.donorId] = 0
+          }
+          gene.countByDonor[obs.donorId]++
         }
       }
     }

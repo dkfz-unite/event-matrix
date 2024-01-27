@@ -15,6 +15,7 @@ export interface IGene {
   y: number
   score: number
   count: number
+  countByDonor: Record<string, number>
 }
 
 export interface IDonor {
@@ -24,6 +25,7 @@ export interface IDonor {
   age?: number
 
   count: number
+  countByGene: Record<string, number>
   score: number
 
   // situational params
