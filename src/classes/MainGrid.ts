@@ -725,7 +725,7 @@ class MainGrid {
    * @param entry.
    */
   private getColor(entry: IEntry) {
-    const colorKey = entry.value
+    const colorKey = entry.value ?? entry.consequence
     if (this.heatMap) {
       return this.heatMapColor
     } else {

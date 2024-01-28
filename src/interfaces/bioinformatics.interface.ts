@@ -4,6 +4,7 @@ export interface IEntry {
   rowId: string
   code?: string,
   value?: string,
+  consequence?: string,
   impact?: string
 }
 
