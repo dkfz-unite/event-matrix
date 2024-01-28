@@ -4,7 +4,7 @@ export enum publicEvents {
   DESCRIPTION_LEGEND_HOVER = 'description:legend:hover',
   DESCRIPTION_LEGEND_OUT = 'description:legend:out',
   DESCRIPTION_BUTTONS_ADD_CLICK = 'description:buttons:add:click',
-  DESCRIPTION_FIELD_CLICK = 'description:field:click',
+  DESCRIPTION_FIELD_CLICK = 'description:cell:click',
   DESCRIPTION_CELL_HOVER = 'description:cell:hover',
   DESCRIPTION_CELL_OUT = 'description:cell:out',
   HISTOGRAM_HOVER = 'histogram:hover',

@@ -26,11 +26,11 @@ class MainGrid {
   private scaleToFit = true
   private leftTextWidth = 80
   private types: BaseType[] = [BaseType.Mutation]
-  private wrapper!: Selection<HTMLElement, any, HTMLElement, any>
-  private svg!: Selection<SVGSVGElement, any, HTMLElement, any>
-  private container!: Selection<SVGGElement, any, HTMLElement, any>
-  private background!: Selection<SVGRectElement, any, HTMLElement, any>
-  private gridContainer!: Selection<SVGGElement, any, HTMLElement, any>
+  private wrapper!: Selection<HTMLElement, unknown, HTMLElement, unknown>
+  private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
+  private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
+  private gridContainer: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private colorMap: ColorMap = {
     'missense_variant': '#ff9b6c',
     'frameshift_variant': '#57dba4',
@@ -43,19 +43,19 @@ class MainGrid {
   private height = 500
   private inputWidth = 500
   private inputHeight = 500
-  private cellWidth!: number
-  private cellHeight!: number
+  private cellWidth: number
+  private cellHeight: number
   private margin: CssMarginProps = {top: 30, right: 100, bottom: 15, left: 80}
   public heatMap = false
   public drawGridLines = false
   public crosshair = false
   private heatMapColor = '#D33682'
-  private verticalCross: any
-  private horizontalCross: any
-  private selectionRegion: any
-  private column: any
-  private row: any
-  private rowMap: any
+  private verticalCross: Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private horizontalCross: Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private selectionRegion: Selection<SVGRectElement, unknown, HTMLElement, unknown>
+  private column: Selection<SVGLineElement, unknown, SVGGElement, unknown>
+  private row: Selection<SVGGElement, IRow, SVGGElement, unknown>
+  private rowMap: Record<string, IRow>
   public fullscreen = false
 
   constructor(params: MainGridParams, x: ScaleBand<string>, y: ScaleBand<string>) {
@@ -152,21 +152,13 @@ class MainGrid {
     }
 
     if (width !== undefined) {
-      this.width = width
       this.inputWidth = width
     }
     if (height !== undefined) {
-      this.height = height
       this.inputHeight = height
     }
 
-    this.cellWidth = this.width / storage.columns.length
-    this.cellHeight = this.height / storage.rows.length
-
-    if (this.cellHeight < storage.minCellHeight) {
-      this.cellHeight = storage.minCellHeight
-      this.height = storage.rows.length * storage.minCellHeight
-    }
+    this.initDimensions(width, height)
 
     if (margin !== undefined) {
       this.margin = margin
@@ -190,11 +182,6 @@ class MainGrid {
       .attr('class', `${storage.prefix}maingrid-svg`)
       .attr('id', `${storage.prefix}maingrid-svg`)
       .attr('width', '100%')
-    // .style('position', 'absolute')
-    // .style('top', 0)
-    // .style('left', 0)
-
-    // n=t.margin.left+t.leftTextWidth+t.width+t.histogramHeight+t.rowTrack.height+t.margin.right
 
     this.container = this.svg.append('g')
 
@@ -207,7 +194,7 @@ class MainGrid {
   }
 
   /**
-   * Only to be called the first time the OncoGrid is rendered. It creates the rects representing the
+   * Only to be called the first time the EventMatrix is rendered. It creates the rects representing the
    * mutation occurrences.
    */
   public render() {
@@ -271,7 +258,7 @@ class MainGrid {
       .data(storage.entries)
       .enter()
       .append('path')
-      .attr('data-obs-index', (obs: IEntry, i: number) => {
+      .attr('data-obs-index', (obs: IEntry) => {
         return `${obs.columnId} ${obs.rowId} ${obs.id}`
       })
       .attr('class', (obs: IEntry) => {
@@ -335,18 +322,16 @@ class MainGrid {
 
     this.row
       .transition()
-      .attr('transform', (d: any) => {
-        return 'translate( 0, ' + d.y + ')'
+      .attr('transform', (row: IRow) => {
+        return 'translate( 0, ' + row.y + ')'
       })
 
-    for (let i = 0; i < this.types.length; i++) {
-      this.container
-        .selectAll(`.${storage.prefix}sortable-rect`)
-        .transition()
-        .attr('d', (obs: IEntry) => {
-          return this.getRectangularPath(obs)
-        })
-    }
+    this.container
+      .selectAll(`.${storage.prefix}sortable-rect`)
+      .transition()
+      .attr('d', (obs: IEntry) => {
+        return this.getRectangularPath(obs)
+      })
 
     this.horizontalDescriptionBlock.update(storage.columns as IDomainEntity[])
     this.verticalDescriptionBlock.update(storage.rows as IDomainEntity[])
@@ -361,9 +346,7 @@ class MainGrid {
   private computeCoordinates() {
     this.cellWidth = this.width / storage.columns.length
 
-    if (this.column !== undefined) {
-      this.column.remove()
-    }
+    this.column?.remove()
 
     if (this.drawGridLines) {
       this.column = this.gridContainer.selectAll(`.${storage.prefix}column-column`)
@@ -379,18 +362,15 @@ class MainGrid {
     }
 
     this.cellHeight = this.height / storage.rows.length
-
-    if (this.row !== undefined) {
-      this.row.remove()
-    }
+    this.row?.remove()
 
     this.row = this.gridContainer.selectAll(`.${storage.prefix}row-row`)
       .data(storage.rows)
       .enter()
       .append('g')
       .attr('class', `${storage.prefix}row-row`)
-      .attr('transform', (d: IRow) => {
-        return 'translate(0,' + d.y + ')'
+      .attr('transform', (row: IRow) => {
+        return 'translate(0,' + row.y + ')'
       })
 
     if (this.drawGridLines) {
@@ -401,10 +381,10 @@ class MainGrid {
 
     this.row
       .append('text')
-      .attr('class', (g: any) => {
-        return `${storage.prefix}${g.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font`
+      .attr('class', (row: IRow) => {
+        return `${storage.prefix}${row.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font`
       })
-      .attr('data-row', (d) => d.id)
+      .attr('data-row', (row: IRow) => row.id)
       .attr('x', -8)
       .attr('y', this.cellHeight / 2)
       .attr('dy', '.32em')
@@ -416,8 +396,8 @@ class MainGrid {
           return ''
         }
       })
-      .text((d: any, i: number) => {
-        return storage.rows[i].symbol
+      .text((row: IRow) => {
+        return row.symbol
       })
       .on('click', (event: IEnhancedEvent) => {
         const target = event.target
@@ -434,13 +414,13 @@ class MainGrid {
       })
   }
 
-  public resize(width: number, height: number, x: ScaleBand<string>, y: ScaleBand<string>) {
-    this.createRowMap()
-
-    this.x = x
-    this.y = y
-    this.width = width
-    this.height = height
+  private initDimensions(width?: number, height?: number) {
+    if (width !== undefined) {
+      this.width = width
+    }
+    if (height !== undefined) {
+      this.height = height
+    }
 
     this.cellWidth = this.width / storage.columns.length
     this.cellHeight = this.height / storage.rows.length
@@ -449,6 +429,15 @@ class MainGrid {
       this.cellHeight = storage.minCellHeight
       this.height = storage.rows.length * storage.minCellHeight
     }
+  }
+
+  public resize(width: number, height: number, x: ScaleBand<string>, y: ScaleBand<string>) {
+    this.createRowMap()
+
+    this.x = x
+    this.y = y
+
+    this.initDimensions(width, height)
 
     this.background
       .attr('width', this.width)
@@ -718,8 +707,7 @@ class MainGrid {
    * Function that determines the x position of a mutation
    */
   private getCellX(entry: IEntry): number {
-    const x = storage.lookupTable[entry.columnId].x ?? 0
-    return x
+    return storage.lookupTable[entry.columnId].x ?? 0
   }
 
   /**
@@ -740,7 +728,7 @@ class MainGrid {
    * @returns {number}
    */
   private getOpacity(entry: IEntry) {
-    if (this.heatMap) {
+    if (entry && this.heatMap) {
       return 0.25
     } else {
       return 1
@@ -764,24 +752,11 @@ class MainGrid {
     return height / count
   }
 
-  private getCellWidth(entry: IEntry) {
-    return this.cellWidth ?? 0
-  }
-
   /**
    * Returns the correct entry value based on the data type.
    */
   private getValueByType(entry: IEntry) {
     return entry.consequence ?? ''
-  }
-
-  /**
-   * Returns circular path based on cell dimensions
-   */
-  private getCircularPath(entry: IEntry) {
-    const x1 = this.getCellX(entry)
-    const y1 = this.getY(entry)
-    return 'M ' + (x1 + this.cellWidth / 4) + ', ' + y1 + ' m ' + (-1 * this.getCellWidth(entry)) + ', 0 ' + 'a ' + this.getCellWidth(entry) + ', ' + this.getCellWidth(entry) + ' 0 1,0 ' + (2 * this.getCellWidth(entry)) + ',0 a ' + this.getCellWidth(entry) + ',' + this.getCellWidth(entry) + ' 0 1,0 ' + (-1 * (2 * this.getCellWidth(entry))) + ',0'
   }
 
   /**
@@ -800,20 +775,17 @@ class MainGrid {
     if (active === this.heatMap) return this.heatMap
     this.heatMap = active
 
-    for (const type of this.types) {
-      d3.selectAll(`.${storage.prefix}sortable-rect`)
-        .transition()
-        .attr('d', (obs: IEntry) => {
-          return this.getRectangularPath(obs)
-        })
-        .attr('fill', (obs: IEntry) => {
-          return this.getColor(obs)
-        })
-        .attr('opacity', (obs: IEntry) => {
-          return this.getOpacity(obs)
-        })
-    }
-
+    d3.selectAll(`.${storage.prefix}sortable-rect`)
+      .transition()
+      .attr('d', (obs: IEntry) => {
+        return this.getRectangularPath(obs)
+      })
+      .attr('fill', (obs: IEntry) => {
+        return this.getColor(obs)
+      })
+      .attr('opacity', (obs: IEntry) => {
+        return this.getOpacity(obs)
+      })
 
     return this.heatMap
   }
@@ -836,45 +808,31 @@ class MainGrid {
     return this.crosshair
   }
 
-  /**
-   * Helper for getting column index position
-   */
-  private getColumnIndex(columns: any[], columnId: any) {
-    for (let i = 0; i < columns.length; i++) {
-      const column = columns[i]
-      if (column.id === columnId) {
-        return i
-      }
-    }
+  // /**
+  //  * Removes all elements corresponding to the given row and then removes it from the row list.
+  //  * @param index of the row to remove.
+  //  */
+  // public removeRow(i: number) {
+  //   const row = storage.rows[i]
+  //   if (row) {
+  //     d3.selectAll(`.${storage.prefix}${row.id}-cell`).remove()
+  //     d3.selectAll(`.${storage.prefix}${row.id}-bar`).remove()
+  //     storage.rows.splice(i, 1)
+  //   }
+  //
+  //   eventBus.emit(innerEvents.INNER_UPDATE, true)
+  // }
 
-    return -1
-  }
-
-  /**
-   * Removes all elements corresponding to the given row and then removes it from the row list.
-   * @param i index of the row to remove.
-   */
-  public removeRow(i: number) {
-    const row = storage.rows[i]
-    if (row) {
-      d3.selectAll(`.${storage.prefix}${row.id}-cell`).remove()
-      d3.selectAll(`.${storage.prefix}${row.id}-bar`).remove()
-      storage.rows.splice(i, 1)
-    }
-
-    eventBus.emit(innerEvents.INNER_UPDATE, true)
-  }
-
-  private nullableObsLookup(column: any, row: any) {
-    if (!column || typeof column !== 'object') return null
-    if (!row || typeof row !== 'object') return null
-
-    if (storage.lookupTable?.[column.id]?.[row.id]) {
-      return storage.lookupTable[column.id][row.id].join(', ') // Table stores arrays and we want to return a string;
-    } else {
-      return null
-    }
-  }
+  // private nullableObsLookup(column: any, row: any) {
+  //   if (!column || typeof column !== 'object') return null
+  //   if (!row || typeof row !== 'object') return null
+  //
+  //   if (storage.lookupTable?.[column.id]?.[row.id]) {
+  //     return storage.lookupTable[column.id][row.id].join(', ') // Table stores arrays, and we want to return a string
+  //   } else {
+  //     return null
+  //   }
+  // }
 
   /**
    * Removes all svg elements for this grid.
