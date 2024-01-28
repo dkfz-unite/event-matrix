@@ -384,9 +384,10 @@ class DescriptionFieldsGroup {
         const fieldData = this.fieldsData[target.dataset.trackDataIndex]
         if (!fieldData) return
         eventBus.emit(publicEvents.DESCRIPTION_FIELD_CLICK, {
-          domain: fieldData,
           target: target,
+          domainId: fieldData.id,
           type: this.rotated ? BlockType.Rows : BlockType.Columns,
+          field: fieldData.fieldName,
         })
       })
       .on('mouseover', (event: IEnhancedEvent) => {
@@ -395,8 +396,8 @@ class DescriptionFieldsGroup {
         if (!fieldData) return
 
         eventBus.emit(publicEvents.DESCRIPTION_CELL_HOVER, {
-          domainId: fieldData.id,
           target: target,
+          domainId: fieldData.id,
           type: this.rotated ? BlockType.Rows : BlockType.Columns,
           field: fieldData.fieldName,
         })

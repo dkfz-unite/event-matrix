@@ -266,7 +266,7 @@ class EventMatrix extends EventEmitter {
   }
 
   /**
-   * set EventMatrix between heatmap mode and regular mode showing individual consequence types.
+   * set EventMatrix between heatmap mode and regular mode showing individual value types.
    */
   public setHeatmap(active: boolean) {
     this.heatMapMode = active
@@ -274,7 +274,7 @@ class EventMatrix extends EventEmitter {
   }
 
   /**
-   * Toggles EventMatrix between heatmap mode and regular mode showing individual consequence types.
+   * Toggles EventMatrix between heatmap mode and regular mode showing individual value types.
    */
   public toggleHeatmap() {
     this.setHeatmap(!this.heatMapMode)

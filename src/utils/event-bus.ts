@@ -1,15 +1,6 @@
 import EventEmitter from 'eventemitter3'
 
 export enum publicEvents {
-  DESCRIPTION_LEGEND_HOVER = 'description:legend:hover',
-  DESCRIPTION_LEGEND_OUT = 'description:legend:out',
-  DESCRIPTION_BUTTONS_ADD_CLICK = 'description:buttons:add:click',
-  DESCRIPTION_FIELD_CLICK = 'description:cell:click',
-  DESCRIPTION_CELL_HOVER = 'description:cell:hover',
-  DESCRIPTION_CELL_OUT = 'description:cell:out',
-  HISTOGRAM_HOVER = 'histogram:hover',
-  HISTOGRAM_OUT = 'histogram:out',
-  HISTOGRAM_CLICK = 'histogram:click',
   GRID_CELL_HOVER = 'grid:cell:hover',
   GRID_CELL_CLICK = 'grid:cell:click',
   GRID_OUT = 'grid:out',
@@ -19,6 +10,15 @@ export enum publicEvents {
   GRID_CROSSHAIR_OUT = 'grid:crosshair:out',
   GRID_SELECTION_STARTED = 'grid:selection:started',
   GRID_SELECTION_FINISHED = 'grid:selection:finished',
+  HISTOGRAM_HOVER = 'histogram:hover',
+  HISTOGRAM_CLICK = 'histogram:click',
+  HISTOGRAM_OUT = 'histogram:out',
+  DESCRIPTION_LEGEND_HOVER = 'description:legend:hover',
+  DESCRIPTION_LEGEND_OUT = 'description:legend:out',
+  DESCRIPTION_BUTTONS_ADD_CLICK = 'description:buttons:add:click',
+  DESCRIPTION_FIELD_CLICK = 'description:cell:click',
+  DESCRIPTION_CELL_HOVER = 'description:cell:hover',
+  DESCRIPTION_CELL_OUT = 'description:cell:out',
 }
 
 export enum innerEvents {

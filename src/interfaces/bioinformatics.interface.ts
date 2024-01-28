@@ -3,7 +3,7 @@ export interface IEntry {
   columnId: string
   rowId: string
   code?: string,
-  consequence?: string,
+  value?: string,
   impact?: string
 }
 
