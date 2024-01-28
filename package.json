@@ -1,13 +1,13 @@
 {
   "name": "event-matrix",
-  "version": "0.0.2",
+  "version": "0.0.7",
   "description": "An instrument for the visual representation of multidimensional data",
-  "main": "src/index.js",
-  "jsdelivr": "dist/event-matrix.min.js",
-  "unpkg": "dist/event-matrix.min.js",
+  "type": "module",
+  "main": "dist/event-matrix.umd.js",
+  "module": "dist/event-matrix.es.js",
   "exports": {
-    "umd": "./dist/event-matrix.min.js",
-    "default": "./src/index.js"
+    "import": "./dist/event-matrix.es.js",
+    "require": "./dist/event-matrix.umd.js"
   },
   "scripts": {
     "dev": "vite",

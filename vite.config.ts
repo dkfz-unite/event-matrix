@@ -10,24 +10,12 @@ export default defineConfig({
     })
   ],
   build: {
+    lib: {
+      entry: './src/index.ts',
+      name: 'EventMatrix',
+      fileName: (format) => `event-matrix.${format}.js`
+    },
     outDir: './dist',
-    rollupOptions: {
-      input: './src/index.ts',
-      output: [
-        {
-          dir: 'dist',
-          entryFileNames: `event-matrix.mjs`,
-          format: 'es',
-          sourcemap: true,
-        },
-        {
-          dir: 'dist',
-          entryFileNames: `event-matrix.min.js`,
-          format: 'iife',
-          name: 'EventMatrix',
-          sourcemap: true,
-        }
-      ],
-    }
+    sourcemap: true
   }
 })

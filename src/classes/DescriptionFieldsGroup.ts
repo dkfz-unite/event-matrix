@@ -74,12 +74,6 @@ class DescriptionFieldsGroup {
       })
     })
 
-    this.fields = [...new Set(this.fields)]
-
-    // const { height: cellHeight, length } = this.getDimensions()
-
-    // this.height = cellHeight * length
-
     if (this.rendered) {
       this.refreshData()
       eventBus.emit(innerEvents.INNER_RESIZE)
@@ -221,7 +215,8 @@ class DescriptionFieldsGroup {
 
     const {width} = this.getFieldDimensions()
 
-    this.container.selectAll(`.${storage.prefix}track-data`)
+    this.container
+      .selectAll(`.${storage.prefix}track-data`)
       .data(this.fieldsData)
       .attr('x', ({domainIndex}: IPreparedFieldData) => {
         const domain = this.domain[domainIndex]
