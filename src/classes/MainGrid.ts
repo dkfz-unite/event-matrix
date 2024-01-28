@@ -23,7 +23,6 @@ class MainGrid {
   private verticalHistogram: Histogram
   private horizontalHistogram: Histogram
   private verticalDescriptionBlock: DescriptionBlock
-  private scaleToFit = true
   private leftTextWidth = 80
   private types: BaseType[] = [BaseType.Mutation]
   private wrapper!: Selection<HTMLElement, unknown, HTMLElement, unknown>
@@ -103,7 +102,7 @@ class MainGrid {
       columns: this.params.columns,
       width: this.params.width,
       parentHeight: this.params.height,
-      height: this.params.trackHeight,
+      height: this.params.fieldHeight,
       nullSentinel: this.params.nullSentinel,
       grid: this.params.grid,
       wrapper: this.params.wrapper,
@@ -129,7 +128,6 @@ class MainGrid {
    * @param params
    */
   private loadParams({
-    scaleToFit,
     leftTextWidth,
     wrapper,
     colorMap,
@@ -140,9 +138,6 @@ class MainGrid {
     heatMapColor,
     grid,
   }: MainGridParams) {
-    if (scaleToFit !== undefined) {
-      this.scaleToFit = scaleToFit
-    }
     if (leftTextWidth !== undefined) {
       this.leftTextWidth = leftTextWidth
     }
@@ -238,18 +233,11 @@ class MainGrid {
         return
       }
 
-      const obs = storage.entries.filter((entry: IEntry) => {
-        return entry.columnId === obsIds[0] && entry.rowId === obsIds[1]
-      })
-      const targetEntry = obs.find((entry: IEntry) => {
-        return entry.id == obsIds[2]
-      })
-
       eventBus.emit(publicEvents.GRID_CELL_CLICK, {
         target: event.target,
         columnId: obsIds[0],
         rowId: obsIds[1],
-        entry: targetEntry,
+        entryId: obsIds[2],
       })
     })
 
@@ -399,6 +387,17 @@ class MainGrid {
       .text((row: IRow) => {
         return row.symbol
       })
+      .on('mouseover', (event: IEnhancedEvent) => {
+        const target = event.target
+        const rowId = target.dataset.row
+        if (!rowId) {
+          return
+        }
+        eventBus.emit(publicEvents.GRID_LABEL_HOVER, {
+          target,
+          rowId,
+        })
+      })
       .on('click', (event: IEnhancedEvent) => {
         const target = event.target
         const rowId = target.dataset.row
@@ -407,8 +406,8 @@ class MainGrid {
         }
         storage.sortColumns('countByRow', rowId)
         eventBus.emit(innerEvents.INNER_UPDATE, false)
-
         eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
+          target,
           rowId,
         })
       })
@@ -501,10 +500,13 @@ class MainGrid {
           return
         }
 
-        eventBus.emit(publicEvents.GRID_CROSSHAIR_HOVER, {
-          columnId: column.id,
-          rowId: row.id,
-        })
+        if (eventType === 'mouseover') {
+          eventBus.emit(publicEvents.GRID_CROSSHAIR_HOVER, {
+            target: event.target,
+            columnId: column.id,
+            rowId: row.id,
+          })
+        }
       }
     }
 
@@ -554,9 +556,13 @@ class MainGrid {
    */
   private startSelection(event: IEnhancedEvent) {
     if (this.crosshair && this.selectionRegion === undefined) {
-      eventBus.emit(publicEvents.GRID_SELECTION_STARTED)
       event.stopPropagation()
       const coord = d3.pointer(event, event.target)
+      eventBus.emit(publicEvents.GRID_SELECTION_STARTED, {
+        target: event.target,
+        x: coord[0],
+        y: coord[1],
+      })
 
       this.selectionRegion = this.container.append('rect')
         .attr('x', coord[0])
@@ -637,7 +643,11 @@ class MainGrid {
       this.selectionRegion.remove()
       delete this.selectionRegion
 
-      eventBus.emit(publicEvents.GRID_SELECTION_FINISHED)
+      eventBus.emit(publicEvents.GRID_SELECTION_FINISHED, {
+        target: event.target,
+        x: x2,
+        y: y2,
+      })
       eventBus.emit(innerEvents.INNER_UPDATE, true)
     }
   }
@@ -715,7 +725,7 @@ class MainGrid {
    * @param entry.
    */
   private getColor(entry: IEntry) {
-    const colorKey = entry.consequence
+    const colorKey = entry.value
     if (this.heatMap) {
       return this.heatMapColor
     } else {
@@ -756,7 +766,7 @@ class MainGrid {
    * Returns the correct entry value based on the data type.
    */
   private getValueByType(entry: IEntry) {
-    return entry.consequence ?? ''
+    return entry.value ?? ''
   }
 
   /**

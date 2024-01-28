@@ -2,7 +2,6 @@ import {ColorMap, CssMarginProps} from './base.interface'
 import {IColumn, IEntry, IRow} from './bioinformatics.interface'
 
 export type MainGridParams = {
-  scaleToFit?: boolean
   leftTextWidth?: number
   columns?: IColumn[]
   rows?: IRow[]
@@ -26,7 +25,7 @@ export type MainGridParams = {
   trackPadding?: number
   offset: any
   fieldLegendLabel: any
-  trackHeight?: number
+  fieldHeight?: number
   nullSentinel?: number
   expandableGroups?: string[]
 } & HistogramParams

@@ -92,9 +92,9 @@ class Histogram {
         const domain = this.domain[target.dataset.domainIndex]
         if (!domain) return
         eventBus.emit(publicEvents.HISTOGRAM_HOVER, {
+          target,
           domainId: domain.id,
           type: this.rotated ? BlockType.Rows : BlockType.Columns,
-          target,
         })
       })
       .on('mouseout', () => {
@@ -113,9 +113,9 @@ class Histogram {
         }
         eventBus.emit(innerEvents.INNER_UPDATE, false)
         eventBus.emit(publicEvents.HISTOGRAM_CLICK, {
-          type: this.rotated ? BlockType.Rows : BlockType.Columns,
-          domainId: domain.id,
           target,
+          domainId: domain.id,
+          type: this.rotated ? BlockType.Rows : BlockType.Columns,
         })
       })
 
