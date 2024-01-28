@@ -1,0 +1,14 @@
+.bundle
+.cache
+.github
+.vscode
+
+android
+assets
+envs
+ios
+
+node_modules
+public
+build
+dist
