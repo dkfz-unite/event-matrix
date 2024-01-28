@@ -158,7 +158,7 @@ class EventMatrix extends EventEmitter {
   }
 
   /**
-   * Triggers a resize of OncoGrid to desired width and height.
+   * Triggers a resize of EventMatrix to desired width and height.
    */
   public resize(width: number, height: number, fullscreen: boolean) {
     this.fullscreen = fullscreen
@@ -225,7 +225,7 @@ class EventMatrix extends EventEmitter {
   }
 
   /**
-   * Removes genes and updates OncoGrid rendering.
+   * Removes genes and updates EventMatrix rendering.
    * @param func function describing the criteria for removing a gene.
    */
   public removeRows(func: any) {
@@ -266,7 +266,7 @@ class EventMatrix extends EventEmitter {
   }
 
   /**
-   * set oncogrid between heatmap mode and regular mode showing individual consequence types.
+   * set EventMatrix between heatmap mode and regular mode showing individual consequence types.
    */
   public setHeatmap(active: boolean) {
     this.heatMapMode = active
@@ -274,7 +274,7 @@ class EventMatrix extends EventEmitter {
   }
 
   /**
-   * Toggles oncogrid between heatmap mode and regular mode showing individual consequence types.
+   * Toggles EventMatrix between heatmap mode and regular mode showing individual consequence types.
    */
   public toggleHeatmap() {
     this.setHeatmap(!this.heatMapMode)

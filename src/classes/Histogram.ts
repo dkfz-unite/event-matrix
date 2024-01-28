@@ -6,12 +6,12 @@ import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 
 class Histogram {
-  private lineWidthOffset: number
-  private lineHeightOffset: number
+  private readonly lineWidthOffset: number
+  private readonly lineHeightOffset: number
   private padding = 10
   private centerText = -10
-  private svg: Selection<any, any, HTMLElement, any>
-  private rotated: boolean
+  private svg: Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private readonly rotated: boolean
   private domain: IDomainEntity[]
   private margin: {
     top: number
@@ -25,18 +25,18 @@ class Histogram {
   private histogramHeight = 80
   private numDomain: number
   private barWidth: number
-  private totalHeight: number
+  private readonly totalHeight: number
   private wrapper: d3.Selection<Element, unknown, Element, unknown>
   private topCount = 1
-  private container!: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private histogram!: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private bottomAxis: any
-  private leftAxis: any
-  private topText: any
-  private middleText: any
-  private leftLabel: any
+  private container: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private histogram: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private bottomAxis: d3.Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private leftAxis: d3.Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private topText: d3.Selection<SVGTextElement, unknown, HTMLElement, unknown>
+  private middleText: d3.Selection<SVGTextElement, unknown, HTMLElement, unknown>
+  private leftLabel: d3.Selection<SVGTextElement, unknown, HTMLElement, unknown>
 
-  constructor(params: HistogramParams, svg: Selection<any, any, HTMLElement, any>, rotated?: boolean) {
+  constructor(params: HistogramParams, svg: Selection<SVGGElement, unknown, HTMLElement, unknown>, rotated?: boolean) {
     this.lineWidthOffset = params.histogramBorderPadding?.left || 10
     this.lineHeightOffset = params.histogramBorderPadding?.bottom || 5
     this.svg = svg
@@ -49,7 +49,6 @@ class Histogram {
     this.numDomain = this.domain.length
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
 
-    console.log(this.histogramHeight, this.lineHeightOffset, this.padding)
     this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding
     this.wrapper = d3.select<Element, unknown>(params.wrapper || 'body')
   }
@@ -124,19 +123,19 @@ class Histogram {
       .data(this.domain)
       .enter()
       .append('rect')
-      .attr('class', (d: IDomainEntity) => {
-        return `${storage.prefix}sortable-bar ${storage.prefix}${d.id}-bar`
+      .attr('class', (domain: IDomainEntity) => {
+        return `${storage.prefix}sortable-bar ${storage.prefix}${domain.id}-bar`
       })
-      .attr('data-domain-index', (d: IDomainEntity, i: number) => i)
+      .attr('data-domain-index', (domain: IDomainEntity, i: number) => i)
       .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-      .attr('height', (d: IDomainEntity) => {
-        return this.histogramHeight * d.count / topCount
+      .attr('height', (domain: IDomainEntity) => {
+        return this.histogramHeight * domain.count / topCount
       })
-      .attr('x', (d: IDomainEntity) => {
-        return this.rotated ? d.y : d.x
+      .attr('x', (domain: IDomainEntity) => {
+        return this.rotated ? domain.y : domain.x
       })
-      .attr('y', (d: IDomainEntity) => {
-        return this.histogramHeight - this.histogramHeight * d.count / topCount
+      .attr('y', (domain: IDomainEntity) => {
+        return this.histogramHeight - this.histogramHeight * domain.count / topCount
       })
       .attr('fill', '#1693C0')
   }
@@ -151,17 +150,17 @@ class Histogram {
 
     this.histogram.selectAll('rect')
       .data(this.domain)
-      .attr('data-domain-index', (d: IDomainEntity, i: number) => i)
+      .attr('data-domain-index', (domain: IDomainEntity, i: number) => i)
       .transition()
       .attr('width', this.barWidth - (this.barWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-      .attr('height', (d: IDomainEntity) => {
-        return this.histogramHeight * d.count / topCount
+      .attr('height', (domain: IDomainEntity) => {
+        return this.histogramHeight * domain.count / topCount
       })
-      .attr('y', (d: IDomainEntity) => {
-        return this.histogramHeight - this.histogramHeight * d.count / topCount
+      .attr('y', (domain: IDomainEntity) => {
+        return this.histogramHeight - this.histogramHeight * domain.count / topCount
       })
-      .attr('x', (d: IDomainEntity) => {
-        return this.rotated ? d.y : d.x
+      .attr('x', (domain: IDomainEntity) => {
+        return this.rotated ? domain.y : domain.x
       })
   }
 
@@ -246,10 +245,8 @@ class Histogram {
       .text(halfInt)
 
     this.leftLabel
-      .attr({
-        x: -this.histogramHeight / 2,
-        y: -this.lineHeightOffset - this.padding,
-      })
+      .attr('x', -this.histogramHeight / 2)
+      .attr('y', -this.lineHeightOffset - this.padding)
   }
 
   private getLargestCount(domain: IDomainEntity[]): number {
