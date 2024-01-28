@@ -1,8 +1,14 @@
 {
   "name": "event-matrix",
-  "version": "0.0.1",
-  "description": "A TypeScript project built with Vite for frontend usage",
-  "main": "dist/index.js",
+  "version": "0.0.2",
+  "description": "An instrument for the visual representation of multidimensional data",
+  "main": "src/index.js",
+  "jsdelivr": "dist/event-matrix.min.js",
+  "unpkg": "dist/event-matrix.min.js",
+  "exports": {
+    "umd": "./dist/event-matrix.min.js",
+    "default": "./src/index.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -21,14 +27,17 @@
   },
   "maintainers": [
     {
-      "name": "Valentin Vlasov",
-      "url": "https://github.com/vulasau"
-    },
-    {
       "name": "Vadim Bannov",
       "email": "deflopian@gmail.com",
       "url": "https://github.com/deflopian"
     },
+    {
+      "name": "Eugene Menshakov",
+      "email": "jokezer@gmail.com",
+      "url": "https://github.com/jokezer"
+    }
+  ],
+  "contributors": [
     {
       "name": "Alex P",
       "url": "https://github.com/sfuerte"

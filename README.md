@@ -9,7 +9,7 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
 
 1. Install dependencies:
     ```shell
-    npm install dkz-united/event-matrix
+    npm install event-matrix
     ```
 2. Import EventMatrix in your project:
     ```javascript
