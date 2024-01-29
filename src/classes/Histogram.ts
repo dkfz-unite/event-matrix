@@ -1,8 +1,12 @@
 import {select, Selection} from 'd3-selection'
+// eslint-disable-next-line no-unused-vars
+import {transition} from 'd3-transition'
 import {BlockType} from '../interfaces/base.interface'
 import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
+
+transition() // do nothing, hack to bypass no-unused-vars IDE check %)
 
 class Histogram {
   private readonly lineWidthOffset: number
