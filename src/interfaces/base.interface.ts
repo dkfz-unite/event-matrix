@@ -22,5 +22,3 @@ export interface ColorMap {
   'stop_lost': string,
   'initiator_codon_variant': string,
 }
-
-export type SortFn = (a: any, b: any) => number

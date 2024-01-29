@@ -1,6 +1,6 @@
 {
   "name": "event-matrix",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "An instrument for the visual representation of multidimensional data",
   "type": "module",
   "main": "dist/event-matrix.umd.js",
@@ -9,13 +9,18 @@
     "import": "./dist/event-matrix.es.js",
     "require": "./dist/event-matrix.umd.js"
   },
+  "keywords": [
+    "oncogrid",
+    "events",
+    "matrix",
+    "events-matrix",
+    "visualization",
+    "grid"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview"
-  },
-  "engines": {
-    "node": "18"
   },
   "repository": {
     "type": "git",
@@ -64,7 +69,9 @@
     "vite": "5.0.12"
   },
   "dependencies": {
-    "d3": "7.8.5",
+    "d3-selection": "3.0.0",
+    "d3-array": "3.2.4",
+    "d3-scale": "4.0.2",
     "eventemitter3": "5.0.1"
   }
 }
