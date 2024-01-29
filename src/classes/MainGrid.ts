@@ -1,5 +1,5 @@
-import * as d3 from 'd3'
-import {ScaleBand, Selection} from 'd3'
+import {ScaleBand} from 'd3-scale'
+import {pointer, select, selectAll, Selection} from 'd3-selection'
 import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
 import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {
@@ -25,7 +25,7 @@ class MainGrid {
   private verticalDescriptionBlock: DescriptionBlock
   private leftTextWidth = 80
   private types: BaseType[] = [BaseType.Mutation]
-  private wrapper!: Selection<HTMLElement, unknown, HTMLElement, unknown>
+  private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
@@ -141,7 +141,7 @@ class MainGrid {
     if (leftTextWidth !== undefined) {
       this.leftTextWidth = leftTextWidth
     }
-    this.wrapper = d3.select(wrapper || 'body')
+    this.wrapper = select(wrapper || 'body')
     if (colorMap !== undefined) {
       this.colorMap = colorMap
     }
@@ -198,7 +198,7 @@ class MainGrid {
 
     this.svg.on('mouseover', (event: IEnhancedEvent) => {
       const target = event.target
-      const coord = d3.pointer(event, target)
+      const coord = pointer(event, target)
 
       const xIndex = this.getIndexFromScaleBand(this.x, coord[0])
       const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
@@ -479,7 +479,7 @@ class MainGrid {
   private defineCrosshairBehaviour() {
     const moveCrossHair = (eventType: string, event: IEnhancedEvent) => {
       if (this.crosshair) {
-        const coord = d3.pointer(event, event.target)
+        const coord = pointer(event, event.target)
 
         this.verticalCross.attr('x1', coord[0]).attr('opacity', 1)
         this.verticalCross.attr('x2', coord[0]).attr('opacity', 1)
@@ -557,7 +557,7 @@ class MainGrid {
   private startSelection(event: IEnhancedEvent) {
     if (this.crosshair && this.selectionRegion === undefined) {
       event.stopPropagation()
-      const coord = d3.pointer(event, event.target)
+      const coord = pointer(event, event.target)
       eventBus.emit(publicEvents.GRID_SELECTION_STARTED, {
         target: event.target,
         x: coord[0],
@@ -661,8 +661,8 @@ class MainGrid {
     for (let i = 0; i < storage.rows.length; i++) {
       const row = storage.rows[i]
       if (i < start || i > stop) {
-        d3.selectAll(`.${storage.prefix}${row.id}-cell`).remove()
-        d3.selectAll(`.${storage.prefix}${row.id}-bar`).remove()
+        selectAll(`.${storage.prefix}${row.id}-cell`).remove()
+        selectAll(`.${storage.prefix}${row.id}-bar`).remove()
         storage.rows.splice(i, 1)
         i--
         start--
@@ -680,8 +680,8 @@ class MainGrid {
     for (let i = 0; i < storage.columns.length; i++) {
       const column = storage.columns[i]
       if (i < start || i > stop) {
-        d3.selectAll(`.${storage.prefix}${column.id}-cell`).remove()
-        d3.selectAll(`.${storage.prefix}${column.id}-bar`).remove()
+        selectAll(`.${storage.prefix}${column.id}-cell`).remove()
+        selectAll(`.${storage.prefix}${column.id}-bar`).remove()
         storage.columns.splice(i, 1)
         i--
         start--
@@ -785,7 +785,7 @@ class MainGrid {
     if (active === this.heatMap) return this.heatMap
     this.heatMap = active
 
-    d3.selectAll(`.${storage.prefix}sortable-rect`)
+    selectAll(`.${storage.prefix}sortable-rect`)
       .transition()
       .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
@@ -825,8 +825,8 @@ class MainGrid {
   // public removeRow(i: number) {
   //   const row = storage.rows[i]
   //   if (row) {
-  //     d3.selectAll(`.${storage.prefix}${row.id}-cell`).remove()
-  //     d3.selectAll(`.${storage.prefix}${row.id}-bar`).remove()
+  //     selectAll(`.${storage.prefix}${row.id}-cell`).remove()
+  //     selectAll(`.${storage.prefix}${row.id}-bar`).remove()
   //     storage.rows.splice(i, 1)
   //   }
   //

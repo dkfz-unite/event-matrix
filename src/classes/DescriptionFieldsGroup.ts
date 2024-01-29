@@ -1,5 +1,6 @@
-import * as d3 from 'd3'
-import {BaseType, ScaleBand} from 'd3'
+import {range} from 'd3-array'
+import {ScaleBand, scaleBand} from 'd3-scale'
+import {BaseType, select, Selection} from 'd3-selection'
 import {BlockType} from '../interfaces/base.interface'
 import {
   IDescriptionField,
@@ -12,29 +13,27 @@ import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 
 class DescriptionFieldsGroup {
-  public container!: d3.Selection<SVGGElement, any, HTMLElement, any>
-
+  private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private rendered = false
   private params: IDescriptionFieldsGroupParams
-  private expandable: boolean
-  private name: string
+  private readonly expandable: boolean
+  private readonly name: string
   private height: number
   private width: number
   private fields: IDescriptionField[] = []
   private collapsedFields: IDescriptionField[] = []
-  private length: number
-  private nullSentinel: number
-  private rotated: boolean
+  private readonly nullSentinel: number
+  private readonly rotated: boolean
   private drawGridLines: boolean
   private domain: IDomainEntity[]
   private fieldsData: IPreparedFieldData[] = []
-  private wrapper: any
-  private label: any
-  private legendObject: any
-  private legend: any
-  private background: any
-  private column: any
-  private row: any
+  private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
+  private label: Selection<SVGTextElement, unknown, HTMLElement, unknown>
+  private legendObject: Selection<BaseType, unknown, HTMLElement, unknown>
+  private legend: Selection<BaseType, unknown, HTMLElement, unknown>
+  private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
+  private column: Selection<SVGLineElement, IDomainEntity, SVGGElement, unknown>
+  private row: Selection<SVGGElement, unknown, SVGGElement, unknown>
   private blockType: BlockType
   private y: ScaleBand<string>
 
@@ -53,7 +52,11 @@ class DescriptionFieldsGroup {
     this.drawGridLines = params.grid ?? false
     this.domain = params.domain
     this.blockType = blockType
-    this.wrapper = d3.select(params.wrapper || 'body')
+    this.wrapper = select(params.wrapper || 'body')
+  }
+
+  public setTransform(x: number, y: number) {
+    this.container.attr('transform', `translate(${x},${y})`)
   }
 
   /**
@@ -125,7 +128,7 @@ class DescriptionFieldsGroup {
   /**
    * Initializes the container for the field groups.
    */
-  init(container: d3.Selection<SVGGElement, any, HTMLElement, any>) {
+  init(container: Selection<SVGGElement, unknown, HTMLElement, unknown>) {
     this.container = container
 
     this.label = this.container.append('text')
@@ -136,7 +139,8 @@ class DescriptionFieldsGroup {
       .attr('class', `${storage.prefix}track-group-label`)
       .text(this.name)
 
-    this.legendObject = this.container.append('svg:foreignObject')
+    this.legendObject = this.container
+      .append('svg:foreignObject')
       .attr('width', 20)
       .attr('height', 20)
 
@@ -157,7 +161,7 @@ class DescriptionFieldsGroup {
   }
 
   /**
-   * Renders the field group. Takes the x axis range, and the div for tooltips.
+   * Renders the field group. Takes the x-axis range, and the div for tooltips.
    */
   render() {
     this.rendered = true
@@ -222,7 +226,7 @@ class DescriptionFieldsGroup {
         const domain = this.domain[domainIndex]
         return (this.rotated ? domain.y : domain.x) ?? 0
       })
-      .attr('data-track-data-index', (d, i) => i)
+      .attr('data-track-data-index', (fieldData, i) => i)
       .attr('width', width)
   }
 
@@ -251,8 +255,8 @@ class DescriptionFieldsGroup {
     const {height: cellHeight} = this.getFieldDimensions()
 
     // Изменение на scaleBand
-    this.y = d3.scaleBand()
-      .domain(d3.range(this.fields.length).map(String))
+    this.y = scaleBand()
+      .domain(range(this.fields.length).map(String))
       .range([0, height])
 
     // append columns
@@ -261,13 +265,14 @@ class DescriptionFieldsGroup {
     }
 
     if (this.drawGridLines) {
-      this.column = this.container.selectAll(`.${storage.prefix}column`)
+      this.column = this.container
+        .selectAll(`.${storage.prefix}column`)
         .data(this.domain)
         .enter()
         .append('line')
         .attr('class', `${storage.prefix}column`)
-        .attr('column', (d) => d.id)
-        .attr('transform', (d: IDomainEntity, i) => `translate(${this.rotated ? d.y : d.x}),rotate(-90)`)
+        .attr('column', (domain) => domain.id)
+        .attr('transform', (domain: IDomainEntity) => `translate(${this.rotated ? domain.y : domain.x}),rotate(-90)`)
         .style('pointer-events', 'none')
         .attr('x1', -height)
     }
@@ -277,11 +282,13 @@ class DescriptionFieldsGroup {
       this.row.remove()
     }
 
-    this.row = this.container.selectAll(`.${storage.prefix}row`)
+    this.row = this.container
+      .selectAll(`.${storage.prefix}row`)
       .data(this.fields)
-      .enter().append('g')
+      .enter()
+      .append('g')
       .attr('class', `${storage.prefix}row`)
-      .attr('transform', (d: IDescriptionField, i) => {
+      .attr('transform', (field: IDescriptionField, i) => {
         return `translate(0,${this.y(String(i))})`
       })
 
@@ -295,7 +302,7 @@ class DescriptionFieldsGroup {
 
     labels
       .attr('class', `${storage.prefix}track-label ${storage.prefix}label-text-font`)
-      .attr('data-field', (d) => d.fieldName)
+      .attr('data-field', (field) => field.fieldName)
       .on('click', (event: IEnhancedEvent) => {
         if (this.rotated) {
           storage.sortRows(event.target.dataset.field)
@@ -310,7 +317,7 @@ class DescriptionFieldsGroup {
       .attr('y', cellHeight / 2)
       .attr('dy', '.32em')
       .attr('text-anchor', 'end')
-      .text((d, i) => this.fields[i].name)
+      .text((field) => field.name)
 
     if (this.expandable) {
       setTimeout(() => {
@@ -318,8 +325,8 @@ class DescriptionFieldsGroup {
         this.container.selectAll(`.${removeFieldClass}`).remove()
 
         const textLengths = {}
-        labels.each(function (d) {
-          textLengths[d.name] = this.getComputedTextLength()
+        labels.each((text) => {
+          textLengths[text.name] = text.getComputedTextLength()
         })
         this.row
           .append('text')
@@ -327,11 +334,11 @@ class DescriptionFieldsGroup {
           .text('-')
           .attr('y', cellHeight / 2)
           .attr('dy', '.32em')
-          .on('click', (d, i) => {
+          .on('click', (event, i: number) => {
             this.removeField(i)
           })
-          .attr('x', function (d) {
-            return -(textLengths[d.name] + 12 + this.getComputedTextLength())
+          .attr('x', function (text) {
+            return -(textLengths[text.name] + 12 + text.getComputedTextLength())
           })
       })
     }
@@ -352,7 +359,7 @@ class DescriptionFieldsGroup {
               hiddenTracks: this.collapsedFields.slice(),
               addTrack: this.addDescriptionFields.bind(this),
             })
-          }) as d3.Selection<BaseType, any, SVGGElement, any>
+          }) as Selection<BaseType, unknown, SVGGElement, unknown>
       }
 
       addButton.attr('y', (cellHeight / 2) + (length * cellHeight + this.y((length - 1).toString())))

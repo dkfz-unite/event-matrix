@@ -5,7 +5,7 @@ export type MainGridParams = {
   leftTextWidth?: number
   columns?: IColumn[]
   rows?: IRow[]
-  wrapper?: string
+  wrapper: string
   colorMap?: ColorMap
   width?: number
   height?: number
@@ -17,14 +17,18 @@ export type MainGridParams = {
   columnFields?: IDescriptionField[]
   rowFields?: IDescriptionField[]
 
-  columnsOpacityFunc?: (val: any) => number,
-  columnsFillFunc?: (val: any) => string,
-  rowsOpacityFunc?: (val: any) => number,
-  rowsFillFunc?: (val: any) => string,
+  // eslint-disable-next-line no-unused-vars
+  columnsOpacityFunc?: (val: IColumn) => number,
+  // eslint-disable-next-line no-unused-vars
+  columnsFillFunc?: (val: IColumn) => string,
+  // eslint-disable-next-line no-unused-vars
+  rowsOpacityFunc?: (val: IRow) => number,
+  // eslint-disable-next-line no-unused-vars
+  rowsFillFunc?: (val: IRow) => string,
 
   trackPadding?: number
-  offset: any
-  fieldLegendLabel: any
+  offset: number
+  fieldLegendLabel: string
   fieldHeight?: number
   nullSentinel?: number
   expandableGroups?: string[]
@@ -50,7 +54,7 @@ export type EventMatrixParams = {
   prefix?: string
   minCellHeight?: number
   element: string
-  entries?: any[]
+  entries?: IEntry[]
 } & MainGridParams
 
 export interface IDescriptionBlockParams {
@@ -65,7 +69,7 @@ export interface IDescriptionBlockParams {
   parentHeight?: number
   nullSentinel?: number
   grid?: boolean
-  wrapper: any
+  wrapper: string
   expandableGroups?: string[]
 }
 
@@ -80,7 +84,7 @@ export interface IDescriptionField {
 export interface IEnhancedEvent extends Event {
   target: HTMLElement & {
     dataset: Record<string, string>,
-    timeout?: any
+    timeout?: unknown
   }
 }
 
@@ -88,7 +92,7 @@ export interface IPreparedFieldData {
   id: string
   displayId?: string
   domainIndex: number
-  value: any
+  value: string | number
   displayValue: string
   notNullSentinel: boolean
   displayName: string
@@ -101,10 +105,10 @@ export interface IDescriptionFieldsGroupParams {
   cellHeight: number
   width: number
   nullSentinel?: number
-  grid?: boolean
-  domain: any[]
-  wrapper?: string
-  label?: string
+  grid: boolean
+  domain: IDomainEntity[]
+  wrapper: string
+  label: string
 }
 
 export type ILookupTable = {
