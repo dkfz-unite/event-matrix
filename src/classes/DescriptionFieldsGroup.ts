@@ -1,6 +1,7 @@
 import {range} from 'd3-array'
 import {ScaleBand, scaleBand} from 'd3-scale'
 import {BaseType, select, Selection} from 'd3-selection'
+import {transition} from 'd3-transition' // eslint-disable-next-line no-unused-vars
 import {BlockType} from '../interfaces/base.interface'
 import {
   IDescriptionField,
@@ -11,6 +12,8 @@ import {
 } from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
+
+transition() // do nothing, hack to bypass no-unused-vars IDE check %)
 
 class DescriptionFieldsGroup {
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>

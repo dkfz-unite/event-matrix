@@ -1,6 +1,6 @@
 {
   "name": "event-matrix",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "An instrument for the visual representation of multidimensional data",
   "type": "module",
   "main": "dist/event-matrix.umd.js",
@@ -72,6 +72,7 @@
     "d3-selection": "3.0.0",
     "d3-array": "3.2.4",
     "d3-scale": "4.0.2",
+    "d3-transition": "3.0.1",
     "eventemitter3": "5.0.1"
   }
 }
