@@ -9,6 +9,14 @@
     "import": "./dist/event-matrix.es.js",
     "require": "./dist/event-matrix.umd.js"
   },
+  "keywords": [
+    "oncogrid",
+    "events",
+    "matrix",
+    "events-matrix",
+    "visualization",
+    "grid"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
