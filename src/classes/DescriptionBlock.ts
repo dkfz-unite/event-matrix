@@ -1,4 +1,4 @@
-import {Selection} from 'd3'
+import {Selection} from 'd3-selection'
 import {BlockType} from '../interfaces/base.interface'
 import {
   IDescriptionBlockParams,
@@ -13,7 +13,7 @@ class DescriptionBlock {
   params: IDescriptionBlockParams
   blockType: BlockType
   offset: number
-  svg: Selection<any, any, HTMLElement, any>
+  svg: Selection<SVGGElement, unknown, HTMLElement, unknown>
   rotated: boolean
   domain: IDomainEntity[]
   width: number = 0
@@ -25,16 +25,16 @@ class DescriptionBlock {
   nullSentinel: number
   groupMap: Record<string, DescriptionFieldsGroup> = {}
   groups: DescriptionFieldsGroup[] = []
-  container!: Selection<SVGGElement, any, HTMLElement, any>
+  container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   parentHeight = 0
 
   constructor(
     params: IDescriptionBlockParams,
     blockType: BlockType,
-    svg: any,
+    svg: Selection<SVGGElement, unknown, HTMLElement, unknown>,
     rotated: boolean,
     fields: IDescriptionField[],
-    offset: any
+    offset: number
   ) {
     this.blockType = blockType
     this.offset = offset
@@ -148,8 +148,9 @@ class DescriptionBlock {
     const {padding} = this.getDimensions()
 
     for (const group of this.groups) {
-      group.container.attr('transform', 'translate(0,' + this.parentHeight + ')')
+      group.setTransform(0, this.parentHeight)
       group.resize(this.width)
+
       this.parentHeight += group.getTotalHeight() + padding
     }
 

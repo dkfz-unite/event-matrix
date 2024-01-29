@@ -1,5 +1,4 @@
-import * as d3 from 'd3'
-import {Selection} from 'd3'
+import {select, Selection} from 'd3-selection'
 import {BlockType} from '../interfaces/base.interface'
 import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'
@@ -26,15 +25,15 @@ class Histogram {
   private numDomain: number
   private barWidth: number
   private readonly totalHeight: number
-  private wrapper: d3.Selection<Element, unknown, Element, unknown>
+  private wrapper: Selection<Element, unknown, Element, unknown>
   private topCount = 1
-  private container: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private histogram: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private bottomAxis: d3.Selection<SVGLineElement, unknown, HTMLElement, unknown>
-  private leftAxis: d3.Selection<SVGLineElement, unknown, HTMLElement, unknown>
-  private topText: d3.Selection<SVGTextElement, unknown, HTMLElement, unknown>
-  private middleText: d3.Selection<SVGTextElement, unknown, HTMLElement, unknown>
-  private leftLabel: d3.Selection<SVGTextElement, unknown, HTMLElement, unknown>
+  private container: Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  private histogram: Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private bottomAxis: Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private leftAxis: Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private topText: Selection<SVGTextElement, unknown, HTMLElement, unknown>
+  private middleText: Selection<SVGTextElement, unknown, HTMLElement, unknown>
+  private leftLabel: Selection<SVGTextElement, unknown, HTMLElement, unknown>
 
   constructor(params: HistogramParams, svg: Selection<SVGGElement, unknown, HTMLElement, unknown>, rotated?: boolean) {
     this.lineWidthOffset = params.histogramBorderPadding?.left || 10
@@ -50,7 +49,7 @@ class Histogram {
     this.barWidth = (this.rotated ? this.height : this.width) / this.domain.length
 
     this.totalHeight = this.histogramHeight + this.lineHeightOffset + this.padding
-    this.wrapper = d3.select<Element, unknown>(params.wrapper || 'body')
+    this.wrapper = select<Element, unknown>(params.wrapper || 'body')
   }
 
   public getHistogramHeight() {
@@ -80,7 +79,6 @@ class Histogram {
         }
       })
 
-    console.log(this.totalHeight, this.centerText)
     this.histogram = this.container.append('g')
       .attr('transform', 'translate(0,-' + (this.totalHeight + this.centerText) + ')')
 
@@ -165,6 +163,10 @@ class Histogram {
   }
 
   public resize(width: number, height: number): void {
+    if (this.container === null) {
+      return
+    }
+
     this.width = width
     this.height = height
 
@@ -261,7 +263,7 @@ class Histogram {
 
   public destroy(): void {
     this.histogram.remove()
-    this.container.remove()
+    this.container?.remove()
   }
 }
 

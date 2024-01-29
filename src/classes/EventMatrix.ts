@@ -1,7 +1,7 @@
-import * as d3 from 'd3'
-import {ScaleBand} from 'd3'
+import {range} from 'd3-array'
+import {scaleBand, ScaleBand} from 'd3-scale'
+import {select, Selection} from 'd3-selection'
 import EventEmitter from 'eventemitter3'
-import {SortFn} from '../interfaces/base.interface'
 import {IColumn, IRow} from '../interfaces/bioinformatics.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
@@ -9,17 +9,17 @@ import {storage} from '../utils/storage'
 import MainGrid from './MainGrid'
 
 class EventMatrix extends EventEmitter {
-  private params: EventMatrixParams
+  private readonly params: EventMatrixParams
   private width: number
   private height: number
-  private container: d3.Selection<HTMLDivElement, any, HTMLElement, any>
+  private container: Selection<HTMLDivElement, unknown, HTMLElement, unknown>
   private mainGrid: MainGrid
   private heatMapMode = false
   private drawGridLines = false
   private crosshairMode = false
   private charts: MainGrid[] = []
-  private x!: ScaleBand<string>
-  private y!: ScaleBand<string>
+  private x: ScaleBand<string>
+  private y: ScaleBand<string>
   private fullscreen = false
 
   constructor(params: EventMatrixParams) {
@@ -35,10 +35,11 @@ class EventMatrix extends EventEmitter {
     }
 
     params.wrapper = `.${storage.prefix}container`
-    this.container = d3.select(params.element || 'body')
+    this.container = select(params.element || 'body')
       .append('div')
       .attr('class', `${storage.prefix}container`)
       .style('position', 'relative')
+
     this.initCharts()
 
     eventBus.exposeEvents().forEach((eventName) => {
@@ -58,7 +59,7 @@ class EventMatrix extends EventEmitter {
     this.computeColumnCounts()
     this.computeRowCounts()
     this.computeRowScoresAndCount()
-    this.rowsSortbyScores()
+    this.rowsSortByScores()
     this.computeScores()
     this.sortByScores()
     this.calculatePositions()
@@ -85,12 +86,12 @@ class EventMatrix extends EventEmitter {
   }
 
   private calculatePositions() {
-    const getX = d3.scaleBand()
-      .domain(d3.range(storage.columns.length).map(String))
+    const getX = scaleBand()
+      .domain(range(storage.columns.length).map(String))
       .range([0, this.width])
 
-    const getY = d3.scaleBand()
-      .domain(d3.range(storage.rows.length).map(String))
+    const getY = scaleBand()
+      .domain(range(storage.rows.length).map(String))
       .range([0, this.height])
 
     for (let i = 0; i < storage.columns.length; i++) {
@@ -99,7 +100,7 @@ class EventMatrix extends EventEmitter {
       const positionX = getX(String(i))!
       column.x = positionX
       storage.lookupTable[columnId] = storage.lookupTable[columnId] || {}
-      storage.lookupTable[columnId].x = positionX as any
+      storage.lookupTable[columnId].x = positionX as number
     }
 
     for (let i = 0; i < storage.rows.length; i++) {
@@ -183,7 +184,7 @@ class EventMatrix extends EventEmitter {
     storage.columns.sort(this.sortScore)
   }
 
-  private rowsSortbyScores() {
+  private rowsSortByScores() {
     storage.rows.sort(this.sortScore)
   }
 
@@ -192,76 +193,9 @@ class EventMatrix extends EventEmitter {
    * Clusters towards top left corner of grid.
    */
   public cluster() {
-    this.rowsSortbyScores()
+    this.rowsSortByScores()
     this.computeScores()
     this.sortByScores()
-    this.update(false)
-  }
-
-  public removeColumns(func: any) {
-    const removedList = []
-    // Remove donors from data
-    for (let i = 0; i < storage.columns.length; i++) {
-      const column = storage.columns[i]
-      if (func(column)) {
-        removedList.push(column.id)
-        d3.selectAll(`.${storage.prefix}${column.id}-cell`).remove()
-        d3.selectAll(`.${storage.prefix}${column.id}-bar`).remove()
-        storage.columns.splice(i, 1)
-        i--
-      }
-    }
-    for (let j = 0; j < storage.entries.length; j++) {
-      const obs = storage.entries[j]
-      if (storage.columns.find((column) => column.id === obs.columnId)) {
-        storage.entries.splice(j, 1)
-        j--
-      }
-    }
-    this.computeRowCounts()
-    this.computeRowScoresAndCount()
-    this.update(false)
-    this.resize(this.width, this.height, false)
-  }
-
-  /**
-   * Removes genes and updates EventMatrix rendering.
-   * @param func function describing the criteria for removing a gene.
-   */
-  public removeRows(func: any) {
-    const removedList = []
-    // Remove genes from data
-    for (let i = 0; i < storage.rows.length; i++) {
-      const row = storage.rows[i]
-      if (func(row)) {
-        removedList.push(row.id)
-        d3.selectAll(`.${storage.prefix}${row.id}-cell`).remove()
-        d3.selectAll(`.${storage.prefix}${row.id}-bar`).remove()
-        storage.rows.splice(i, 1)
-        i--
-      }
-    }
-    this.update(false)
-    this.resize(this.width, this.height, false)
-  }
-
-  /**
-   * Sorts donors
-   * @param func a comparator function.
-   */
-  public sortColumns(func: SortFn) {
-    storage.columns.sort(func)
-    this.update(false)
-  }
-
-  /**
-   * Sorts genes
-   * @param func a comparator function.
-   */
-  public sortRows(func: SortFn) {
-    this.computeScores()
-    this.sortByScores()
-    storage.rows.sort(func)
     this.update(false)
   }
 
@@ -310,7 +244,7 @@ class EventMatrix extends EventEmitter {
   }
 
   /**
-   * Returns # of mutations a gene has as it's score
+   * Returns # of mutations a gene has as its score
    */
   private mutationRowScore(columnId: string, rowId: string) {
     if (storage.lookupTable?.[columnId]?.[rowId] !== undefined) {
@@ -418,7 +352,7 @@ class EventMatrix extends EventEmitter {
       chart.destroy()
     })
     storage.reset()
-    this.container = d3.select(this.params.element || 'body')
+    this.container = select(this.params.element || 'body')
       .append('div')
       .attr('class', `${storage.prefix}container`)
       .style('position', 'relative')
