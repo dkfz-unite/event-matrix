@@ -1,6 +1,5 @@
 import {ScaleBand} from 'd3-scale'
 import {pointer, select, selectAll, Selection} from 'd3-selection'
-// eslint-disable-next-line no-unused-vars
 import {BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
 import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {
@@ -394,7 +393,7 @@ class MainGrid {
         if (!rowId) {
           return
         }
-        storage.sortColumns('countByRow', rowId)
+        storage.sortColumns('countByRow', parseInt(rowId))
         eventBus.emit(innerEvents.INNER_UPDATE, false)
         eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
           target,

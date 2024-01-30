@@ -9,6 +9,8 @@ export interface IEntry {
 }
 
 export interface IRow {
+  [key: string]: any
+
   id: string
   symbol: string
 
@@ -16,9 +18,14 @@ export interface IRow {
   y: number
   count: number
   countByColumn: Record<string, number>
+
+  opacity?: number
+  fill?: string
 }
 
 export interface IColumn {
+  [key: string]: any
+  
   id: string
   displayId?: string
   gender?: string
@@ -29,4 +36,7 @@ export interface IColumn {
 
   // situational params
   x: number
+
+  opacity?: number
+  fill?: string
 }
