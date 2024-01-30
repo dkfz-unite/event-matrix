@@ -2,7 +2,7 @@ import {ScaleBand} from 'd3-scale'
 import {pointer, select, selectAll, Selection} from 'd3-selection'
 // eslint-disable-next-line no-unused-vars
 import {transition} from 'd3-transition'
-import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
+import {BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
 import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {
   HistogramParams,
@@ -27,7 +27,6 @@ class MainGrid {
   private horizontalHistogram: Histogram
   private verticalDescriptionBlock: DescriptionBlock
   private leftTextWidth = 80
-  private types: BaseType[] = [BaseType.Mutation]
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
@@ -90,7 +89,7 @@ class MainGrid {
         this.container,
         true,
         params.rowFields ?? [],
-        this.width + 10 + this.verticalHistogram.getHistogramHeight() + 10 + storage.minCellHeight * (this.types.length)
+        this.width + 10 + this.verticalHistogram.getHistogramHeight() + 10 + storage.minCellHeight
       )
     this.verticalDescriptionBlock.init()
   }
@@ -459,12 +458,12 @@ class MainGrid {
     this.update(this.x, this.y)
 
     this.verticalCross.attr('y2', this.height + this.horizontalDescriptionBlock.height)
-    this.horizontalCross.attr('x2', this.width + (histogramHeight * this.types.length) + this.verticalDescriptionBlock.height)
+    this.horizontalCross.attr('x2', this.width + histogramHeight + this.verticalDescriptionBlock.height)
   }
 
   private resizeSvg() {
     const histogramHeight = this.horizontalHistogram.getHistogramHeight()
-    const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.verticalDescriptionBlock.height + this.margin.right
+    const width = this.margin.left + this.leftTextWidth + this.width + histogramHeight + this.verticalDescriptionBlock.height + this.margin.right
     const height = this.margin.top + 10 + histogramHeight + 10 + this.height + this.horizontalDescriptionBlock.height + this.margin.bottom
 
     this.svg
@@ -475,7 +474,7 @@ class MainGrid {
     this.container
       .attr('transform', 'translate(' +
         (this.margin.left + this.leftTextWidth) + ',' +
-        (this.margin.top + (histogramHeight * this.types.length) + 10) +
+        (this.margin.top + histogramHeight + 10) +
         ')')
   }
 

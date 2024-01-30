@@ -3,10 +3,6 @@ export enum BlockType {
   Columns = 'columns',
 }
 
-export enum BaseType {
-  Mutation = 'mutation'
-}
-
 export interface CssMarginProps {
   top: number
   right: number

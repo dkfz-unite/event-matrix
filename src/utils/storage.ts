@@ -62,10 +62,7 @@ class Storage {
       this.columns = columns
     }
     if (entries !== undefined) {
-      this.entries = entries.map((obs) => ({
-        ...obs,
-        type: obs.type ?? 'mutation',
-      }))
+      this.entries = entries
     }
     if (rowsFillFunc !== undefined) {
       this.customFunctions[BlockType.Rows].fill = rowsFillFunc
