@@ -1,7 +1,6 @@
 import {ScaleBand} from 'd3-scale'
 import {pointer, select, selectAll, Selection} from 'd3-selection'
 // eslint-disable-next-line no-unused-vars
-import {transition} from 'd3-transition'
 import {BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
 import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {
@@ -15,8 +14,6 @@ import {eventBus, innerEvents, publicEvents, renderEvents} from '../utils/event-
 import {storage} from '../utils/storage'
 import DescriptionBlock from './DescriptionBlock'
 import Histogram from './Histogram'
-
-transition() // do nothing, hack to bypass no-unused-vars IDE check %)
 
 class MainGrid {
   private params: MainGridParams
@@ -32,14 +29,7 @@ class MainGrid {
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
   private gridContainer: Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private colorMap: ColorMap = {
-    'missense_variant': '#ff9b6c',
-    'frameshift_variant': '#57dba4',
-    'stop_gained': '#af57db',
-    'start_lost': '#ff2323',
-    'stop_lost': '#d3ec00',
-    'initiator_codon_variant': '#5abaff',
-  }
+  private colorMap: ColorMap = {}
   private width = 500
   private height = 500
   private inputWidth = 500
@@ -311,14 +301,12 @@ class MainGrid {
     })
 
     this.row
-      .transition()
       .attr('transform', (row: IRow) => {
         return 'translate( 0, ' + row.y + ')'
       })
 
     this.container
       .selectAll(`.${storage.prefix}sortable-rect`)
-      .transition()
       .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
       })
@@ -788,7 +776,6 @@ class MainGrid {
     this.heatMap = active
 
     selectAll(`.${storage.prefix}sortable-rect`)
-      .transition()
       .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
       })

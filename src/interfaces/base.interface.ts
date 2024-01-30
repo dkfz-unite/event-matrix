@@ -11,10 +11,5 @@ export interface CssMarginProps {
 }
 
 export interface ColorMap {
-  'missense_variant': string,
-  'frameshift_variant': string,
-  'stop_gained': string,
-  'start_lost': string,
-  'stop_lost': string,
-  'initiator_codon_variant': string,
+  [key: string]: string
 }
