@@ -933,7 +933,7 @@ var Qe = (
     }, e.prototype.sortItems = function(t, i, n, r) {
       t.sort(function(o, s) {
         var a, h, l = (a = n === null ? o[i] : o[i][n]) !== null && a !== void 0 ? a : "0", u = (h = n === null ? s[i] : s[i][n]) !== null && h !== void 0 ? h : "0";
-        return l === u ? 0 : r === "ASC" ? l.localeCompare(u) : u.localeCompare(l);
+        return l === u ? 0 : r === "ASC" ? l.toString().localeCompare(u) : u.toString().localeCompare(l);
       });
     }, e.prototype.sortRows = function(t, i) {
       t === void 0 && (t = "id"), i === void 0 && (i = null), (i === null || i === this.rowsPrevIndex) && (this.rowsOrder = this.toggleOrder(this.rowsOrder)), this.rowsPrevIndex = i, this.sortItems(this.rows, t, i, this.rowsOrder);

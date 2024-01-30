@@ -110,7 +110,7 @@ export class Storage {
         return 0
       }
 
-      return order === 'ASC' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
+      return order === 'ASC' ? aVal.toString().localeCompare(bVal) : bVal.toString().localeCompare(aVal)
     })
   }
 
