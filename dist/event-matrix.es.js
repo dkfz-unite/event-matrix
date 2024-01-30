@@ -901,17 +901,21 @@ var Qe = (
       var t;
       this.minCellHeight = 10, this.prefix = "og-", this.lookupTable = {}, this.rowsOriginal = [], this.rows = [], this.columnsOriginal = [], this.columns = [], this.entries = [], this.customFunctions = (t = {}, t[w.Rows] = {
         opacity: function(i) {
-          return 1;
+          var n = i.opacity;
+          return n ?? 1;
         },
         fill: function(i) {
-          return "black";
+          var n = i.fill;
+          return n ?? "black";
         }
       }, t[w.Columns] = {
         opacity: function(i) {
-          return 1;
+          var n = i.opacity;
+          return n ?? 1;
         },
         fill: function(i) {
-          return "black";
+          var n = i.fill;
+          return n ?? "black";
         }
       }, t), this.rowsPrevIndex = null, this.rowsOrder = null, this.columnsPrevIndex = null, this.columnsOrder = null;
     }
@@ -928,7 +932,7 @@ var Qe = (
       return t === "ASC" ? "DESC" : "ASC";
     }, e.prototype.sortItems = function(t, i, n, r) {
       t.sort(function(o, s) {
-        var a, h, l = n === null ? o[i] : (a = o[i][n]) !== null && a !== void 0 ? a : "0", u = n === null ? s[i] : (h = s[i][n]) !== null && h !== void 0 ? h : "0";
+        var a, h, l = (a = n === null ? o[i] : o[i][n]) !== null && a !== void 0 ? a : "0", u = (h = n === null ? s[i] : s[i][n]) !== null && h !== void 0 ? h : "0";
         return l === u ? 0 : r === "ASC" ? l.localeCompare(u) : u.localeCompare(l);
       });
     }, e.prototype.sortRows = function(t, i) {
@@ -1378,7 +1382,7 @@ var Qe = (
         });
       }).on("click", function(r) {
         var o = r.target, s = o.dataset.row;
-        s && (c.sortColumns("countByRow", s), m.emit(D.INNER_UPDATE, !1), m.emit(_.GRID_LABEL_CLICK, {
+        s && (c.sortColumns("countByRow", parseInt(s)), m.emit(D.INNER_UPDATE, !1), m.emit(_.GRID_LABEL_CLICK, {
           target: o,
           rowId: s
         }));
