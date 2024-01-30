@@ -14,7 +14,6 @@ export interface IRow {
 
   // situational params
   y: number
-  score: number
   count: number
   countByColumn: Record<string, number>
 }
@@ -27,7 +26,6 @@ export interface IColumn {
 
   count: number
   countByRow: Record<string, number>
-  score: number
 
   // situational params
   x: number
