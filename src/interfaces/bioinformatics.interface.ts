@@ -6,6 +6,7 @@ export interface IEntry {
   value?: string,
   consequence?: string,
   impact?: string
+  layer?: string
 }
 
 export interface IRow {
@@ -25,7 +26,7 @@ export interface IRow {
 
 export interface IColumn {
   [key: string]: any
-  
+
   id: string
   displayId?: string
   gender?: string

@@ -179,12 +179,20 @@ class MainGrid {
     this.gridContainer = this.container.append('g')
   }
 
+  public clear() {
+    this.container?.selectAll(`.${storage.prefix}sortable-rect`)?.remove()
+    this.horizontalHistogram?.clear()
+    this.verticalHistogram?.clear()
+  }
+
   /**
    * Only to be called the first time the EventMatrix is rendered. It creates the rects representing the
    * mutation occurrences.
    */
   public render() {
     eventBus.emit(renderEvents.RENDER_GRID_START)
+    this.clear()
+
     this.computeCoordinates()
 
     this.svg.on('mouseover', (event: IEnhancedEvent) => {

@@ -9,12 +9,14 @@ export class Storage {
   }
 
   public minCellHeight = 10
+  public layer: string | null = null
   public prefix = 'og-'
   public lookupTable: ILookupTable = {}
   public rowsOriginal: IRow[] = []
   public rows: IRow[] = []
   public columnsOriginal: IColumn[] = []
   public columns: IColumn[] = []
+  public entriesOriginal: IEntry[] = []
   public entries: IEntry[] = []
   public customFunctions: ICustomFunctions = {
     [BlockType.Rows]: {
@@ -27,9 +29,9 @@ export class Storage {
     },
   }
 
-  private rowsPrevIndex: number | null = null
+  private rowsPrevIndex: string | number | null = null
   private rowsOrder: 'ASC' | 'DESC' | null = null
-  private columnsPrevIndex: number | null = null
+  private columnsPrevIndex: string | number | null = null
   private columnsOrder: 'ASC' | 'DESC' | null = null
 
   public setLookupTable(lookupTable: ILookupTable) {
@@ -53,6 +55,7 @@ export class Storage {
     this.rows = [...rows]
     this.columnsOriginal = [...columns]
     this.columns = [...columns]
+    this.entriesOriginal = [...entries]
     this.entries = [...entries]
 
     if (rowsFillFunc) {
@@ -81,13 +84,20 @@ export class Storage {
     }
   }
 
+
   public reset() {
     this.rows = [...this.rowsOriginal]
     this.columns = [...this.columnsOriginal]
+    this.entries = [...this.entriesOriginal.filter((entry) => this.layer === null ? true : entry.layer === this.layer)]
     this.rowsOrder = null
     this.columnsOrder = null
     this.rowsPrevIndex = null
     this.columnsPrevIndex = null
+  }
+
+  public setLayer(layer: string | null) {
+    this.layer = layer
+    this.entries = [...this.entriesOriginal.filter((entry) => this.layer === null ? true : entry.layer === this.layer)]
   }
 
   public static getInstance(): Storage {
@@ -101,7 +111,7 @@ export class Storage {
     return currentOrder === 'ASC' ? 'DESC' : 'ASC'
   }
 
-  private sortItems(items: IRow[] | IColumn[], fieldName: string, index: number | null, order: 'ASC' | 'DESC' | null): void {
+  private sortItems(items: IRow[] | IColumn[], fieldName: string, index: string | number | null, order: 'ASC' | 'DESC' | null): void {
     items.sort((a, b) => {
       const aVal = (index === null ? a[fieldName] : a[fieldName][index]) ?? '0'
       const bVal = (index === null ? b[fieldName] : b[fieldName][index]) ?? '0'
@@ -114,7 +124,7 @@ export class Storage {
     })
   }
 
-  public sortRows(fieldName = 'id', index: number | null = null) {
+  public sortRows(fieldName = 'id', index: string | number | null = null) {
     if (index === null || index === this.rowsPrevIndex) {
       this.rowsOrder = this.toggleOrder(this.rowsOrder)
     }
@@ -122,7 +132,7 @@ export class Storage {
     this.sortItems(this.rows, fieldName, index, this.rowsOrder)
   }
 
-  public sortColumns(fieldName = 'id', index: number | null = null) {
+  public sortColumns(fieldName = 'id', index: string | number | null = null) {
     if (index === null || index === this.columnsPrevIndex) {
       this.columnsOrder = this.toggleOrder(this.columnsOrder)
     }

@@ -221,6 +221,10 @@ class Histogram {
     this.updateAxis(topCount)
   }
 
+  public clear() {
+    this.histogram?.remove()
+  }
+
   private updateAxis(topCount: number): void {
     this.bottomAxis
       .attr('y1', this.histogramHeight + this.lineHeightOffset)
