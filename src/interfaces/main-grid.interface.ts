@@ -15,8 +15,8 @@ export interface ICustomFunctions {
 
 export type MainGridParams = {
   leftTextWidth?: number
-  columns?: IColumn[]
-  rows?: IRow[]
+  columns: IColumn[]
+  rows: IRow[]
   wrapper: string
   colorMap?: ColorMap
   width?: number
@@ -63,22 +63,22 @@ export interface HistogramParams {
 export type IDomainEntity = IRow & IColumn
 
 export interface IStorageOptions {
-  rows: IRow[],
-  columns: IColumn[],
+  rows: IRow[]
+  columns: IColumn[]
   entries: IEntry[]
-  minCellHeight?: number,
-  prefix?: string,
+  minCellHeight?: number
+  prefix?: string
   columnsFillFunc?: ValueFn<BaseType, IColumn, string>
-  columnsOpacityFunc?: ValueFn<BaseType, IColumn, number>,
-  rowsFillFunc?: ValueFn<BaseType, IRow, string>,
-  rowsOpacityFunc?: ValueFn<BaseType, IRow, number>,
+  columnsOpacityFunc?: ValueFn<BaseType, IColumn, number>
+  rowsFillFunc?: ValueFn<BaseType, IRow, string>
+  rowsOpacityFunc?: ValueFn<BaseType, IRow, number>
 }
 
 export type EventMatrixParams = {
-  prefix?: string
+  prefix: string
   minCellHeight?: number
   element: string
-  entries?: IEntry[]
+  entries: IEntry[]
 } & MainGridParams
 
 export interface IDescriptionBlockParams {

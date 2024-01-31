@@ -24,7 +24,17 @@ class EventMatrix extends EventEmitter {
 
   constructor(params: EventMatrixParams) {
     super()
-    storage.setOptions(params)
+    storage.setOptions({
+      minCellHeight: params.minCellHeight,
+      prefix: params.prefix,
+      rows: params.rows,
+      columns: params.columns,
+      entries: params.entries,
+      columnsFillFunc: params.columnsFillFunc,
+      rowsOpacityFunc: params.rowsOpacityFunc,
+      rowsFillFunc: params.rowsFillFunc,
+      columnsOpacityFunc: params.columnsOpacityFunc,
+    })
 
     this.params = params
     this.width = params.width ?? 500
@@ -49,6 +59,21 @@ class EventMatrix extends EventEmitter {
 
   public static create(params: EventMatrixParams) {
     return new EventMatrix(params)
+  }
+
+  public setLayer(layer: string | null) {
+    if (storage.layer !== layer) {
+      storage.setLayer(layer)
+
+      this.createLookupTable()
+      this.computeColumnCounts()
+      this.computeRowCounts()
+      this.calculatePositions()
+
+      this.charts.forEach((chart) => {
+        chart.render()
+      })
+    }
   }
 
   /**

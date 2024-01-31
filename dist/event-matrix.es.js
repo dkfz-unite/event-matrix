@@ -25,7 +25,7 @@ var S = function() {
     return t;
   }, S.apply(this, arguments);
 };
-function H(e, t, i) {
+function O(e, t, i) {
   if (i || arguments.length === 2)
     for (var n = 0, r = t.length, o; n < r; n++)
       (o || !(n in t)) && (o || (o = Array.prototype.slice.call(t, 0, n)), o[n] = t[n]);
@@ -65,7 +65,7 @@ function ut({ _intern: e, _key: t }, i) {
 function ft(e) {
   return e !== null && typeof e == "object" ? e.valueOf() : e;
 }
-function N(e, t, i) {
+function L(e, t, i) {
   e = +e, t = +t, i = (r = arguments.length) < 2 ? (t = e, e = 0, 1) : r < 3 ? 1 : +i;
   for (var n = -1, r = Math.max(0, Math.ceil((t - e) / i)) | 0, o = new Array(r); ++n < r; )
     o[n] = e + n * i;
@@ -111,13 +111,13 @@ function q() {
     return q(t, i).unknown(n);
   }, Y.apply(r, arguments), r;
 }
-function L() {
+function N() {
   var e = q().unknown(void 0), t = e.domain, i = e.range, n = 0, r = 1, o, s, a = !1, h = 0, l = 0, u = 0.5;
   delete e.unknown;
   function f() {
     var d = t().length, v = r < n, p = v ? r : n, x = v ? n : r;
     o = (x - p) / Math.max(1, d - h + l * 2), a && (o = Math.floor(o)), p += (x - p - o * (d - h)) * u, s = o * (1 - h), a && (p = Math.round(p), s = Math.round(s));
-    var g = N(d).map(function(E) {
+    var g = L(d).map(function(E) {
       return p + o * E;
     });
     return i(v ? g.reverse() : g);
@@ -143,7 +143,7 @@ function L() {
   }, e.align = function(d) {
     return arguments.length ? (u = Math.max(0, Math.min(1, d)), f()) : u;
   }, e.copy = function() {
-    return L(t(), [n, r]).round(a).paddingInner(h).paddingOuter(l).align(u);
+    return N(t(), [n, r]).round(a).paddingInner(h).paddingOuter(l).align(u);
   }, Y.apply(f(), arguments);
 }
 var B = "http://www.w3.org/1999/xhtml";
@@ -233,16 +233,16 @@ function Et(e) {
   return this.select(e == null ? Ct : It(typeof e == "function" ? e : j(e)));
 }
 var Dt = Array.prototype.filter;
-function St() {
+function Ot() {
   return Array.from(this.children);
 }
-function Ot(e) {
+function St(e) {
   return function() {
     return Dt.call(this.children, e);
   };
 }
 function Ht(e) {
-  return this.selectAll(e == null ? St : Ot(typeof e == "function" ? e : j(e)));
+  return this.selectAll(e == null ? Ot : St(typeof e == "function" ? e : j(e)));
 }
 function Tt(e) {
   typeof e != "function" && (e = xt(e));
@@ -280,13 +280,13 @@ function At(e) {
     return e;
   };
 }
-function Nt(e, t, i, n, r, o) {
+function Lt(e, t, i, n, r, o) {
   for (var s = 0, a, h = t.length, l = o.length; s < l; ++s)
     (a = t[s]) ? (a.__data__ = o[s], n[s] = a) : i[s] = new k(e, o[s]);
   for (; s < h; ++s)
     (a = t[s]) && (r[s] = a);
 }
-function Lt(e, t, i, n, r, o, s) {
+function Nt(e, t, i, n, r, o, s) {
   var a, h, l = /* @__PURE__ */ new Map(), u = t.length, f = o.length, d = new Array(u), v;
   for (a = 0; a < u; ++a)
     (h = t[a]) && (d[a] = v = s.call(h, h.__data__, a, t) + "", l.has(v) ? r[a] = h : l.set(v, h));
@@ -301,16 +301,16 @@ function kt(e) {
 function Gt(e, t) {
   if (!arguments.length)
     return Array.from(this, kt);
-  var i = t ? Lt : Nt, n = this._parents, r = this._groups;
+  var i = t ? Nt : Lt, n = this._parents, r = this._groups;
   typeof e != "function" && (e = At(e));
   for (var o = r.length, s = new Array(o), a = new Array(o), h = new Array(o), l = 0; l < o; ++l) {
     var u = n[l], f = r[l], d = f.length, v = Mt(e.call(u, u && u.__data__, l, n)), p = v.length, x = a[l] = new Array(p), g = s[l] = new Array(p), E = h[l] = new Array(d);
     i(u, f, x, g, E, v, t);
-    for (var C = 0, y = 0, A, O; C < p; ++C)
+    for (var C = 0, y = 0, A, H; C < p; ++C)
       if (A = x[C]) {
-        for (C >= y && (y = C + 1); !(O = g[y]) && ++y < p; )
+        for (C >= y && (y = C + 1); !(H = g[y]) && ++y < p; )
           ;
-        A._next = O || null;
+        A._next = H || null;
       }
   }
   return s = new I(s, n), s._enter = a, s._exit = h, s;
@@ -567,10 +567,10 @@ function Ee() {
 function De() {
   this.previousSibling && this.parentNode.insertBefore(this, this.parentNode.firstChild);
 }
-function Se() {
+function Oe() {
   return this.each(De);
 }
-function Oe(e) {
+function Se(e) {
   var t = typeof e == "function" ? e : J(e);
   return this.select(function() {
     return this.appendChild(t.apply(this, arguments));
@@ -592,16 +592,16 @@ function be() {
 function Ae() {
   return this.each(be);
 }
-function Ne() {
+function Le() {
   var e = this.cloneNode(!1), t = this.parentNode;
   return t ? t.insertBefore(e, this.nextSibling) : e;
 }
-function Le() {
+function Ne() {
   var e = this.cloneNode(!0), t = this.parentNode;
   return t ? t.insertBefore(e, this.nextSibling) : e;
 }
 function ke(e) {
-  return this.select(e ? Le : Ne);
+  return this.select(e ? Ne : Le);
 }
 function Ge(e) {
   return arguments.length ? this.property("__data__", e) : this.node().__data__;
@@ -713,8 +713,8 @@ I.prototype = {
   text: we,
   html: Ie,
   raise: Ee,
-  lower: Se,
-  append: Oe,
+  lower: Oe,
+  append: Se,
   insert: Te,
   remove: Ae,
   clone: ke,
@@ -816,7 +816,7 @@ var ht = { exports: {} };
         C[y - 1] = arguments[y];
       g.fn.apply(g.context, C);
     } else {
-      var A = g.length, O;
+      var A = g.length, H;
       for (y = 0; y < A; y++)
         switch (g[y].once && this.removeListener(l, g[y].fn, void 0, !0), E) {
           case 1:
@@ -833,8 +833,8 @@ var ht = { exports: {} };
             break;
           default:
             if (!C)
-              for (O = 1, C = new Array(E - 1); O < E; O++)
-                C[O - 1] = arguments[O];
+              for (H = 1, C = new Array(E - 1); H < E; H++)
+                C[H - 1] = arguments[H];
             g[y].fn.apply(g[y].context, C);
         }
     }
@@ -899,7 +899,7 @@ var Qe = (
   function() {
     function e() {
       var t;
-      this.minCellHeight = 10, this.prefix = "og-", this.lookupTable = {}, this.rowsOriginal = [], this.rows = [], this.columnsOriginal = [], this.columns = [], this.entries = [], this.customFunctions = (t = {}, t[w.Rows] = {
+      this.minCellHeight = 10, this.layer = null, this.prefix = "og-", this.lookupTable = {}, this.rowsOriginal = [], this.rows = [], this.columnsOriginal = [], this.columns = [], this.entriesOriginal = [], this.entries = [], this.customFunctions = (t = {}, t[w.Rows] = {
         opacity: function(i) {
           var n = i.opacity;
           return n ?? 1;
@@ -923,9 +923,17 @@ var Qe = (
       this.lookupTable = t;
     }, e.prototype.setOptions = function(t) {
       var i = t.minCellHeight, n = t.prefix, r = n === void 0 ? this.prefix : n, o = t.rows, s = o === void 0 ? this.rowsOriginal : o, a = t.columns, h = a === void 0 ? this.columnsOriginal : a, l = t.entries, u = l === void 0 ? this.entries : l, f = t.columnsFillFunc, d = t.rowsOpacityFunc, v = t.rowsFillFunc, p = t.columnsOpacityFunc;
-      this.minCellHeight = i ?? 10, this.prefix = r ?? "og-", this.rowsOriginal = H([], s, !0), this.rows = H([], s, !0), this.columnsOriginal = H([], h, !0), this.columns = H([], h, !0), this.entries = H([], u, !0), v && (this.customFunctions[w.Rows] = S(S({}, this.customFunctions[w.Rows]), { fill: v })), d && (this.customFunctions[w.Rows] = S(S({}, this.customFunctions[w.Rows]), { opacity: d })), f && (this.customFunctions[w.Columns] = S(S({}, this.customFunctions[w.Columns]), { fill: f })), p && (this.customFunctions[w.Columns] = S(S({}, this.customFunctions[w.Columns]), { opacity: p }));
+      this.minCellHeight = i ?? 10, this.prefix = r ?? "og-", this.rowsOriginal = O([], s, !0), this.rows = O([], s, !0), this.columnsOriginal = O([], h, !0), this.columns = O([], h, !0), this.entriesOriginal = O([], u, !0), this.entries = O([], u, !0), v && (this.customFunctions[w.Rows] = S(S({}, this.customFunctions[w.Rows]), { fill: v })), d && (this.customFunctions[w.Rows] = S(S({}, this.customFunctions[w.Rows]), { opacity: d })), f && (this.customFunctions[w.Columns] = S(S({}, this.customFunctions[w.Columns]), { fill: f })), p && (this.customFunctions[w.Columns] = S(S({}, this.customFunctions[w.Columns]), { opacity: p }));
     }, e.prototype.reset = function() {
-      this.rows = H([], this.rowsOriginal, !0), this.columns = H([], this.columnsOriginal, !0), this.rowsOrder = null, this.columnsOrder = null, this.rowsPrevIndex = null, this.columnsPrevIndex = null;
+      var t = this;
+      this.rows = O([], this.rowsOriginal, !0), this.columns = O([], this.columnsOriginal, !0), this.entries = O([], this.entriesOriginal.filter(function(i) {
+        return t.layer === null ? !0 : i.layer === t.layer;
+      }), !0), this.rowsOrder = null, this.columnsOrder = null, this.rowsPrevIndex = null, this.columnsPrevIndex = null;
+    }, e.prototype.setLayer = function(t) {
+      var i = this;
+      this.layer = t, this.entries = O([], this.entriesOriginal.filter(function(n) {
+        return i.layer === null ? !0 : n.layer === i.layer;
+      }), !0);
     }, e.getInstance = function() {
       return this.instance || (this.instance = new this()), this.instance;
     }, e.prototype.toggleOrder = function(t) {
@@ -1031,7 +1039,7 @@ var Qe = (
       this.width = t, this.background.attr("class", "background").attr("width", t).attr("height", i), this.computeCoordinates(), this.renderData();
     }, e.prototype.computeCoordinates = function() {
       var t = this, i = this.getFieldsGroupDimensions(), n = i.height, r = i.length, o = this.getFieldDimensions().height;
-      this.y = L().domain(N(this.fields.length).map(String)).range([0, n]), this.column && this.column.remove(), this.drawGridLines && (this.column = this.container.selectAll(".".concat(c.prefix, "column")).data(this.domain).enter().append("line").attr("class", "".concat(c.prefix, "column")).attr("column", function(h) {
+      this.y = N().domain(L(this.fields.length).map(String)).range([0, n]), this.column && this.column.remove(), this.drawGridLines && (this.column = this.container.selectAll(".".concat(c.prefix, "column")).data(this.domain).enter().append("line").attr("class", "".concat(c.prefix, "column")).attr("column", function(h) {
         return h.id;
       }).attr("transform", function(h) {
         return "translate(".concat(t.rotated ? h.y : h.x, "),rotate(-90)");
@@ -1250,6 +1258,9 @@ var Qe = (
       }), this.histogram.attr("transform", "translate(0,-" + (this.totalHeight + this.centerText) + ")"), this.bottomAxis.attr("x2", this.histogramWidth + 10));
     }, e.prototype.renderAxis = function(t) {
       this.bottomAxis = this.histogram.append("line").attr("class", "".concat(c.prefix, "histogram-axis")), this.leftAxis = this.histogram.append("line").attr("class", "".concat(c.prefix, "histogram-axis")), this.topText = this.histogram.append("text").attr("class", "".concat(c.prefix, "label-text-font")).attr("dy", ".32em").attr("text-anchor", "end"), this.middleText = this.histogram.append("text").attr("class", "".concat(c.prefix, "label-text-font")).attr("dy", ".32em").attr("text-anchor", "end"), this.leftLabel = this.histogram.append("text").text("Mutation freq.").attr("class", "".concat(c.prefix, "label-text-font")).attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("x", "-40").attr("y", "-25"), this.updateAxis(t);
+    }, e.prototype.clear = function() {
+      var t;
+      (t = this.histogram) === null || t === void 0 || t.remove();
     }, e.prototype.updateAxis = function(t) {
       this.bottomAxis.attr("y1", this.histogramHeight + this.lineHeightOffset).attr("y2", this.histogramHeight + this.lineHeightOffset).attr("x2", this.histogramWidth + this.lineWidthOffset).attr("transform", "translate(-" + this.lineHeightOffset + ",0)"), this.leftAxis.attr("y1", 0).attr("y2", this.histogramHeight + this.lineHeightOffset).attr("transform", "translate(-" + this.lineHeightOffset + ",0)"), this.topText.attr("x", this.centerText).text(t);
       var i = parseInt(String(t / 2)), n = this.histogramHeight - this.histogramHeight / (t / i);
@@ -1306,9 +1317,12 @@ var Qe = (
       i !== void 0 && (this.leftTextWidth = i), this.wrapper = b(n || "body"), r !== void 0 && (this.colorMap = r), o !== void 0 && (this.inputWidth = o), s !== void 0 && (this.inputHeight = s), this.initDimensions(o, s), a !== void 0 && (this.margin = a), h !== void 0 && (this.heatMap = h), u !== void 0 && (this.drawGridLines = u), l !== void 0 && (this.heatMapColor = l);
     }, e.prototype.init = function() {
       this.svg = this.wrapper.append("svg").attr("class", "".concat(c.prefix, "maingrid-svg")).attr("id", "".concat(c.prefix, "maingrid-svg")).attr("width", "100%"), this.container = this.svg.append("g"), this.background = this.container.append("rect").attr("class", "".concat(c.prefix, "background")).attr("width", this.width).attr("height", this.height), this.gridContainer = this.container.append("g");
+    }, e.prototype.clear = function() {
+      var t, i, n, r;
+      (i = (t = this.container) === null || t === void 0 ? void 0 : t.selectAll(".".concat(c.prefix, "sortable-rect"))) === null || i === void 0 || i.remove(), (n = this.horizontalHistogram) === null || n === void 0 || n.clear(), (r = this.verticalHistogram) === null || r === void 0 || r.clear();
     }, e.prototype.render = function() {
       var t = this;
-      m.emit(R.RENDER_GRID_START), this.computeCoordinates(), this.svg.on("mouseover", function(i) {
+      m.emit(R.RENDER_GRID_START), this.clear(), this.computeCoordinates(), this.svg.on("mouseover", function(i) {
         var n = i.target, r = G(i, n), o = t.getIndexFromScaleBand(t.x, r[0]), s = t.getIndexFromScaleBand(t.y, r[1]);
         if (!(!n.dataset.obsIndex || t.crosshair)) {
           var a = n.dataset.obsIndex.split(" "), h = c.entries.filter(function(u) {
@@ -1521,7 +1535,17 @@ var Qe = (
     X(t, e);
     function t(i) {
       var n, r, o = e.call(this) || this;
-      return o.heatMapMode = !1, o.drawGridLines = !1, o.crosshairMode = !1, o.charts = [], o.fullscreen = !1, c.setOptions(i), o.params = i, o.width = (n = i.width) !== null && n !== void 0 ? n : 500, o.height = (r = i.height) !== null && r !== void 0 ? r : 500, o.height / c.rows.length < c.minCellHeight && (o.height = c.rows.length * c.minCellHeight), i.wrapper = ".".concat(c.prefix, "container"), o.container = b(i.element || "body").append("div").attr("class", "".concat(c.prefix, "container")).style("position", "relative"), o.initCharts(), m.exposeEvents().forEach(function(s) {
+      return o.heatMapMode = !1, o.drawGridLines = !1, o.crosshairMode = !1, o.charts = [], o.fullscreen = !1, c.setOptions({
+        minCellHeight: i.minCellHeight,
+        prefix: i.prefix,
+        rows: i.rows,
+        columns: i.columns,
+        entries: i.entries,
+        columnsFillFunc: i.columnsFillFunc,
+        rowsOpacityFunc: i.rowsOpacityFunc,
+        rowsFillFunc: i.rowsFillFunc,
+        columnsOpacityFunc: i.columnsOpacityFunc
+      }), o.params = i, o.width = (n = i.width) !== null && n !== void 0 ? n : 500, o.height = (r = i.height) !== null && r !== void 0 ? r : 500, o.height / c.rows.length < c.minCellHeight && (o.height = c.rows.length * c.minCellHeight), i.wrapper = ".".concat(c.prefix, "container"), o.container = b(i.element || "body").append("div").attr("class", "".concat(c.prefix, "container")).style("position", "relative"), o.initCharts(), m.exposeEvents().forEach(function(s) {
         m.on(s, function(a) {
           return o.emit(s, a);
         });
@@ -1529,6 +1553,10 @@ var Qe = (
     }
     return t.create = function(i) {
       return new t(i);
+    }, t.prototype.setLayer = function(i) {
+      c.layer !== i && (c.setLayer(i), this.createLookupTable(), this.computeColumnCounts(), this.computeRowCounts(), this.calculatePositions(), this.charts.forEach(function(n) {
+        n.render();
+      }));
     }, t.prototype.initCharts = function(i) {
       var n = this;
       this.createLookupTable(), this.computeColumnCounts(), this.computeRowCounts(), this.sortColumnsByScores(), this.sortRowsByScores(), this.calculatePositions(), i && (this.params.width = this.width, this.params.height = this.height), this.mainGrid = new je(this.params, this.x, this.y), m.off(D.INNER_RESIZE), m.off(D.INNER_UPDATE), m.on(D.INNER_RESIZE, function() {
@@ -1537,7 +1565,7 @@ var Qe = (
         n.update();
       }), this.heatMapMode = this.mainGrid.heatMap, this.drawGridLines = this.mainGrid.drawGridLines, this.crosshairMode = this.mainGrid.crosshair, this.charts = [], this.charts.push(this.mainGrid);
     }, t.prototype.calculatePositions = function() {
-      for (var i, n = L().domain(N(c.columns.length).map(String)).range([0, this.width]), r = L().domain(N(c.rows.length).map(String)).range([0, this.height]), o = 0; o < c.columns.length; o++) {
+      for (var i, n = N().domain(L(c.columns.length).map(String)).range([0, this.width]), r = N().domain(L(c.rows.length).map(String)).range([0, this.height]), o = 0; o < c.columns.length; o++) {
         var s = c.columns[o], a = s.id, h = n(String(o));
         s.x = h, c.lookupTable[a] = c.lookupTable[a] || {}, c.lookupTable[a].x = h;
       }
