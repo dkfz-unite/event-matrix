@@ -6,20 +6,27 @@ export interface IEntry {
   value?: string,
   consequence?: string,
   impact?: string
+  layer?: string
 }
 
 export interface IRow {
+  [key: string]: any
+
   id: string
   symbol: string
 
   // situational params
   y: number
-  score: number
   count: number
   countByColumn: Record<string, number>
+
+  opacity?: number
+  fill?: string
 }
 
 export interface IColumn {
+  [key: string]: any
+
   id: string
   displayId?: string
   gender?: string
@@ -27,8 +34,10 @@ export interface IColumn {
 
   count: number
   countByRow: Record<string, number>
-  score: number
 
   // situational params
   x: number
+
+  opacity?: number
+  fill?: string
 }

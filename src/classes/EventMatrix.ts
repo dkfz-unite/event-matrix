@@ -24,7 +24,17 @@ class EventMatrix extends EventEmitter {
 
   constructor(params: EventMatrixParams) {
     super()
-    storage.setOptions(params)
+    storage.setOptions({
+      minCellHeight: params.minCellHeight,
+      prefix: params.prefix,
+      rows: params.rows,
+      columns: params.columns,
+      entries: params.entries,
+      columnsFillFunc: params.columnsFillFunc,
+      rowsOpacityFunc: params.rowsOpacityFunc,
+      rowsFillFunc: params.rowsFillFunc,
+      columnsOpacityFunc: params.columnsOpacityFunc,
+    })
 
     this.params = params
     this.width = params.width ?? 500
@@ -51,6 +61,21 @@ class EventMatrix extends EventEmitter {
     return new EventMatrix(params)
   }
 
+  public setLayer(layer: string | null) {
+    if (storage.layer !== layer) {
+      storage.setLayer(layer)
+
+      this.createLookupTable()
+      this.computeColumnCounts()
+      this.computeRowCounts()
+      this.calculatePositions()
+
+      this.charts.forEach((chart) => {
+        chart.render()
+      })
+    }
+  }
+
   /**
    * Instantiate charts
    */
@@ -58,10 +83,9 @@ class EventMatrix extends EventEmitter {
     this.createLookupTable()
     this.computeColumnCounts()
     this.computeRowCounts()
-    this.computeRowScoresAndCount()
-    this.rowsSortByScores()
-    this.computeScores()
-    this.sortByScores()
+    this.sortColumnsByScores()
+    this.sortRowsByScores()
+
     this.calculatePositions()
     if (reloading) {
       this.params.width = this.width
@@ -75,7 +99,7 @@ class EventMatrix extends EventEmitter {
       this.resize(this.width, this.height, this.fullscreen)
     })
     eventBus.on(innerEvents.INNER_UPDATE, (columnSort: boolean) => {
-      this.update(columnSort)
+      this.update()
     })
 
     this.heatMapMode = this.mainGrid.heatMap
@@ -146,12 +170,7 @@ class EventMatrix extends EventEmitter {
   /**
    * Updates all charts
    */
-  private update(columnSort = false) {
-    if (columnSort) {
-      this.computeScores()
-      this.sortByScores()
-    }
-
+  private update() {
     this.calculatePositions()
     this.charts.forEach((chart) => {
       chart.update(this.x, this.y)
@@ -180,12 +199,32 @@ class EventMatrix extends EventEmitter {
   /**
    * Sorts donors by score
    */
-  private sortByScores() {
-    storage.columns.sort(this.sortScore)
+  private sortColumnsByScores() {
+    storage.columns.sort((columnA: IColumn, columnB: IColumn) => {
+      const scoreA = Object.values(columnA.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
+      const scoreB = Object.values(columnB.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
+      if (scoreA < scoreB) {
+        return 1
+      } else if (scoreA > scoreB) {
+        return -1
+      } else {
+        return columnA.id >= columnB.id ? 1 : -1
+      }
+    })
   }
 
-  private rowsSortByScores() {
-    storage.rows.sort(this.sortScore)
+  private sortRowsByScores() {
+    storage.rows.sort((rowA: IRow, rowB: IRow) => {
+      const scoreA = Object.values(rowA.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
+      const scoreB = Object.values(rowB.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
+      if (scoreA < scoreB) {
+        return 1
+      } else if (scoreA > scoreB) {
+        return -1
+      } else {
+        return rowA.id >= rowB.id ? 1 : -1
+      }
+    })
   }
 
   /**
@@ -193,10 +232,9 @@ class EventMatrix extends EventEmitter {
    * Clusters towards top left corner of grid.
    */
   public cluster() {
-    this.rowsSortByScores()
-    this.computeScores()
-    this.sortByScores()
-    this.update(false)
+    this.sortColumnsByScores()
+    this.sortRowsByScores()
+    this.update()
   }
 
   /**
@@ -230,56 +268,6 @@ class EventMatrix extends EventEmitter {
 
   public toggleCrosshair() {
     this.setCrosshair(!this.crosshairMode)
-  }
-
-  /**
-   * Returns 1 if at least one mutation, 0 otherwise.
-   */
-  private mutationScore(columnId: string, rowId: string) {
-    if (storage.lookupTable?.[columnId]?.[rowId] !== undefined) {
-      return 1
-    } else {
-      return 0
-    }
-  }
-
-  /**
-   * Returns # of mutations a gene has as its score
-   */
-  private mutationRowScore(columnId: string, rowId: string) {
-    if (storage.lookupTable?.[columnId]?.[rowId] !== undefined) {
-      // genes are in nested arrays in the lookup table, need to flatten to get the correct count
-      const totalRows = storage.lookupTable[columnId][rowId]
-      return totalRows.length
-    } else {
-      return 0
-    }
-  }
-
-  /**
-   * Computes scores for donor sorting.
-   */
-  private computeScores() {
-    for (const column of storage.columns) {
-      column.score = 0
-      for (let j = 0; j < storage.rows.length; j++) {
-        const row = storage.rows[j]
-        column.score += (this.mutationScore(column.id, row.id) * Math.pow(2, storage.rows.length + 1 - j))
-      }
-    }
-  }
-
-  /**
-   * Computes scores for gene sorting.
-   */
-  private computeRowScoresAndCount() {
-    for (const row of storage.rows) {
-      row.score = 0
-      for (const column of storage.columns) {
-        row.score += this.mutationRowScore(column.id, row.id)
-      }
-      row.count = row.score
-    }
   }
 
   /**
@@ -321,19 +309,6 @@ class EventMatrix extends EventEmitter {
           row.countByColumn[obs.columnId]++
         }
       }
-    }
-  }
-
-  /**
-   * Comparator for scores
-   */
-  private sortScore(a: IRow | IColumn, b: IRow | IColumn): 1 | -1 {
-    if (a.score < b.score) {
-      return 1
-    } else if (a.score > b.score) {
-      return -1
-    } else {
-      return a.id >= b.id ? 1 : -1
     }
   }
 

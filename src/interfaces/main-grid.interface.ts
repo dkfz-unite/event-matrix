@@ -1,10 +1,22 @@
-import {ColorMap, CssMarginProps} from './base.interface'
+import {BaseType, ValueFn} from 'd3-selection'
+import {BlockType, ColorMap, CssMarginProps} from './base.interface'
 import {IColumn, IEntry, IRow} from './bioinformatics.interface'
+
+export interface ICustomFunctions {
+  [BlockType.Rows]: {
+    opacity: ValueFn<BaseType, IRow, number>
+    fill: ValueFn<BaseType, IRow, string>,
+  },
+  [BlockType.Columns]: {
+    opacity: ValueFn<BaseType, IColumn, number>
+    fill: ValueFn<BaseType, IColumn, string>,
+  },
+}
 
 export type MainGridParams = {
   leftTextWidth?: number
-  columns?: IColumn[]
-  rows?: IRow[]
+  columns: IColumn[]
+  rows: IRow[]
   wrapper: string
   colorMap?: ColorMap
   width?: number
@@ -18,13 +30,13 @@ export type MainGridParams = {
   rowFields?: IDescriptionField[]
 
   // eslint-disable-next-line no-unused-vars
-  columnsOpacityFunc?: (val: IColumn) => number,
+  columnsOpacityFunc?: ValueFn<BaseType, IColumn, number>,
   // eslint-disable-next-line no-unused-vars
-  columnsFillFunc?: (val: IColumn) => string,
+  columnsFillFunc?: ValueFn<BaseType, IColumn, string>,
   // eslint-disable-next-line no-unused-vars
-  rowsOpacityFunc?: (val: IRow) => number,
+  rowsOpacityFunc?: ValueFn<BaseType, IRow, number>,
   // eslint-disable-next-line no-unused-vars
-  rowsFillFunc?: (val: IRow) => string,
+  rowsFillFunc?: ValueFn<BaseType, IRow, string>,
 
   trackPadding?: number
   offset: number
@@ -50,11 +62,23 @@ export interface HistogramParams {
 
 export type IDomainEntity = IRow & IColumn
 
-export type EventMatrixParams = {
+export interface IStorageOptions {
+  rows: IRow[]
+  columns: IColumn[]
+  entries: IEntry[]
+  minCellHeight?: number
   prefix?: string
+  columnsFillFunc?: ValueFn<BaseType, IColumn, string>
+  columnsOpacityFunc?: ValueFn<BaseType, IColumn, number>
+  rowsFillFunc?: ValueFn<BaseType, IRow, string>
+  rowsOpacityFunc?: ValueFn<BaseType, IRow, number>
+}
+
+export type EventMatrixParams = {
+  prefix: string
   minCellHeight?: number
   element: string
-  entries?: IEntry[]
+  entries: IEntry[]
 } & MainGridParams
 
 export interface IDescriptionBlockParams {

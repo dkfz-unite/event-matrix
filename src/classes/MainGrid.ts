@@ -1,8 +1,6 @@
 import {ScaleBand} from 'd3-scale'
 import {pointer, select, selectAll, Selection} from 'd3-selection'
-// eslint-disable-next-line no-unused-vars
-import {transition} from 'd3-transition'
-import {BaseType, BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
+import {BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
 import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {
   HistogramParams,
@@ -16,8 +14,6 @@ import {storage} from '../utils/storage'
 import DescriptionBlock from './DescriptionBlock'
 import Histogram from './Histogram'
 
-transition() // do nothing, hack to bypass no-unused-vars IDE check %)
-
 class MainGrid {
   private params: MainGridParams
   private x: ScaleBand<string>
@@ -27,20 +23,12 @@ class MainGrid {
   private horizontalHistogram: Histogram
   private verticalDescriptionBlock: DescriptionBlock
   private leftTextWidth = 80
-  private types: BaseType[] = [BaseType.Mutation]
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
   private gridContainer: Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private colorMap: ColorMap = {
-    'missense_variant': '#ff9b6c',
-    'frameshift_variant': '#57dba4',
-    'stop_gained': '#af57db',
-    'start_lost': '#ff2323',
-    'stop_lost': '#d3ec00',
-    'initiator_codon_variant': '#5abaff',
-  }
+  private colorMap: ColorMap = {}
   private width = 500
   private height = 500
   private inputWidth = 500
@@ -90,7 +78,7 @@ class MainGrid {
         this.container,
         true,
         params.rowFields ?? [],
-        this.width + 10 + this.verticalHistogram.getHistogramHeight() + 10 + storage.minCellHeight * (this.types.length)
+        this.width + 10 + this.verticalHistogram.getHistogramHeight() + 10 + storage.minCellHeight
       )
     this.verticalDescriptionBlock.init()
   }
@@ -191,12 +179,20 @@ class MainGrid {
     this.gridContainer = this.container.append('g')
   }
 
+  public clear() {
+    this.container?.selectAll(`.${storage.prefix}sortable-rect`)?.remove()
+    this.horizontalHistogram?.clear()
+    this.verticalHistogram?.clear()
+  }
+
   /**
    * Only to be called the first time the EventMatrix is rendered. It creates the rects representing the
    * mutation occurrences.
    */
   public render() {
     eventBus.emit(renderEvents.RENDER_GRID_START)
+    this.clear()
+
     this.computeCoordinates()
 
     this.svg.on('mouseover', (event: IEnhancedEvent) => {
@@ -312,14 +308,12 @@ class MainGrid {
     })
 
     this.row
-      .transition()
       .attr('transform', (row: IRow) => {
         return 'translate( 0, ' + row.y + ')'
       })
 
     this.container
       .selectAll(`.${storage.prefix}sortable-rect`)
-      .transition()
       .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
       })
@@ -407,7 +401,7 @@ class MainGrid {
         if (!rowId) {
           return
         }
-        storage.sortColumns('countByRow', rowId)
+        storage.sortColumns('countByRow', parseInt(rowId))
         eventBus.emit(innerEvents.INNER_UPDATE, false)
         eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
           target,
@@ -459,12 +453,12 @@ class MainGrid {
     this.update(this.x, this.y)
 
     this.verticalCross.attr('y2', this.height + this.horizontalDescriptionBlock.height)
-    this.horizontalCross.attr('x2', this.width + (histogramHeight * this.types.length) + this.verticalDescriptionBlock.height)
+    this.horizontalCross.attr('x2', this.width + histogramHeight + this.verticalDescriptionBlock.height)
   }
 
   private resizeSvg() {
     const histogramHeight = this.horizontalHistogram.getHistogramHeight()
-    const width = this.margin.left + this.leftTextWidth + this.width + (histogramHeight * this.types.length) + this.verticalDescriptionBlock.height + this.margin.right
+    const width = this.margin.left + this.leftTextWidth + this.width + histogramHeight + this.verticalDescriptionBlock.height + this.margin.right
     const height = this.margin.top + 10 + histogramHeight + 10 + this.height + this.horizontalDescriptionBlock.height + this.margin.bottom
 
     this.svg
@@ -475,7 +469,7 @@ class MainGrid {
     this.container
       .attr('transform', 'translate(' +
         (this.margin.left + this.leftTextWidth) + ',' +
-        (this.margin.top + (histogramHeight * this.types.length) + 10) +
+        (this.margin.top + histogramHeight + 10) +
         ')')
   }
 
@@ -789,7 +783,6 @@ class MainGrid {
     this.heatMap = active
 
     selectAll(`.${storage.prefix}sortable-rect`)
-      .transition()
       .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
       })
