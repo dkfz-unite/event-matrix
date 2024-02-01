@@ -22,7 +22,6 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
       columns, // Columns of your data grid
       rows, // Rows of your data grid
       entries, // Entries/events that occur in a specific cell
-      colorMap, // Object where keys represent the entry type and values represent the cell color
       width: 1000, // Table width
     });
     eventMatrix.setGridLines(this.showGridLines);

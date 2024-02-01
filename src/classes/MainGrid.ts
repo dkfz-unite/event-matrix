@@ -1,6 +1,6 @@
 import {ScaleBand} from 'd3-scale'
 import {pointer, select, selectAll, Selection} from 'd3-selection'
-import {BlockType, ColorMap, CssMarginProps} from '../interfaces/base.interface'
+import {BlockType, CssMarginProps} from '../interfaces/base.interface'
 import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
 import {
   HistogramParams,
@@ -28,7 +28,6 @@ class MainGrid {
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
   private gridContainer: Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private colorMap: ColorMap = {}
   private width = 500
   private height = 500
   private inputWidth = 500
@@ -121,7 +120,6 @@ class MainGrid {
   private loadParams({
     leftTextWidth,
     wrapper,
-    colorMap,
     width,
     height,
     margin,
@@ -133,9 +131,6 @@ class MainGrid {
       this.leftTextWidth = leftTextWidth
     }
     this.wrapper = select(wrapper || 'body')
-    if (colorMap !== undefined) {
-      this.colorMap = colorMap
-    }
 
     if (width !== undefined) {
       this.inputWidth = width
@@ -240,6 +235,9 @@ class MainGrid {
       })
     })
 
+    const heatMap = this.heatMap
+    const heatMapColor = this.heatMapColor
+
     this.container
       .selectAll(`.${storage.prefix}maingrid-svg`)
       .data(storage.entries)
@@ -257,11 +255,18 @@ class MainGrid {
       .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
       })
-      .attr('fill', (obs: IEntry) => {
-        return this.getColor(obs)
-      })
-      .attr('opacity', (obs: IEntry) => {
-        return this.getOpacity(obs)
+      .each(function (entry: IEntry) {
+        let color = heatMapColor
+        let opacity = heatMap ? 0.25 : 1
+        if (!heatMap) {
+          const appearance = (storage.customFunctions[BlockType.Entries])(entry)
+          color = appearance.color
+          opacity = appearance.opacity
+        }
+
+        const element = select(this)
+        element.attr('fill', color)
+        element.attr('opacity', opacity)
       })
 
     eventBus.emit(renderEvents.RENDER_GRID_END)
@@ -781,16 +786,24 @@ class MainGrid {
   public setHeatmap(active: boolean) {
     if (active === this.heatMap) return this.heatMap
     this.heatMap = active
+    const heatMapColor = this.heatMapColor
 
     selectAll(`.${storage.prefix}sortable-rect`)
       .attr('d', (obs: IEntry) => {
         return this.getRectangularPath(obs)
       })
-      .attr('fill', (obs: IEntry) => {
-        return this.getColor(obs)
-      })
-      .attr('opacity', (obs: IEntry) => {
-        return this.getOpacity(obs)
+      .each(function (entry: IEntry) {
+        let color = heatMapColor
+        let opacity = active ? 0.25 : 1
+        if (!active) {
+          const appearance = (storage.customFunctions[BlockType.Entries])(entry)
+          color = appearance.color
+          opacity = appearance.opacity
+        }
+
+        const element = select(this)
+        element.attr('fill', color)
+        element.attr('opacity', opacity)
       })
 
     return this.heatMap
