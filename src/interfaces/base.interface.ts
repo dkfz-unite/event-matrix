@@ -1,6 +1,7 @@
 export enum BlockType {
   Rows = 'rows',
   Columns = 'columns',
+  Entries = 'entries',
 }
 
 export interface CssMarginProps {

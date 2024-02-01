@@ -1,6 +1,6 @@
 import {BlockType} from '../interfaces/base.interface'
 import {IColumn, IEntry, IRow} from '../interfaces/bioinformatics.interface'
-import {ICustomFunctions, ILookupTable, IStorageOptions} from '../interfaces/main-grid.interface'
+import {ICustomFunctions, ILookupTable, IPreparedFieldData, IStorageOptions} from '../interfaces/main-grid.interface'
 
 export class Storage {
   private static instance: Storage | null = null
@@ -19,14 +19,9 @@ export class Storage {
   public entriesOriginal: IEntry[] = []
   public entries: IEntry[] = []
   public customFunctions: ICustomFunctions = {
-    [BlockType.Rows]: {
-      opacity: ({opacity}: IRow) => opacity ?? 1,
-      fill: ({fill}: IRow) => fill ?? 'black',
-    },
-    [BlockType.Columns]: {
-      opacity: ({opacity}: IColumn) => opacity ?? 1,
-      fill: ({fill}: IColumn) => fill ?? 'black',
-    },
+    [BlockType.Rows]: (fieldData: IPreparedFieldData) => ({color: 'black', opacity: 1}),
+    [BlockType.Columns]: (fieldData: IPreparedFieldData) => ({color: 'black', opacity: 1}),
+    [BlockType.Entries]: (entry: IEntry) => ({color: 'black', opacity: 1}),
   }
 
   private rowsPrevIndex: string | number | null = null
@@ -44,10 +39,9 @@ export class Storage {
     rows = this.rowsOriginal,
     columns = this.columnsOriginal,
     entries = this.entries,
-    columnsFillFunc,
-    rowsOpacityFunc,
-    rowsFillFunc,
-    columnsOpacityFunc,
+    columnsAppearanceFunc,
+    rowsAppearanceFunc,
+    cellAppearanceFunc,
   }: IStorageOptions) {
     this.minCellHeight = minCellHeight ?? 10
     this.prefix = prefix ?? 'og-'
@@ -58,29 +52,14 @@ export class Storage {
     this.entriesOriginal = [...entries]
     this.entries = [...entries]
 
-    if (rowsFillFunc) {
-      this.customFunctions[BlockType.Rows] = {
-        ...this.customFunctions[BlockType.Rows],
-        fill: rowsFillFunc,
-      }
+    if (rowsAppearanceFunc) {
+      this.customFunctions[BlockType.Rows] = rowsAppearanceFunc
     }
-    if (rowsOpacityFunc) {
-      this.customFunctions[BlockType.Rows] = {
-        ...this.customFunctions[BlockType.Rows],
-        opacity: rowsOpacityFunc,
-      }
+    if (columnsAppearanceFunc) {
+      this.customFunctions[BlockType.Columns] = columnsAppearanceFunc
     }
-    if (columnsFillFunc) {
-      this.customFunctions[BlockType.Columns] = {
-        ...this.customFunctions[BlockType.Columns],
-        fill: columnsFillFunc,
-      }
-    }
-    if (columnsOpacityFunc) {
-      this.customFunctions[BlockType.Columns] = {
-        ...this.customFunctions[BlockType.Columns],
-        opacity: columnsOpacityFunc,
-      }
+    if (cellAppearanceFunc) {
+      this.customFunctions[BlockType.Entries] = cellAppearanceFunc
     }
   }
 
