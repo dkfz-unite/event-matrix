@@ -424,10 +424,8 @@ class DescriptionFieldsGroup {
         return this.y(yIndexLookup[fieldName]) ?? 0
       })
       .each(function (fieldData, i) {
-        console.log(this)
-        console.log(fieldData, i)
         const element = select(this)
-        const {color, opacity} = storage.customFunctions[blockType].call(fieldData)
+        const {color, opacity} = (storage.customFunctions[blockType])(fieldData)
         element.attr('fill', color)
         element.attr('opacity', opacity)
 

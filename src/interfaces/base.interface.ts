@@ -10,7 +10,3 @@ export interface CssMarginProps {
   bottom: number
   left: number
 }
-
-export interface ColorMap {
-  [key: string]: string
-}

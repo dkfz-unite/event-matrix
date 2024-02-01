@@ -1,4 +1,4 @@
-import {BlockType, ColorMap, CssMarginProps} from './base.interface'
+import {BlockType, CssMarginProps} from './base.interface'
 import {IColumn, IEntry, IRow} from './bioinformatics.interface'
 
 export interface ICustomFunctions {
@@ -15,7 +15,6 @@ export type MainGridParams = {
   columns: IColumn[]
   rows: IRow[]
   wrapper: string
-  colorMap?: ColorMap
   width?: number
   height?: number
   margin?: CssMarginProps

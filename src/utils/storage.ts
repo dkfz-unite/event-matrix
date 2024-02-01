@@ -52,13 +52,13 @@ export class Storage {
     this.entriesOriginal = [...entries]
     this.entries = [...entries]
 
-    if (rowsAppearanceFunc) {
+    if (rowsAppearanceFunc !== undefined) {
       this.customFunctions[BlockType.Rows] = rowsAppearanceFunc
     }
-    if (columnsAppearanceFunc) {
+    if (columnsAppearanceFunc !== undefined) {
       this.customFunctions[BlockType.Columns] = columnsAppearanceFunc
     }
-    if (cellAppearanceFunc) {
+    if (cellAppearanceFunc !== undefined) {
       this.customFunctions[BlockType.Entries] = cellAppearanceFunc
     }
   }
