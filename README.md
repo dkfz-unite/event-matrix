@@ -1,3 +1,6 @@
+<!-- markdownlint-disable MD033 -->
+<!-- TODO: MD033/no-inline-html -->
+
 # Event Matrix
 
 Event Matrix is an instrument for the visual representation of multidimensional data, inspired by the earlier
@@ -8,21 +11,25 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
 ## Installation & Usage
 
 1. Install dependencies:
-    ```shell
+
+    ```sh
     npm install event-matrix
     ```
-2. Import EventMatrix in your project:
+
+1. Import `EventMatrix` in your project:
+
     ```javascript
     import EventMatrix from 'event-matrix';
     ```
-3. Set up options:
+
+1. Set up options:
+
     ```javascript
     const eventMatrix = new EventMatrix({
       element: '#event-matrix', // HTML ID for mounting the component
       columns, // Columns of your data grid
       rows, // Rows of your data grid
       entries, // Entries/events that occur in a specific cell
-      colorMap, // Object where keys represent the entry type and values represent the cell color
       width: 1000, // Table width
     });
     eventMatrix.setGridLines(this.showGridLines);
@@ -31,23 +38,21 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
 
 ## Options
 
-| Option               | Default value                               | Example                                                            | Description                                                                             |
-|----------------------|---------------------------------------------|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| `element`            | -                                           | "#event-matrix"                                                    | HTML selector for mounting the component                                                |
-| `columns`            | []                                          | [{ "id": "12" }]                                                   | Column data                                                                             |
-| `rows`               | []                                          | [{ "id": "34" }]                                                   | Row data                                                                                |
-| `entries`            | []                                          | [{ "id": "56", "value": "good", "rowId": "34", "columnId": "12" }] | "Events" or "Entries" - data defined by the intersection of a row and a column          |
-| `columnFields`       | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]         | Fields describing column data. This block is located below the table                    |
-| `rowFields`          | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]         | Fields describing row data. This block is located to the right of the table             |
-| `colorMap`           | {}                                          | { "good": "#00FF00", "normal": "#FFFF00", "bad": "#FF0000" }       | Cell color in the table depending on the value in the cell (entries)                    |
-| `columnsFillFunc`    | () => "black"                               | (val) => (val.name === "red" ? "#FF0000" : "#00FF00")              | Function that determines the cell color in the lower description block                  |
-| `columnsOpacityFunc` | () => 1                                     | (val) => Math.max(val.value / 100 + 0.1, 1)                        | Function that determines the cell opacity ("brightness") in the lower description block |
-| `rowsFillFunc`       | () => "black"                               | (val) => (val.name === "red" ? "#FF0000" : "#00FF00")              | Function that determines the cell color in the right description block                  |
-| `rowsOpacityFunc`    | () => 1                                     | (val) => Math.max(val.value / 100 + 0.1, 1)                        | Function that determines the cell opacity ("brightness") in the right description block |
-| `fieldHeight`        | 10                                          | 20                                                                 | Row height in the description block                                                     |
-| `width`              | 500                                         | 1000                                                               | Width of the main table                                                                 |
-| `fieldLegendLabel`   | undefined                                   | "<i class='las la-question-circle'></i>"                           | HTML icon next to the name of the parameter group in the description block              |
-| `margin`             | {top: 30, right: 100, bottom: 15, left: 80} | {top: 0, right: 0, bottom: 0, left: 0}                             | Margins around the component                                                            |
+| Option                  | Default value                               | Example                                                                         | Description                                                                        |
+|-------------------------|---------------------------------------------|---------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| `element`               | -                                           | "#event-matrix"                                                                 | HTML selector for mounting the component                                           |
+| `columns`               | []                                          | [{ "id": "12" }]                                                                | Column data                                                                        |
+| `rows`                  | []                                          | [{ "id": "34" }]                                                                | Row data                                                                           |
+| `entries`               | []                                          | [{ "id": "56", "value": "good", "rowId": "34", "columnId": "12" }]              | "Events" or "Entries" - data defined by the intersection of a row and a column     |
+| `columnFields`          | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]                      | Fields describing column data. This block is located below the table               |
+| `rowFields`             | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]                      | Fields describing row data. This block is located to the right of the table        |
+| `rowsAppearanceFunc`    | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the lower description block |
+| `columnsAppearanceFunc` | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the right description block |
+| `cellAppearanceFunc`    | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the main grid               |
+| `fieldHeight`           | 10                                          | 20                                                                              | Row height in the description block                                                |
+| `width`                 | 500                                         | 1000                                                                            | Width of the main table                                                            |
+| `fieldLegendLabel`      | undefined                                   | "<i class='las la-question-circle'></i>"                                        | HTML icon next to the name of the parameter group in the description block         |
+| `margin`                | {top: 30, right: 100, bottom: 15, left: 80} | {top: 0, right: 0, bottom: 0, left: 0}                                          | Margins around the component                                                       |
 
 ## Events
 
@@ -83,23 +88,25 @@ parameter, function, and event names.
 - `observations` → `entries`
 - `donorTracks` → `columnFields`
 - `geneTracks` → `rowFields`
-- `donorFillFunc` → `columnsFillFunc`
-- `geneFillFunc` → `rowsFillFunc`
-- `donorOpacityFunc` → `columnsOpacityFunc`
-- `geneOpacityFunc` → `rowsOpacityFunc`
+- `donorOpacityFunc` + `donorFillFunc` → `columnsAppearanceFunc`
+- `geneOpacityFunc` + `geneFillFunc` → `rowsAppearanceFunc`
+- `colorMap` (Map) → `cellAppearanceFunc` (Function)
 - `trackLegendLabel` → `fieldLegendLabel`
 - `trackHeight` → `fieldHeight`
 
-2. Update the structure of observations:
+1. Update the structure of observations:
 
 - Before:
+
   ```json
   {
     "geneId": "1234",
     "donorId": "5678"
   }
   ```
+
 - After:
+
   ```json
   {
     "rowId": "1234",
@@ -107,7 +114,7 @@ parameter, function, and event names.
   }
   ```
 
-3. Update events:
+1. Update events:
 
 - `histogramMouseOver` → `histogram:hover`
 - `histogramClick` → `histogram:click`
@@ -117,12 +124,18 @@ parameter, function, and event names.
 - `trackMouseOver` → `description:cell:hover`
 - `trackClick` → `description:cell:click`
 
-4. As the component update is still in progress, please feel free to create issues and provide feedback.
+1. As the component update is still in progress, please feel free to create issues and provide feedback.
 
 ## Development
 
 1. Install Node ~18. Using [NVM](https://github.com/nvm-sh/nvm) is recommended.
 2. Install dependencies:
-    ```shell
+
+    ```sh
     npm install
     ```
+
+## Contribution guidelines
+
+The project uses [pre-commit.com](https://pre-commit.com/) hooks. Run `brew install pre-commit && pre-commit install`
+for automatic configuration.

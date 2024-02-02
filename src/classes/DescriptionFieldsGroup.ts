@@ -412,9 +412,10 @@ class DescriptionFieldsGroup {
     const selection = this.container.selectAll(`.${storage.prefix}track-data`)
       .data(this.fieldsData)
 
+    const blockType = this.blockType
+
     selection.enter()
       .append('rect')
-      .attr('data-track-data-index', (dom: IPreparedFieldData, i) => i)
       .attr('x', ({domainIndex}: IPreparedFieldData) => {
         const domain = this.domain[domainIndex]
         return (this.rotated ? domain.y : domain.x) ?? 0
@@ -422,17 +423,21 @@ class DescriptionFieldsGroup {
       .attr('y', ({fieldName}: IPreparedFieldData) => {
         return this.y(yIndexLookup[fieldName]) ?? 0
       })
-      .attr('width', width)
-      .attr('height', height)
-      .attr('fill', storage.customFunctions[this.blockType].fill)
-      .attr('opacity', storage.customFunctions[this.blockType].opacity)
-      .attr('class', ({id, value, fieldName}: IPreparedFieldData) => {
-        return [
+      .each(function (fieldData, i) {
+        const element = select(this)
+        const {color, opacity} = (storage.customFunctions[blockType])(fieldData)
+        element.attr('fill', color)
+        element.attr('opacity', opacity)
+
+        element.attr('width', width)
+        element.attr('height', height)
+        element.attr('data-track-data-index', i)
+        element.attr('class', [
           `${storage.prefix}track-data`,
-          `${storage.prefix}track-${fieldName}`,
-          `${storage.prefix}track-${value}`,
-          `${storage.prefix}${id}-cell`,
-        ].join(' ')
+          `${storage.prefix}track-${fieldData.fieldName}`,
+          `${storage.prefix}track-${fieldData.value}`,
+          `${storage.prefix}${fieldData.id}-cell`,
+        ].join(' '))
       })
 
     selection.exit().remove()

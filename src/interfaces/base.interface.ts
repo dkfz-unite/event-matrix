@@ -1,6 +1,7 @@
 export enum BlockType {
   Rows = 'rows',
   Columns = 'columns',
+  Entries = 'entries',
 }
 
 export interface CssMarginProps {
@@ -8,8 +9,4 @@ export interface CssMarginProps {
   right: number
   bottom: number
   left: number
-}
-
-export interface ColorMap {
-  [key: string]: string
 }

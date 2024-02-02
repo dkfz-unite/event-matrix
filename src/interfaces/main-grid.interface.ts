@@ -1,16 +1,13 @@
-import {BaseType, ValueFn} from 'd3-selection'
-import {BlockType, ColorMap, CssMarginProps} from './base.interface'
+import {BlockType, CssMarginProps} from './base.interface'
 import {IColumn, IEntry, IRow} from './bioinformatics.interface'
 
 export interface ICustomFunctions {
-  [BlockType.Rows]: {
-    opacity: ValueFn<BaseType, IRow, number>
-    fill: ValueFn<BaseType, IRow, string>,
-  },
-  [BlockType.Columns]: {
-    opacity: ValueFn<BaseType, IColumn, number>
-    fill: ValueFn<BaseType, IColumn, string>,
-  },
+  // eslint-disable-next-line no-unused-vars
+  [BlockType.Rows]: (fieldData: IPreparedFieldData) => { color: string, opacity: number },
+  // eslint-disable-next-line no-unused-vars
+  [BlockType.Columns]: (fieldData: IPreparedFieldData) => { color: string, opacity: number },
+  // eslint-disable-next-line no-unused-vars
+  [BlockType.Entries]: (entry: IEntry) => { color: string, opacity: number }
 }
 
 export type MainGridParams = {
@@ -18,7 +15,6 @@ export type MainGridParams = {
   columns: IColumn[]
   rows: IRow[]
   wrapper: string
-  colorMap?: ColorMap
   width?: number
   height?: number
   margin?: CssMarginProps
@@ -30,13 +26,11 @@ export type MainGridParams = {
   rowFields?: IDescriptionField[]
 
   // eslint-disable-next-line no-unused-vars
-  columnsOpacityFunc?: ValueFn<BaseType, IColumn, number>,
+  columnsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
   // eslint-disable-next-line no-unused-vars
-  columnsFillFunc?: ValueFn<BaseType, IColumn, string>,
+  rowsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
   // eslint-disable-next-line no-unused-vars
-  rowsOpacityFunc?: ValueFn<BaseType, IRow, number>,
-  // eslint-disable-next-line no-unused-vars
-  rowsFillFunc?: ValueFn<BaseType, IRow, string>,
+  cellAppearanceFunc?: (entry: IEntry) => { color: string, opacity: number }
 
   trackPadding?: number
   offset: number
@@ -68,10 +62,12 @@ export interface IStorageOptions {
   entries: IEntry[]
   minCellHeight?: number
   prefix?: string
-  columnsFillFunc?: ValueFn<BaseType, IColumn, string>
-  columnsOpacityFunc?: ValueFn<BaseType, IColumn, number>
-  rowsFillFunc?: ValueFn<BaseType, IRow, string>
-  rowsOpacityFunc?: ValueFn<BaseType, IRow, number>
+  // eslint-disable-next-line no-unused-vars
+  columnsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
+  // eslint-disable-next-line no-unused-vars
+  rowsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
+  // eslint-disable-next-line no-unused-vars
+  cellAppearanceFunc?: (entry: IEntry) => { color: string, opacity: number }
 }
 
 export type EventMatrixParams = {

@@ -30,10 +30,9 @@ class EventMatrix extends EventEmitter {
       rows: params.rows,
       columns: params.columns,
       entries: params.entries,
-      columnsFillFunc: params.columnsFillFunc,
-      rowsOpacityFunc: params.rowsOpacityFunc,
-      rowsFillFunc: params.rowsFillFunc,
-      columnsOpacityFunc: params.columnsOpacityFunc,
+      columnsAppearanceFunc: params.columnsAppearanceFunc,
+      rowsAppearanceFunc: params.rowsAppearanceFunc,
+      cellAppearanceFunc: params.cellAppearanceFunc,
     })
 
     this.params = params
