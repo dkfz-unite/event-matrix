@@ -15,7 +15,7 @@ repos:
       - id: markdownlint
         name: markdownlint
         files: .*\.md$
-        entry: markdownlint -c ./.markdownlint.yaml --ignore node_modules/ .
+        entry: markdownlint -c ./.markdownlint.yaml --ignore node_modules/
         language: system
         always_run: false
         pass_filenames: true
