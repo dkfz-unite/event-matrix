@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD033 -->
+<!-- TODO: MD033/no-inline-html -->
 # Event Matrix
 
 Event Matrix is an instrument for the visual representation of multidimensional data, inspired by the earlier
@@ -8,14 +10,19 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
 ## Installation & Usage
 
 1. Install dependencies:
-    ```shell
+
+    ```sh
     npm install event-matrix
     ```
-2. Import EventMatrix in your project:
+
+1. Import `EventMatrix` in your project:
+
     ```javascript
     import EventMatrix from 'event-matrix';
     ```
-3. Set up options:
+
+1. Set up options:
+
     ```javascript
     const eventMatrix = new EventMatrix({
       element: '#event-matrix', // HTML ID for mounting the component
@@ -77,51 +84,59 @@ parameter, function, and event names.
 
 1. Update options:
 
-- `genes` → `rows`
-- `donors` → `columns`
-- `observations` → `entries`
-- `donorTracks` → `columnFields`
-- `geneTracks` → `rowFields`
-- `donorFillFunc` → `columnsFillFunc`
-- `geneFillFunc` → `rowsFillFunc`
-- `donorOpacityFunc` → `columnsOpacityFunc`
-- `geneOpacityFunc` → `rowsOpacityFunc`
-- `trackLegendLabel` → `fieldLegendLabel`
-- `trackHeight` → `fieldHeight`
+    - `genes` → `rows`
+    - `donors` → `columns`
+    - `observations` → `entries`
+    - `donorTracks` → `columnFields`
+    - `geneTracks` → `rowFields`
+    - `donorFillFunc` → `columnsFillFunc`
+    - `geneFillFunc` → `rowsFillFunc`
+    - `donorOpacityFunc` → `columnsOpacityFunc`
+    - `geneOpacityFunc` → `rowsOpacityFunc`
+    - `trackLegendLabel` → `fieldLegendLabel`
+    - `trackHeight` → `fieldHeight`
 
-2. Update the structure of observations:
+1. Update the structure of observations:
 
-- Before:
-  ```json
-  {
-    "geneId": "1234",
-    "donorId": "5678"
-  }
-  ```
-- After:
-  ```json
-  {
-    "rowId": "1234",
-    "columnId": "5678"
-  }
-  ```
+    - Before:
 
-3. Update events:
+      ```json
+      {
+        "geneId": "1234",
+        "donorId": "5678"
+      }
+      ```
 
-- `histogramMouseOver` → `histogram:hover`
-- `histogramClick` → `histogram:click`
-- `gridMouseOver` → `grid:cell:hover`
-- `gridClick` → `grid:cell:click`
-- `trackLegendMouseOver` → `description:legend:hover`
-- `trackMouseOver` → `description:cell:hover`
-- `trackClick` → `description:cell:click`
+    - After:
 
-4. As the component update is still in progress, please feel free to create issues and provide feedback.
+      ```json
+      {
+        "rowId": "1234",
+        "columnId": "5678"
+      }
+      ```
+
+1. Update events:
+
+    - `histogramMouseOver` → `histogram:hover`
+    - `histogramClick` → `histogram:click`
+    - `gridMouseOver` → `grid:cell:hover`
+    - `gridClick` → `grid:cell:click`
+    - `trackLegendMouseOver` → `description:legend:hover`
+    - `trackMouseOver` → `description:cell:hover`
+    - `trackClick` → `description:cell:click`
+
+1. As the component update is still in progress, please feel free to create issues and provide feedback.
 
 ## Development
 
 1. Install Node ~18. Using [NVM](https://github.com/nvm-sh/nvm) is recommended.
 2. Install dependencies:
-    ```shell
+
+    ```sh
     npm install
     ```
+
+## Contribution guidelines
+
+The project uses [pre-commit.com](https://pre-commit.com/) hooks. Run `brew install pre-commit && pre-commit install` for automatic configuration.

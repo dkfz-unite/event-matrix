@@ -1,0 +1,89 @@
+---
+# run `brew install pre-commit && pre-commit install` for automatic configuration.
+
+default_stages: [pre-commit, pre-push]
+fail_fast: false
+
+# TODO:
+#   depcheck --ignores <... if any>
+
+repos:
+  - repo: local
+    hooks:
+      # MD
+      # brew install markdownlint-cli
+      - id: markdownlint
+        name: markdownlint
+        files: .*\.md$
+        entry: markdownlint -c ./.markdownlint.yaml --ignore node_modules/ .
+        language: system
+        always_run: false
+        pass_filenames: true
+
+      # YAML
+      # brew install yamllint
+      - id: yamllint
+        name: yamllint
+        files: .*\.(yaml|yml|yamllint)$
+        entry: yamllint --config-file ./.yamllint --strict
+        language: system
+        always_run: false
+        pass_filenames: true
+
+      #
+      # JS
+      - id: eslint
+        name: eslint
+        files: .*\.(js|jsx|ts|tsx)$
+        entry: env NODE_ENV=test eslint --ext .js,.jsx,.ts,.tsx
+        language: system
+        always_run: false
+        pass_filenames: true
+
+      - id: npm-audit
+        name: npm-audit
+        entry: npm audit
+        language: system
+        always_run: true
+        # files: .*\.(js|jsx|ts|tsx)$
+        # pass_filenames: false
+
+      - id: npm-test
+        name: npm-test
+        entry: npm test
+        language: system
+        always_run: false
+        files: .*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+
+      - id: npm-outdated
+        name: npm-outdated
+        files: .*\.(js|jsx|ts|tsx)$
+        # XXX: run dependency version checks but do not fail
+        # entry: npm outdated
+        entry: bash -c 'npm outdated || true' --
+        verbose: true # forces the output to be printed for the passed hook
+        language: system
+        always_run: false
+        pass_filenames: false
+
+
+      #
+      # POST-CHECKOUT
+      # optional, need to be installed with: pre-commit install -t post-checkout
+      - id: git-pull
+        name: git pull
+        entry: bash -c '[[ $(git branch --show-current) == "master" ]] && git pull --all || true'
+        language: system
+        stages: [post-checkout]
+        always_run: true
+        pass_filenames: false
+
+      - id: git-branch-delete-stale
+        name: Delete stale committed branches
+        # yamllint disable-line rule:line-length
+        entry: bash -c '[[ $(git branch --show-current) == "master" ]] && (git fetch -p && git branch -vv | grep ":\ gone]" | awk "{ print \$1 }" | xargs git branch -D) || true' --
+        language: system
+        stages: [post-checkout]
+        always_run: true
+        pass_filenames: false
