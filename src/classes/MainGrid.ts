@@ -264,7 +264,9 @@ class MainGrid {
           opacity = appearance.opacity
         }
 
-        const element = select(this)
+        // "this" in the context is a selected DOM element. If you see an error below, everything is fine
+        // "this as string" - is just a trick to bypass WebStorm types check
+        const element = select(this as string)
         element.attr('fill', color)
         element.attr('opacity', opacity)
       })
@@ -723,31 +725,6 @@ class MainGrid {
   }
 
   /**
-   * Returns the color for the given entry.
-   * @param entry.
-   */
-  private getColor(entry: IEntry) {
-    const colorKey = entry.value ?? entry.consequence
-    if (this.heatMap) {
-      return this.heatMapColor
-    } else {
-      return this.colorMap[colorKey]
-    }
-  }
-
-  /**
-   * Returns the desired opacity of entry rects. This changes between heatmap and regular mode.
-   * @returns {number}
-   */
-  private getOpacity(entry: IEntry) {
-    if (entry && this.heatMap) {
-      return 0.25
-    } else {
-      return 1
-    }
-  }
-
-  /**
    * Returns the height of an entry cell.
    * @returns {number}
    */
@@ -801,7 +778,9 @@ class MainGrid {
           opacity = appearance.opacity
         }
 
-        const element = select(this)
+        // "this" in the context is a selected DOM element. If you see an error below, everything is fine
+        // "this as string" - is just a trick to bypass WebStorm types check
+        const element = select(this as string)
         element.attr('fill', color)
         element.attr('opacity', opacity)
       })
