@@ -1,5 +1,6 @@
 <!-- markdownlint-disable MD033 -->
 <!-- TODO: MD033/no-inline-html -->
+
 # Event Matrix
 
 Event Matrix is an instrument for the visual representation of multidimensional data, inspired by the earlier
@@ -37,23 +38,21 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
 
 ## Options
 
-| Option               | Default value                               | Example                                                            | Description                                                                             |
-|----------------------|---------------------------------------------|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| `element`            | -                                           | "#event-matrix"                                                    | HTML selector for mounting the component                                                |
-| `columns`            | []                                          | [{ "id": "12" }]                                                   | Column data                                                                             |
-| `rows`               | []                                          | [{ "id": "34" }]                                                   | Row data                                                                                |
-| `entries`            | []                                          | [{ "id": "56", "value": "good", "rowId": "34", "columnId": "12" }] | "Events" or "Entries" - data defined by the intersection of a row and a column          |
-| `columnFields`       | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]         | Fields describing column data. This block is located below the table                    |
-| `rowFields`          | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]         | Fields describing row data. This block is located to the right of the table             |
-| `colorMap`           | {}                                          | { "good": "#00FF00", "normal": "#FFFF00", "bad": "#FF0000" }       | Cell color in the table depending on the value in the cell (entries)                    |
-| `columnsFillFunc`    | () => "black"                               | (val) => (val.name === "red" ? "#FF0000" : "#00FF00")              | Function that determines the cell color in the lower description block                  |
-| `columnsOpacityFunc` | () => 1                                     | (val) => Math.max(val.value / 100 + 0.1, 1)                        | Function that determines the cell opacity ("brightness") in the lower description block |
-| `rowsFillFunc`       | () => "black"                               | (val) => (val.name === "red" ? "#FF0000" : "#00FF00")              | Function that determines the cell color in the right description block                  |
-| `rowsOpacityFunc`    | () => 1                                     | (val) => Math.max(val.value / 100 + 0.1, 1)                        | Function that determines the cell opacity ("brightness") in the right description block |
-| `fieldHeight`        | 10                                          | 20                                                                 | Row height in the description block                                                     |
-| `width`              | 500                                         | 1000                                                               | Width of the main table                                                                 |
-| `fieldLegendLabel`   | undefined                                   | "<i class='las la-question-circle'></i>"                           | HTML icon next to the name of the parameter group in the description block              |
-| `margin`             | {top: 30, right: 100, bottom: 15, left: 80} | {top: 0, right: 0, bottom: 0, left: 0}                             | Margins around the component                                                            |
+| Option                  | Default value                               | Example                                                                         | Description                                                                        |
+|-------------------------|---------------------------------------------|---------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| `element`               | -                                           | "#event-matrix"                                                                 | HTML selector for mounting the component                                           |
+| `columns`               | []                                          | [{ "id": "12" }]                                                                | Column data                                                                        |
+| `rows`                  | []                                          | [{ "id": "34" }]                                                                | Row data                                                                           |
+| `entries`               | []                                          | [{ "id": "56", "value": "good", "rowId": "34", "columnId": "12" }]              | "Events" or "Entries" - data defined by the intersection of a row and a column     |
+| `columnFields`          | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]                      | Fields describing column data. This block is located below the table               |
+| `rowFields`             | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]                      | Fields describing row data. This block is located to the right of the table        |
+| `rowsAppearanceFunc`    | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the lower description block |
+| `columnsAppearanceFunc` | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the right description block |
+| `cellAppearanceFunc`    | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the main grid               |
+| `fieldHeight`           | 10                                          | 20                                                                              | Row height in the description block                                                |
+| `width`                 | 500                                         | 1000                                                                            | Width of the main table                                                            |
+| `fieldLegendLabel`      | undefined                                   | "<i class='las la-question-circle'></i>"                                        | HTML icon next to the name of the parameter group in the description block         |
+| `margin`                | {top: 30, right: 100, bottom: 15, left: 80} | {top: 0, right: 0, bottom: 0, left: 0}                                          | Margins around the component                                                       |
 
 ## Events
 
@@ -84,47 +83,46 @@ parameter, function, and event names.
 
 1. Update options:
 
-    - `genes` → `rows`
-    - `donors` → `columns`
-    - `observations` → `entries`
-    - `donorTracks` → `columnFields`
-    - `geneTracks` → `rowFields`
-    - `donorFillFunc` → `columnsFillFunc`
-    - `geneFillFunc` → `rowsFillFunc`
-    - `donorOpacityFunc` → `columnsOpacityFunc`
-    - `geneOpacityFunc` → `rowsOpacityFunc`
-    - `trackLegendLabel` → `fieldLegendLabel`
-    - `trackHeight` → `fieldHeight`
+- `genes` → `rows`
+- `donors` → `columns`
+- `observations` → `entries`
+- `donorTracks` → `columnFields`
+- `geneTracks` → `rowFields`
+- `donorOpacityFunc` + `donorFillFunc` → `columnsAppearanceFunc`
+- `geneOpacityFunc` + `geneFillFunc` → `rowsAppearanceFunc`
+- `colorMap` (Map) → `cellAppearanceFunc` (Function)
+- `trackLegendLabel` → `fieldLegendLabel`
+- `trackHeight` → `fieldHeight`
 
 1. Update the structure of observations:
 
-    - Before:
+- Before:
 
-      ```json
-      {
-        "geneId": "1234",
-        "donorId": "5678"
-      }
-      ```
+  ```json
+  {
+    "geneId": "1234",
+    "donorId": "5678"
+  }
+  ```
 
-    - After:
+- After:
 
-      ```json
-      {
-        "rowId": "1234",
-        "columnId": "5678"
-      }
-      ```
+  ```json
+  {
+    "rowId": "1234",
+    "columnId": "5678"
+  }
+  ```
 
 1. Update events:
 
-    - `histogramMouseOver` → `histogram:hover`
-    - `histogramClick` → `histogram:click`
-    - `gridMouseOver` → `grid:cell:hover`
-    - `gridClick` → `grid:cell:click`
-    - `trackLegendMouseOver` → `description:legend:hover`
-    - `trackMouseOver` → `description:cell:hover`
-    - `trackClick` → `description:cell:click`
+- `histogramMouseOver` → `histogram:hover`
+- `histogramClick` → `histogram:click`
+- `gridMouseOver` → `grid:cell:hover`
+- `gridClick` → `grid:cell:click`
+- `trackLegendMouseOver` → `description:legend:hover`
+- `trackMouseOver` → `description:cell:hover`
+- `trackClick` → `description:cell:click`
 
 1. As the component update is still in progress, please feel free to create issues and provide feedback.
 
@@ -139,4 +137,5 @@ parameter, function, and event names.
 
 ## Contribution guidelines
 
-The project uses [pre-commit.com](https://pre-commit.com/) hooks. Run `brew install pre-commit && pre-commit install` for automatic configuration.
+The project uses [pre-commit.com](https://pre-commit.com/) hooks. Run `brew install pre-commit && pre-commit install`
+for automatic configuration.
