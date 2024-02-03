@@ -76,6 +76,8 @@ export class Storage {
 
   public setLayer(layer: string | null) {
     this.layer = layer
+    console.log(JSON.parse(JSON.stringify(this.rows)))
+    console.log(JSON.parse(JSON.stringify(this.columns)))
     this.entries = [...this.entriesOriginal.filter((entry) => this.layer === null ? true : entry.layer === this.layer)]
   }
 
