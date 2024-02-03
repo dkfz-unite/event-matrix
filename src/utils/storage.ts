@@ -76,9 +76,12 @@ export class Storage {
 
   public setLayer(layer: string | null) {
     this.layer = layer
-    console.log(JSON.parse(JSON.stringify(this.rows)))
-    console.log(JSON.parse(JSON.stringify(this.columns)))
-    this.entries = [...this.entriesOriginal.filter((entry) => this.layer === null ? true : entry.layer === this.layer)]
+
+    const existedRowIds = this.rows.map((r) => r.id)
+    const existedColumnIds = this.columns.map((c) => c.id)
+    this.entries = [...this.entriesOriginal.filter((entry) => {
+      return existedRowIds.includes(entry.rowId) && existedColumnIds.includes(entry.columnId) && (this.layer === null ? true : entry.layer === this.layer)
+    })]
   }
 
   public static getInstance(): Storage {
