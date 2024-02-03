@@ -36,6 +36,7 @@ jobs:
       # FIXME: add '--max-warnings=0' in package.json to fail on warnings
       - run: npm run lint:report-disabled
       - run: npm run lint:stats
+      # TODO: https://www.npmjs.com/package/coveralls
       - run: npm run test:coverage
       - run: npm audit
       # XXX: run dependency version checks but do not fail
