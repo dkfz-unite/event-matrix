@@ -1,0 +1,61 @@
+---
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: CI
+
+on: # yamllint disable-line rule:truthy
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  nodejs:
+    #
+    # JS
+    name: Node.js
+    # no custom images like 'alpine' or '18-alpine'
+    # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build --if-present
+      # FIXME: add '--max-warnings=0' in package.json to fail on warnings
+      - run: npm run lint:report-disabled
+      - run: npm run lint:stats
+      # TODO: https://www.npmjs.com/package/coveralls
+      - run: npm run test:coverage
+      - run: npm audit
+      # XXX: run dependency version checks but do not fail
+      - run: npm outdated || true
+
+  # Linters: Markdown, yamllint, etc.
+  lint:
+    name: Linters
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+      - run: pip install yamllint
+      - run: yamllint --version
+      - run: yamllint --config-file ./.yamllint --strict .
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+      - run: npm install -g markdownlint-cli
+      - run: markdownlint --version
+      - run: markdownlint -c ./.markdownlint.yaml --ignore node_modules/ .
