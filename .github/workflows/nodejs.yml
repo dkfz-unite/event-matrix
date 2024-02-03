@@ -13,7 +13,9 @@ on:
 
 jobs:
   build:
-    runs-on: alpine # 18-alpine
+    # no custom images like 'alpine' or '18-alpine'
+    # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
