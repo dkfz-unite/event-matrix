@@ -187,7 +187,6 @@ class MainGrid {
   public render() {
     eventBus.emit(renderEvents.RENDER_GRID_START)
     this.clear()
-
     this.computeCoordinates()
 
     this.svg.on('mouseover', (event: IEnhancedEvent) => {
