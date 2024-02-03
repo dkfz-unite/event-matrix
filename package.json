@@ -22,7 +22,7 @@
     "build": "vite build",
     "serve": "vite preview",
     "lint:disabled": "eslint src --ext .js,.jsx,.ts,.tsx --cache --report-unused-disable-directives",
-    "lint:stats": "NODE_ENV=test eslint src --ext .js,.jsx,.ts,.tsx --cache --format node_modules/eslint-stats/byError.js",
+    "lint:stats": "NODE_ENV=test eslint src --ext .js,.jsx,.ts,.tsx --cache --format node_modules/eslint-stats/byErrorAndWarning.js",
     "lint": "NODE_ENV=test eslint src --ext .js,.jsx,.ts,.tsx --cache",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
     "test:coverage": "NODE_ENV=test jest --coverage",
