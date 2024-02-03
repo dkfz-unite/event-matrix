@@ -1,6 +1,6 @@
 {
   "name": "event-matrix",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "An instrument for the visual representation of multidimensional data",
   "type": "module",
   "main": "dist/event-matrix.umd.js",
