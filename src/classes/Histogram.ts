@@ -1,5 +1,4 @@
 import {select, Selection} from 'd3-selection'
-// eslint-disable-next-line no-unused-vars
 import {BlockType} from '../interfaces/base.interface'
 import {HistogramParams, IDomainEntity} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents} from '../utils/event-bus'

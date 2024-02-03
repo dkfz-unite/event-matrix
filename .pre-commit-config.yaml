@@ -35,7 +35,8 @@ repos:
       - id: eslint
         name: eslint
         files: .*\.(js|jsx|ts|tsx)$
-        entry: env NODE_ENV=test eslint --ext .js,.jsx,.ts,.tsx
+        # FIXME: add '--max-warnings=0' to fail on warnings
+        entry: env NODE_ENV=test eslint --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives
         language: system
         always_run: false
         pass_filenames: true
@@ -66,7 +67,6 @@ repos:
         language: system
         always_run: false
         pass_filenames: false
-
 
       #
       # POST-CHECKOUT
