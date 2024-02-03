@@ -52,8 +52,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
       - run: pip install yamllint
+      - run: yamllint --version
       - run: yamllint --config-file ./.yamllint --strict .
       - name: Set up Node.js
         uses: actions/setup-node@v4
       - run: npm install -g markdownlint-cli
+      - run: markdownlint --version
       - run: markdownlint -c ./.markdownlint.yaml --ignore node_modules/ .
