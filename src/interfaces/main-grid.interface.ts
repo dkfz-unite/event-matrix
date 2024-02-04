@@ -10,6 +10,23 @@ export interface ICustomFunctions {
   [BlockType.Entries]: (entry: IEntry) => { color: string, opacity: number }
 }
 
+export type IMatrix = IMatrixRow[]
+
+export type IMatrixRow = {
+  id: string
+  data: IRow
+  columns: IMatrixColumn[]
+}
+export type IMatrixColumn = {
+  id: string
+  data: IColumn
+  entries: IMatrixEntry[]
+}
+export type IMatrixEntry = {
+  id: string
+  data: IEntry
+}
+
 export type MainGridParams = {
   leftTextWidth?: number
   columns: IColumn[]
