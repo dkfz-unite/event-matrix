@@ -46,7 +46,7 @@ class Processing {
       croppedMatrix.set(row.id, rowMap)
 
       croppedColumns.forEach((column) => {
-        const cellEntries = this.matrix.get(row.id).get(column.id)
+        const cellEntries = this.matrix.get(row.id)?.get(column.id) ?? []
         const croppedEntries = cellEntries.slice(this.frame.z[0], this.frame.z[1])
         rowMap.set(column.id, croppedEntries)
       })
