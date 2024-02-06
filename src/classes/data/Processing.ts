@@ -1,300 +1,171 @@
-import {range} from 'd3-array'
-import {scaleBand} from 'd3-scale'
-import {select} from 'd3-selection'
 import {IColumn, IEntry, IRow} from '../../interfaces/bioinformatics.interface'
-import {EventMatrixParams, ILookupTable, IMatrix} from '../../interfaces/main-grid.interface'
-import {eventBus, innerEvents, renderEvents} from '../../utils/event-bus'
-import {storage} from '../../utils/storage'
-import MainGrid from '../MainGrid'
+import {IFrame, IMatrix, ISortOrder} from '../../interfaces/main-grid.interface'
 
 class Processing {
-  private matrix: IMatrix = []
+  public rowsOriginal: IRow[] = []
+  public rows: IRow[] = []
+  public columnsOriginal: IColumn[] = []
+  public columns: IColumn[] = []
+  private entries: IEntry[] = []
+  private matrix: IMatrix = new Map()
+  private frame: IFrame = {
+    x: [0, 0],
+    y: [0, 0],
+    z: [0, 0],
+  }
+  private maxCellDepth = 0
+
+  private rowsPrevIndex?: string | number
+  private rowsOrder?: ISortOrder
+  private columnsPrevIndex?: string | number
+  private columnsOrder?: ISortOrder
 
   constructor(rows: IRow[], columns: IColumn[], entries: IEntry[]) {
-    const entriesByColumn = new Map()
-    const columnsByRow
-    this.matrix = rows.map((row) => {
+    this.rowsOriginal = rows
+    this.columnsOriginal = columns
+    this.entries = entries
 
-    })
+    this.reset()
   }
 
-  public static create(params: EventMatrixParams) {
-    return new EventMatrix(params)
+  public reset() {
+    this.rows = [...this.rowsOriginal]
+    this.columns = [...this.columnsOriginal]
+
+    this.generateMatrix()
+    this.generateFrame()
   }
 
-  public setLayer(layer: string | null) {
-    if (storage.layer !== layer) {
-      storage.setLayer(layer)
+  public getFrameView() {
+    const croppedMatrix: IMatrix = new Map()
+    const croppedRows = this.rows.slice(this.frame.y[0], this.frame.y[1])
+    const croppedColumns = this.columns.slice(this.frame.x[0], this.frame.x[1])
 
-      this.createLookupTable()
-      this.computeColumnCounts()
-      this.computeRowCounts()
-      this.calculatePositions()
+    croppedRows.forEach((row) => {
+      const rowMap = new Map()
+      croppedMatrix.set(row.id, rowMap)
 
-      this.charts.forEach((chart) => {
-        chart.render()
+      croppedColumns.forEach((column) => {
+        const cellEntries = this.matrix.get(row.id).get(column.id)
+        const croppedEntries = cellEntries.slice(this.frame.z[0], this.frame.z[1])
+        rowMap.set(column.id, croppedEntries)
       })
-    }
-  }
-
-  /**
-   * Instantiate charts
-   */
-  private initCharts(reloading?: boolean) {
-    this.createLookupTable()
-    this.computeColumnCounts()
-    this.computeRowCounts()
-    this.sortColumnsByScores()
-    this.sortRowsByScores()
-
-    this.calculatePositions()
-    if (reloading) {
-      this.params.width = this.width
-      this.params.height = this.height
-    }
-    this.mainGrid = new MainGrid(this.params, this.x, this.y)
-
-    eventBus.off(innerEvents.INNER_RESIZE)
-    eventBus.off(innerEvents.INNER_UPDATE)
-    eventBus.on(innerEvents.INNER_RESIZE, () => {
-      this.resize(this.width, this.height, this.fullscreen)
-    })
-    eventBus.on(innerEvents.INNER_UPDATE, (columnSort: boolean) => {
-      this.update()
     })
 
-    this.heatMapMode = this.mainGrid.heatMap
-    this.drawGridLines = this.mainGrid.drawGridLines
-    this.crosshairMode = this.mainGrid.crosshair
-    this.charts = []
-    this.charts.push(this.mainGrid)
+    return croppedMatrix
   }
 
-  private calculatePositions() {
-    const getX = scaleBand()
-      .domain(range(storage.columns.length).map(String))
-      .range([0, this.width])
-
-    const getY = scaleBand()
-      .domain(range(storage.rows.length).map(String))
-      .range([0, this.height])
-
-    for (let i = 0; i < storage.columns.length; i++) {
-      const column = storage.columns[i]
-      const columnId = column.id
-      const positionX = getX(String(i))!
-      column.x = positionX
-      storage.lookupTable[columnId] = storage.lookupTable[columnId] || {}
-      storage.lookupTable[columnId].x = positionX as number
+  public setFrame(x: [number, number], y: [number, number], z?: [number, number]) {
+    this.frame.x = x
+    this.frame.y = y
+    if (z !== undefined) {
+      this.frame.z = z
     }
+  }
 
-    for (let i = 0; i < storage.rows.length; i++) {
-      storage.rows[i].y = getY(String(i)) ?? 0
+  public incrementFrameSize(step = 1) {
+    this.frame.x = [
+      Math.max(this.frame.x[0] - step, 0),
+      Math.min(this.frame.x[1] + step, this.columns.length - 1),
+    ]
+    this.frame.y = [
+      Math.max(this.frame.y[0] - step, 0),
+      Math.min(this.frame.y[1] + step, this.rows.length - 1),
+    ]
+  }
+
+  public decrementFrameSize(step = 1) {
+    if (this.frame.x[1] > this.frame.x[0]) {
+      this.frame.x[0] += step
+      this.frame.x[1] -= step
     }
-
-    this.x = getX
-    this.y = getY
+    if (this.frame.y[1] > this.frame.y[0]) {
+      this.frame.y[0] += step
+      this.frame.y[1] -= step
+    }
   }
 
-  /**
-   * Creates a for constant time checks if an observation exists for a given donor, gene coordinate.
-   */
-  private createLookupTable() {
-    const lookupTable: ILookupTable = {}
-    storage.entries.forEach((entry) => {
-      const columnId = entry.columnId
-      const rowId = entry.rowId
-      if (lookupTable[columnId] === undefined) {
-        lookupTable[columnId] = {}
-      }
-      if (lookupTable[columnId][rowId] === undefined) {
-        lookupTable[columnId][rowId] = []
-      }
-      lookupTable[columnId][rowId].push(entry.id)
-    })
-    storage.setLookupTable(lookupTable)
+  public shiftFrameX(step = 1) {
+    this.frame.x[0] = Math.min(Math.max(this.frame.x[0] + step, 0), this.columns.length - 1)
+    this.frame.x[1] = Math.min(Math.max(this.frame.x[0] + step, 0), this.columns.length - 1)
   }
 
-  /**
-   * Initializes and creates the main SVG with rows and columns. Does prelim sort on data
-   */
-  public render() {
-    eventBus.emit(renderEvents.RENDER_ALL_START)
-    setTimeout(() => {
-      this.charts.forEach((chart) => {
-        chart.render()
+  public shiftFrameY(step = 1) {
+    this.frame.y[0] = Math.min(Math.max(this.frame.y[0] + step, 0), this.rows.length - 1)
+    this.frame.y[1] = Math.min(Math.max(this.frame.y[0] + step, 0), this.rows.length - 1)
+  }
+
+  private generateFrame() {
+    this.frame = {
+      x: [0, this.columns.length - 1],
+      y: [0, this.rows.length - 1],
+      z: [0, this.maxCellDepth - 1],
+    }
+  }
+
+  private generateMatrix() {
+    const matrix: IMatrix = new Map()
+
+    this.rows.forEach((row) => {
+      const rowMap = new Map()
+      matrix.set(row.id, rowMap)
+
+      this.columns.forEach((column) => {
+        rowMap.set(column.id, [])
       })
-      eventBus.emit(renderEvents.RENDER_ALL_END)
+    })
+
+    this.entries.forEach(({id, rowId, columnId}) => {
+      const rowMatrix = matrix.get(rowId)
+      if (!rowMatrix) {
+        return
+      }
+
+      const columnMatrix = rowMatrix.get(columnId)
+      if (!columnMatrix) {
+        return
+      }
+      columnMatrix.push(id)
+      if (this.maxCellDepth < columnMatrix.length) {
+        this.maxCellDepth = columnMatrix.length
+      }
+    })
+
+    this.matrix = matrix
+  }
+
+  private toggleOrder(currentOrder?: ISortOrder): ISortOrder {
+    return currentOrder === 'ASC' ? 'DESC' : 'ASC'
+  }
+
+  private sortItems(items: IRow[] | IColumn[], fieldName: string, index?: string | number, order?: ISortOrder): void {
+    items.sort((a, b) => {
+      const aVal = (index === undefined ? a[fieldName] : a[fieldName][index]) ?? '0'
+      const bVal = (index === undefined ? b[fieldName] : b[fieldName][index]) ?? '0'
+
+      if (aVal === bVal) {
+        return 0
+      }
+
+      return order === 'ASC' ? aVal.toString().localeCompare(bVal) : bVal.toString().localeCompare(aVal)
     })
   }
 
-  /**
-   * Updates all charts
-   */
-  private update() {
-    this.calculatePositions()
-    this.charts.forEach((chart) => {
-      chart.update(this.x, this.y)
-    })
-  }
-
-  /**
-   * Triggers a resize of EventMatrix to desired width and height.
-   */
-  public resize(width: number, height: number, fullscreen: boolean) {
-    this.fullscreen = fullscreen
-    this.mainGrid.fullscreen = fullscreen
-    this.width = Number(width)
-    this.height = Number(height)
-
-    if (this.height / storage.rows.length < storage.minCellHeight) {
-      this.height = storage.rows.length * storage.minCellHeight
+  public sortRows(fieldName = 'id', index?: string | number) {
+    if (index === undefined || index === this.rowsPrevIndex) {
+      this.rowsOrder = this.toggleOrder(this.rowsOrder)
     }
-    this.calculatePositions()
-    this.charts.forEach((chart) => {
-      chart.fullscreen = fullscreen
-      chart.resize(this.width, this.height, this.x, this.y)
-    })
+    this.rowsPrevIndex = index
+    this.sortItems(this.rows, fieldName, index, this.rowsOrder)
   }
 
-  /**
-   * Sorts donors by score
-   */
-  private sortColumnsByScores() {
-    storage.columns.sort((columnA: IColumn, columnB: IColumn) => {
-      const scoreA = Object.values(columnA.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
-      const scoreB = Object.values(columnB.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
-      if (scoreA < scoreB) {
-        return 1
-      } else if (scoreA > scoreB) {
-        return -1
-      } else {
-        return columnA.id >= columnB.id ? 1 : -1
-      }
-    })
-  }
-
-  private sortRowsByScores() {
-    storage.rows.sort((rowA: IRow, rowB: IRow) => {
-      const scoreA = Object.values(rowA.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
-      const scoreB = Object.values(rowB.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
-      if (scoreA < scoreB) {
-        return 1
-      } else if (scoreA > scoreB) {
-        return -1
-      } else {
-        return rowA.id >= rowB.id ? 1 : -1
-      }
-    })
-  }
-
-  /**
-   * Sorts genes by scores and recomputes and sorts donors.
-   * Clusters towards top left corner of grid.
-   */
-  public cluster() {
-    this.sortColumnsByScores()
-    this.sortRowsByScores()
-    this.update()
-  }
-
-  /**
-   * set EventMatrix between heatmap mode and regular mode showing individual value types.
-   */
-  public setHeatmap(active: boolean) {
-    this.heatMapMode = active
-    this.mainGrid.setHeatmap(active)
-  }
-
-  /**
-   * Toggles EventMatrix between heatmap mode and regular mode showing individual value types.
-   */
-  public toggleHeatmap() {
-    this.setHeatmap(!this.heatMapMode)
-  }
-
-  public setGridLines(active: boolean) {
-    this.drawGridLines = active
-    this.mainGrid.setGridLines(active)
-  }
-
-  public toggleGridLines() {
-    this.setGridLines(!this.drawGridLines)
-  }
-
-  public setCrosshair(active: boolean) {
-    this.crosshairMode = active
-    this.mainGrid.setCrosshair(active)
-  }
-
-  public toggleCrosshair() {
-    this.setCrosshair(!this.crosshairMode)
-  }
-
-  /**
-   * Computes the number of observations for a given donor.
-   */
-  private computeColumnCounts() {
-    for (const column of storage.columns) {
-      const rows = Object.values(storage.lookupTable[column.id] ?? {})
-      column.count = 0
-      for (const item of rows) {
-        column.count += item.length
-      }
-
-      column.countByRow = {}
-      for (const obs of storage.entries) {
-        if (column.id === obs.columnId) {
-          if (column.countByRow[obs.rowId] === undefined) {
-            column.countByRow[obs.rowId] = 0
-          }
-          column.countByRow[obs.rowId]++
-        }
-      }
+  public sortColumns(fieldName = 'id', index?: string | number) {
+    if (index === undefined || index === this.columnsPrevIndex) {
+      this.columnsOrder = this.toggleOrder(this.columnsOrder)
     }
-  }
-
-  /**
-   * Computes the number of entries for a given row.
-   */
-  private computeRowCounts() {
-    for (const row of storage.rows) {
-      row.count = 0
-      row.countByColumn = {}
-      for (const obs of storage.entries) {
-        if (row.id === obs.rowId) {
-          row.count++
-          if (row.countByColumn[obs.columnId] === undefined) {
-            row.countByColumn[obs.columnId] = 0
-          }
-          row.countByColumn[obs.columnId]++
-        }
-      }
-    }
-  }
-
-  /**
-   *  Cleanup function to ensure the svg and any bindings are removed from the dom.
-   */
-  public destroy() {
-    this.charts.forEach((chart) => {
-      chart.destroy()
-    })
-    this.container.remove()
-  }
-
-  public reload() {
-    this.charts.forEach((chart) => {
-      chart.destroy()
-    })
-    storage.reset()
-    this.container = select(this.params.element || 'body')
-      .append('div')
-      .attr('class', `${storage.prefix}container`)
-      .style('position', 'relative')
-    this.initCharts(true)
-    this.render()
+    this.columnsPrevIndex = index
+    this.sortItems(this.columns, fieldName, index, this.columnsOrder)
   }
 }
 
-export default EventMatrix
+export default Processing

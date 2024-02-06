@@ -10,21 +10,17 @@ export interface ICustomFunctions {
   [BlockType.Entries]: (entry: IEntry) => { color: string, opacity: number }
 }
 
-export type IMatrix = IMatrixRow[]
+export type IMatrix = Map<string, IMatrixRow>
 
-export type IMatrixRow = {
-  id: string
-  data: IRow
-  columns: IMatrixColumn[]
-}
-export type IMatrixColumn = {
-  id: string
-  data: IColumn
-  entries: IMatrixEntry[]
-}
-export type IMatrixEntry = {
-  id: string
-  data: IEntry
+export type IMatrixRow = Map<string, IMatrixColumn>
+export type IMatrixColumn = string[]
+
+export type ISortOrder = 'ASC' | 'DESC'
+
+export interface IFrame {
+  x: [number, number],
+  y: [number, number],
+  z: [number, number],
 }
 
 export type MainGridParams = {
