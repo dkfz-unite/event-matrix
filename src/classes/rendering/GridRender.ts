@@ -1,10 +1,26 @@
+import {pointer, select, Selection} from 'd3-selection'
+import {BlockType, IEntry} from '../../interfaces/base.interface'
+import {IEnhancedEvent, IMatrix} from '../../interfaces/main-grid.interface'
+import {eventBus, publicEvents, renderEvents} from '../../utils/event-bus'
+import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
 
 class GridRender {
   private width = 500
   private height = 500
-  private minCellHeight = 10
   private processing: Processing
+  private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
+  private gridLinesRender: GridLinesRender
+  private crosshairRender: CrosshairRender
+
+  // TODO: check this legacy options
+  private minCellHeight = 10
+  private leftTextWidth = 10
+  private heatMap = false
+  private drawGridLines = false
+  private crosshair = false
+  private heatMapColor = '#D33682'
+  private matrix: IMatrix
 
 
   private params: MainGridParams
@@ -15,7 +31,6 @@ class GridRender {
   private horizontalHistogram: Histogram
   private verticalDescriptionBlock: DescriptionBlock
   private leftTextWidth = 80
-  private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
@@ -27,9 +42,6 @@ class GridRender {
   private cellWidth: number
   private cellHeight: number
   private margin: CssMarginProps = {top: 30, right: 100, bottom: 15, left: 80}
-  public heatMap = false
-  public drawGridLines = false
-  public crosshair = false
   private heatMapColor = '#D33682'
   private verticalCross: Selection<SVGLineElement, unknown, HTMLElement, unknown>
   private horizontalCross: Selection<SVGLineElement, unknown, HTMLElement, unknown>
@@ -42,126 +54,42 @@ class GridRender {
   constructor(width: number, height: number, options: any) {
     this.width = width
     this.height = height
+
+    // TODO: check this legacy options
     this.minCellHeight = options.minCellHeight
+    this.leftTextWidth = options.leftTextWidth
+
     this.processing = Processing.getInstance()
-
-    this.descriptionRender = new DescriptionRender()
+    this.gridLinesRender = new GridLinesRender()
+    this.crosshairRender = new CrosshairRender()
+    this.wrapper = select(`.${storage.prefix}container`)
   }
 
+  public render() {
+    this.destroy()
+    this.matrix = this.processing.getCroppedMatrix()
 
-  constructor(params: MainGridParams, x: ScaleBand<string>, y: ScaleBand<string>) {
-    this.params = params
-    this.x = x
-    this.y = y
+    eventBus.emit(renderEvents.RENDER_GRID_START)
+    this.drawBackground()
+    if (this.drawGridLines) {
+      this.gridLinesRender.render()
+    } else {
+      this.gridLinesRender.destroy()
+    }
+    if (this.crosshair) {
+      this.crosshairRender.render()
+    } else {
+      this.crosshairRender.destroy()
+    }
+    this.drawCells()
+    this.addGridEvents()
+    eventBus.emit(renderEvents.RENDER_GRID_END)
 
-    this.loadParams(params)
-    this.createRowMap()
-    this.init()
-
-    const descriptionBlockParams = this.getDescriptionBlockParams()
-    const histogramParams = this.getHistogramParams()
-    this.horizontalHistogram = new Histogram(histogramParams, this.container, false)
-    this.horizontalDescriptionBlock = new DescriptionBlock(
-      descriptionBlockParams,
-      BlockType.Columns,
-      this.container,
-      false,
-      params.columnFields ?? [],
-      this.height + 10
-    )
-    this.horizontalDescriptionBlock.init()
-
-    this.verticalHistogram = new Histogram(histogramParams, this.container, true)
-    this.verticalDescriptionBlock =
-      new DescriptionBlock(
-        descriptionBlockParams,
-        BlockType.Rows,
-        this.container,
-        true,
-        params.rowFields ?? [],
-        this.width + 10 + this.verticalHistogram.getHistogramHeight() + 10 + storage.minCellHeight
-      )
-    this.verticalDescriptionBlock.init()
+    this.defineCrosshairBehaviour()
   }
 
-  private getDescriptionBlockParams(): IDescriptionBlockParams {
-    return {
-      padding: this.params.trackPadding,
-      offset: this.params.offset,
-      label: this.params.fieldLegendLabel,
-      margin: this.params.margin,
-      rows: this.params.rows,
-      columns: this.params.columns,
-      width: this.params.width,
-      parentHeight: this.params.height,
-      height: this.params.fieldHeight,
-      nullSentinel: this.params.nullSentinel,
-      grid: this.params.grid,
-      wrapper: this.params.wrapper,
-      expandableGroups: this.params.expandableGroups,
-    }
-  }
-
-  private getHistogramParams(): HistogramParams {
-    return {
-      histogramBorderPadding: this.params.histogramBorderPadding,
-      type: this.params.type,
-      rows: this.params.rows,
-      columns: this.params.columns,
-      margin: this.params.margin,
-      width: this.params.width,
-      height: this.params.height,
-      wrapper: this.params.wrapper,
-    }
-  }
-
-  /**
-   * Responsible for initializing instance fields of MainGrid from the provided params object.
-   * @param params
-   */
-  private loadParams({
-    leftTextWidth,
-    wrapper,
-    width,
-    height,
-    margin,
-    heatMap,
-    heatMapColor,
-    grid,
-  }: MainGridParams) {
-    if (leftTextWidth !== undefined) {
-      this.leftTextWidth = leftTextWidth
-    }
-    this.wrapper = select(wrapper || 'body')
-
-    if (width !== undefined) {
-      this.inputWidth = width
-    }
-    if (height !== undefined) {
-      this.inputHeight = height
-    }
-
-    this.initDimensions(width, height)
-
-    if (margin !== undefined) {
-      this.margin = margin
-    }
-    if (heatMap !== undefined) {
-      this.heatMap = heatMap
-    }
-    if (grid !== undefined) {
-      this.drawGridLines = grid
-    }
-    if (heatMapColor !== undefined) {
-      this.heatMapColor = heatMapColor
-    }
-  }
-
-  /**
-   * Creates main svg element, background, and tooltip.
-   */
-  private init() {
-    this.svg = this.wrapper.append('svg')
+  private drawBackground() {
+    this.svg = this.container.append('svg')
       .attr('class', `${storage.prefix}maingrid-svg`)
       .attr('id', `${storage.prefix}maingrid-svg`)
       .attr('width', '100%')
@@ -176,45 +104,23 @@ class GridRender {
     this.gridContainer = this.container.append('g')
   }
 
-  public clear() {
-    this.container?.selectAll(`.${storage.prefix}sortable-rect`)?.remove()
-    this.horizontalHistogram?.clear()
-    this.verticalHistogram?.clear()
-  }
-
-  /**
-   * Only to be called the first time the EventMatrix is rendered. It creates the rects representing the
-   * mutation occurrences.
-   */
-  public render() {
-    eventBus.emit(renderEvents.RENDER_GRID_START)
-    this.clear()
-    this.computeCoordinates()
-
+  private addGridEvents() {
     this.svg.on('mouseover', (event: IEnhancedEvent) => {
       const target = event.target
-      const coord = pointer(event, target)
+      const entryId = target.dataset.entry
 
-      const xIndex = this.getIndexFromScaleBand(this.x, coord[0])
-      const yIndex = this.getIndexFromScaleBand(this.y, coord[1])
-
-      if (!target.dataset.obsIndex || this.crosshair) {
+      if (!entryId || this.crosshair) {
         return
       }
-      const obsIds = target.dataset.obsIndex.split(' ')
-      const obs = storage.entries.filter((entry: IEntry) => {
-        return entry.columnId === obsIds[0] && entry.rowId === obsIds[1]
-      })
-      const targetEntry = obs.find((entry: IEntry) => {
-        return entry.id == obsIds[2]
-      })
+      const rowId = target.dataset.row
+      const columnId = target.dataset.column
 
       eventBus.emit(publicEvents.GRID_CELL_HOVER, {
         target: target,
-        entryIds: obs.map((ob) => ob.id),
-        entryId: targetEntry.id,
-        columnId: storage.columns[xIndex].id,
-        rowId: storage.rows[yIndex].id,
+        entryIds: this.processing.getCellEntries(rowId, columnId),
+        entryId,
+        columnId,
+        rowId,
       })
     })
 
@@ -223,78 +129,91 @@ class GridRender {
     })
 
     this.svg.on('click', (event: IEnhancedEvent) => {
-      const obsIds = event.target.dataset.obsIndex?.split(' ')
-      if (!obsIds) {
-        return
-      }
+      const target = event.target
+      const rowId = target.dataset.row
+      const columnId = target.dataset.column
+      const entryId = target.dataset.entry
 
       eventBus.emit(publicEvents.GRID_CELL_CLICK, {
         target: event.target,
-        columnId: obsIds[0],
-        rowId: obsIds[1],
-        entryId: obsIds[2],
+        rowId,
+        columnId,
+        entryId,
       })
     })
+  }
 
-    const heatMap = this.heatMap
+  private drawCells() {
+    const entriesMap = this.processing.getEntriesMap()
+    const rows = this.processing.getRows()
+    const columns = this.processing.getColumns()
     const heatMapColor = this.heatMapColor
+    const heatMap = this.heatMap
+    for (const i in rows) {
+      const row = rows[i]
+      for (const j in columns) {
+        const column = columns[j]
+        const cellEntries = this.matrix.get(row.id).get(column.id)
+        const cellX = j * this.cellWidth
+        const cellY = i * this.cellHeight
+        const entryHeight = heatMap ? this.cellHeight : this.cellHeight / cellEntries.length
 
-    this.container
-      .selectAll(`.${storage.prefix}maingrid-svg`)
-      .data(storage.entries)
-      .enter()
-      .append('path')
-      .attr('data-obs-index', (obs: IEntry) => {
-        return `${obs.columnId} ${obs.rowId} ${obs.id}`
-      })
-      .attr('class', (obs: IEntry) => {
-        return `${storage.prefix}sortable-rect ${storage.prefix}${obs.columnId}-cell ${storage.prefix}${obs.rowId}-cell`
-      })
-      .attr('cons', (obs: IEntry) => {
-        return this.getValueByType(obs)
-      })
-      .attr('d', (obs: IEntry) => {
-        return this.getRectangularPath(obs)
-      })
-      .each(function (entry: IEntry) {
-        let color = heatMapColor
-        let opacity = heatMap ? 0.25 : 1
-        if (!heatMap) {
-          const appearance = (storage.customFunctions[BlockType.Entries])(entry)
-          color = appearance.color
-          opacity = appearance.opacity
-        }
+        // Define cell container itself
+        const cell = this.svg
+          .append('rect')
+          .attr('width', this.cellWidth)
+          .attr('height', this.cellHeight)
+          .attr('x', cellX)
+          .attr('y', cellY)
+          .attr('data-row', row.id)
+          .attr('data-column', column.id)
+          .attr('class', `${storage.prefix}grid__cell ${storage.prefix}grid-cell`)
 
-        // "this" in the context is a selected DOM element. If you see an error below, everything is fine
-        // "this as string" - is just a trick to bypass WebStorm types check
-        const element = select(this as string)
-        element.attr('fill', color)
-        element.attr('opacity', opacity)
-      })
+        // Draw the entries inside the cell container
+        cell
+          .data(cellEntries)
+          .enter()
+          .append('rect')
+          .attr('width', this.cellWidth)
+          .attr('height', entryHeight)
+          .attr('x', 0)
+          .attr('y', (entryId: string, num: number) => {
+            return heatMap ? 0 : num * entryHeight
+          })
+          .attr('class', `${storage.prefix}sortable-rect ${storage.prefix}grid-cell__entry`)
+          .attr('data-row', row.id)
+          .attr('data-column', column.id)
+          .attr('data-entry', (entryId) => entryId)
+          .each(function (entryId) {
+            const entry = entriesMap[entryId]
+            let color = heatMapColor
+            let opacity = heatMap ? 0.25 : 1
+            if (!heatMap) {
+              const appearance = (storage.customFunctions[BlockType.Entries])(entry)
+              color = appearance.color
+              opacity = appearance.opacity
+            }
 
-    eventBus.emit(renderEvents.RENDER_GRID_END)
-
-    if (storage.entries.length) {
-      eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_START)
-      this.horizontalHistogram.render()
-      eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_END)
-
-      eventBus.emit(renderEvents.RENDER_Y_HISTOGRAM_START)
-      this.verticalHistogram.render()
-      eventBus.emit(renderEvents.RENDER_Y_HISTOGRAM_END)
+            // "this" in the context is a selected DOM element. If you see an error below, everything is fine
+            // "this as string" - is just a trick to bypass WebStorm types check
+            const element = select(this as string)
+            element.attr('fill', color)
+            element.attr('opacity', opacity)
+          })
+      }
     }
+  }
 
-    eventBus.emit(renderEvents.RENDER_X_DESCRIPTION_BLOCK_START)
-    this.horizontalDescriptionBlock.render()
-    eventBus.emit(renderEvents.RENDER_X_DESCRIPTION_BLOCK_END)
+  private removeGridEvents() {
+    this.svg.on('mouseover', null)
+    this.svg.on('mouseout', null)
+    this.svg.on('click', null)
+  }
 
-    eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_START)
-    this.verticalDescriptionBlock.render()
-    eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_END)
-
-    this.defineCrosshairBehaviour()
-
-    this.resizeSvg()
+  private destroy() {
+    this.removeGridEvents()
+    this.container?.selectAll(`.${storage.prefix}sortable-rect`)?.remove()
+    this.container?.selectAll(`.${storage.prefix}grid__cell`)?.remove()
   }
 
   /**

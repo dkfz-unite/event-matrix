@@ -25,6 +25,10 @@ class EventMatrix extends EventEmitter {
   private fullscreen = false
   private processing: Processing
   private gridRender: GridRender
+  private bottomDescriptionRender: BottomDescriptionRender
+  private rightDescriptionRender: RightDescriptionRender
+  private topHistogramRender: TopHistogramRender
+  private rightHistogramRender: RightHistogramRender
 
   constructor(params: EventMatrixParams) {
     super()
@@ -35,10 +39,20 @@ class EventMatrix extends EventEmitter {
       rowsAppearanceFunc: params.rowsAppearanceFunc,
       cellAppearanceFunc: params.cellAppearanceFunc,
     })
-    this.processing = new Processing(params.rows, params.columns, params.entries)
+    this.processing = Processing.createInstance(params.rows, params.columns, params.entries)
+
+    this.container = select(params.element || 'body')
+      .append('div')
+      .attr('class', `${storage.prefix}container`)
+      .style('position', 'relative')
+
     this.gridRender = new GridRender(params.width ?? 500, params.height ?? 500, {
       minCellHeight: params.minCellHeight,
     })
+    this.bottomDescriptionRender = new BottomDescriptionRender()
+    this.rightDescriptionRender = new RightDescriptionRender()
+    this.topHistogramRender = new TopHistogramRender()
+    this.rightHistogramRender = new RightHistogramRender()
 
     this.params = params
     this.width = params.width ?? 500
@@ -49,10 +63,6 @@ class EventMatrix extends EventEmitter {
     }
 
     params.wrapper = `.${storage.prefix}container`
-    this.container = select(params.element || 'body')
-      .append('div')
-      .attr('class', `${storage.prefix}container`)
-      .style('position', 'relative')
 
     this.initCharts()
 

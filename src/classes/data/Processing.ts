@@ -11,6 +11,7 @@ class Processing {
   public columns: IColumn[] = []
   private entriesOriginal: IEntry[] = []
   private entries: IEntry[] = []
+  private entriesMap: Map<string, IEntry> = new Map()
   private matrix: IMatrix = new Map()
   private frame: Frame
   private filters = {
@@ -29,7 +30,6 @@ class Processing {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
     this.entriesOriginal = entries
-    this.entries = entries
 
     this.reset()
   }
@@ -38,10 +38,16 @@ class Processing {
     this.rows = [...this.rowsOriginal]
     this.columns = [...this.columnsOriginal]
     this.entries = [...this.entriesOriginal]
+    this.entriesMap = new Map()
+    this.entries.forEach((entry) => this.entriesMap.set(entry.id, entry))
 
     this.applyFilters()
     this.generateMatrix()
     this.generateFrame()
+  }
+
+  public getEntriesMap() {
+    return this.entriesMap
   }
 
   public getRows() {
@@ -54,6 +60,10 @@ class Processing {
 
   public getEntries() {
     return this.entries
+  }
+
+  public getCellEntries(rowId: string, columnId: string) {
+    return this.matrix.get(rowId).get(columnId)
   }
 
   public setFilter(type: 'rows' | 'columns' | 'entries', filterObj: IFilter) {
@@ -188,11 +198,15 @@ class Processing {
     this.sortItems(this.columns, fieldName, index, this.columnsOrder)
   }
 
-  public static getInstance(rows: IRow[], columns: IColumn[], entries: IEntry[]): Processing {
+  public static createInstance(rows: IRow[], columns: IColumn[], entries: IEntry[]): Processing {
     if (!this.instance) {
       this.instance = new this(rows, columns, entries)
     }
     return this.instance
+  }
+
+  public static getInstance(): Processing {
+    return this.instance as Processing
   }
 }
 
