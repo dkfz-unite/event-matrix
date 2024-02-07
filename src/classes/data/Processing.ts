@@ -1,17 +1,22 @@
-import {IColumn, IEntry, IRow} from '../../interfaces/bioinformatics.interface'
-import {IFrame, IMatrix, ISortOrder} from '../../interfaces/main-grid.interface'
+import {IColumn, IEntity, IEntry, IRow} from '../../interfaces/base.interface'
+import {IFilter, IMatrix, ISortOrder} from '../../interfaces/main-grid.interface'
+import Frame from './Frame'
 
 class Processing {
+  private static instance: Processing | null = null
+
   public rowsOriginal: IRow[] = []
   public rows: IRow[] = []
   public columnsOriginal: IColumn[] = []
   public columns: IColumn[] = []
+  private entriesOriginal: IEntry[] = []
   private entries: IEntry[] = []
   private matrix: IMatrix = new Map()
-  private frame: IFrame = {
-    x: [0, 0],
-    y: [0, 0],
-    z: [0, 0],
+  private frame: Frame
+  private filters = {
+    entries: {},
+    rows: {},
+    columns: {},
   }
   private maxCellDepth = 0
 
@@ -23,6 +28,7 @@ class Processing {
   constructor(rows: IRow[], columns: IColumn[], entries: IEntry[]) {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
+    this.entriesOriginal = entries
     this.entries = entries
 
     this.reset()
@@ -31,15 +37,34 @@ class Processing {
   public reset() {
     this.rows = [...this.rowsOriginal]
     this.columns = [...this.columnsOriginal]
+    this.entries = [...this.entriesOriginal]
 
+    this.applyFilters()
     this.generateMatrix()
     this.generateFrame()
   }
 
-  public getFrameView() {
+  public getRows() {
+    return this.rows
+  }
+
+  public getColumns() {
+    return this.columns
+  }
+
+  public getEntries() {
+    return this.entries
+  }
+
+  public setFilter(type: 'rows' | 'columns' | 'entries', filterObj: IFilter) {
+    this.filters[type] = filterObj
+  }
+
+  public getCroppedMatrix() {
+    const {x, y, z} = this.frame.getSizes()
     const croppedMatrix: IMatrix = new Map()
-    const croppedRows = this.rows.slice(this.frame.y[0], this.frame.y[1])
-    const croppedColumns = this.columns.slice(this.frame.x[0], this.frame.x[1])
+    const croppedRows = this.rows.slice(y[0], y[1])
+    const croppedColumns = this.columns.slice(x[0], x[1])
 
     croppedRows.forEach((row) => {
       const rowMap = new Map()
@@ -47,7 +72,7 @@ class Processing {
 
       croppedColumns.forEach((column) => {
         const cellEntries = this.matrix.get(row.id)?.get(column.id) ?? []
-        const croppedEntries = cellEntries.slice(this.frame.z[0], this.frame.z[1])
+        const croppedEntries = cellEntries.slice(z[0], z[1])
         rowMap.set(column.id, croppedEntries)
       })
     })
@@ -55,51 +80,47 @@ class Processing {
     return croppedMatrix
   }
 
-  public setFrame(x: [number, number], y: [number, number], z?: [number, number]) {
-    this.frame.x = x
-    this.frame.y = y
-    if (z !== undefined) {
-      this.frame.z = z
+  public getFrame() {
+    return this.frame
+  }
+
+  private applyFilters() {
+    const filterFunc = (filter: IFilter) => ((entity: IEntity) => {
+      Object.keys(filter).every((field) => {
+        const value = filter[field]
+        if (typeof value === 'function') {
+          return value.call(entity[field], entity)
+        } else {
+          return entity[field] === value
+        }
+      })
+    })
+
+    if (Object.keys(this.filters.rows).length > 0) {
+      this.rows = this.rows.filter(filterFunc(this.filters.rows))
     }
-  }
-
-  public incrementFrameSize(step = 1) {
-    this.frame.x = [
-      Math.max(this.frame.x[0] - step, 0),
-      Math.min(this.frame.x[1] + step, this.columns.length - 1),
-    ]
-    this.frame.y = [
-      Math.max(this.frame.y[0] - step, 0),
-      Math.min(this.frame.y[1] + step, this.rows.length - 1),
-    ]
-  }
-
-  public decrementFrameSize(step = 1) {
-    if (this.frame.x[1] > this.frame.x[0]) {
-      this.frame.x[0] += step
-      this.frame.x[1] -= step
+    if (Object.keys(this.filters.columns).length > 0) {
+      this.columns = this.columns.filter(filterFunc(this.filters.columns))
     }
-    if (this.frame.y[1] > this.frame.y[0]) {
-      this.frame.y[0] += step
-      this.frame.y[1] -= step
+    if (Object.keys(this.filters.entries).length > 0) {
+      this.entries = this.entries.filter(filterFunc(this.filters.entries))
+      this.updateCellDepth()
     }
-  }
-
-  public shiftFrameX(step = 1) {
-    this.frame.x[0] = Math.min(Math.max(this.frame.x[0] + step, 0), this.columns.length - 1)
-    this.frame.x[1] = Math.min(Math.max(this.frame.x[0] + step, 0), this.columns.length - 1)
-  }
-
-  public shiftFrameY(step = 1) {
-    this.frame.y[0] = Math.min(Math.max(this.frame.y[0] + step, 0), this.rows.length - 1)
-    this.frame.y[1] = Math.min(Math.max(this.frame.y[0] + step, 0), this.rows.length - 1)
   }
 
   private generateFrame() {
-    this.frame = {
-      x: [0, this.columns.length - 1],
-      y: [0, this.rows.length - 1],
-      z: [0, this.maxCellDepth - 1],
+    this.frame = new Frame(this.columns.length - 1, this.rows.length - 1, this.maxCellDepth - 1)
+  }
+
+
+  private updateCellDepth() {
+    this.maxCellDepth = 0
+    for (const columns of this.matrix.values()) {
+      for (const entries of columns.values()) {
+        if (entries.length > this.maxCellDepth) {
+          this.maxCellDepth = entries.length
+        }
+      }
     }
   }
 
@@ -138,7 +159,7 @@ class Processing {
     return currentOrder === 'ASC' ? 'DESC' : 'ASC'
   }
 
-  private sortItems(items: IRow[] | IColumn[], fieldName: string, index?: string | number, order?: ISortOrder): void {
+  private sortItems(items: IEntity[], fieldName: string, index?: string | number, order?: ISortOrder): void {
     items.sort((a, b) => {
       const aVal = (index === undefined ? a[fieldName] : a[fieldName][index]) ?? '0'
       const bVal = (index === undefined ? b[fieldName] : b[fieldName][index]) ?? '0'
@@ -165,6 +186,13 @@ class Processing {
     }
     this.columnsPrevIndex = index
     this.sortItems(this.columns, fieldName, index, this.columnsOrder)
+  }
+
+  public static getInstance(rows: IRow[], columns: IColumn[], entries: IEntry[]): Processing {
+    if (!this.instance) {
+      this.instance = new this(rows, columns, entries)
+    }
+    return this.instance
   }
 }
 

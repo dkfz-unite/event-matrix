@@ -2,11 +2,13 @@ import {range} from 'd3-array'
 import {scaleBand, ScaleBand} from 'd3-scale'
 import {select, Selection} from 'd3-selection'
 import EventEmitter from 'eventemitter3'
-import {IColumn, IRow} from '../interfaces/bioinformatics.interface'
+import {IColumn, IRow} from '../interfaces/base.interface'
 import {EventMatrixParams, ILookupTable} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
+import Processing from './data/Processing'
 import MainGrid from './MainGrid'
+import GridRender from './rendering/GridRender'
 
 class EventMatrix extends EventEmitter {
   private readonly params: EventMatrixParams
@@ -21,26 +23,29 @@ class EventMatrix extends EventEmitter {
   private x: ScaleBand<string>
   private y: ScaleBand<string>
   private fullscreen = false
+  private processing: Processing
+  private gridRender: GridRender
 
   constructor(params: EventMatrixParams) {
     super()
     storage.setOptions({
       minCellHeight: params.minCellHeight,
       prefix: params.prefix,
-      rows: params.rows,
-      columns: params.columns,
-      entries: params.entries,
       columnsAppearanceFunc: params.columnsAppearanceFunc,
       rowsAppearanceFunc: params.rowsAppearanceFunc,
       cellAppearanceFunc: params.cellAppearanceFunc,
+    })
+    this.processing = new Processing(params.rows, params.columns, params.entries)
+    this.gridRender = new GridRender(params.width ?? 500, params.height ?? 500, {
+      minCellHeight: params.minCellHeight,
     })
 
     this.params = params
     this.width = params.width ?? 500
     this.height = params.height ?? 500
 
-    if (this.height / storage.rows.length < storage.minCellHeight) {
-      this.height = storage.rows.length * storage.minCellHeight
+    if (this.height / this.processing.getRows().length < storage.minCellHeight) {
+      this.height = this.processing.getRows().length * storage.minCellHeight
     }
 
     params.wrapper = `.${storage.prefix}container`
@@ -62,7 +67,9 @@ class EventMatrix extends EventEmitter {
 
   public setLayer(layer: string | null) {
     if (storage.layer !== layer) {
-      storage.setLayer(layer)
+      this.processing.setFilter('entries', {
+        layer,
+      })
 
       this.createLookupTable()
       this.computeColumnCounts()
@@ -97,7 +104,7 @@ class EventMatrix extends EventEmitter {
     eventBus.on(innerEvents.INNER_RESIZE, () => {
       this.resize(this.width, this.height, this.fullscreen)
     })
-    eventBus.on(innerEvents.INNER_UPDATE, (columnSort: boolean) => {
+    eventBus.on(innerEvents.INNER_UPDATE, () => {
       this.update()
     })
 
@@ -110,15 +117,15 @@ class EventMatrix extends EventEmitter {
 
   private calculatePositions() {
     const getX = scaleBand()
-      .domain(range(storage.columns.length).map(String))
+      .domain(range(this.processing.getColumns().length).map(String))
       .range([0, this.width])
 
     const getY = scaleBand()
-      .domain(range(storage.rows.length).map(String))
+      .domain(range(this.processing.getRows().length).map(String))
       .range([0, this.height])
 
-    for (let i = 0; i < storage.columns.length; i++) {
-      const column = storage.columns[i]
+    for (let i = 0; i < this.processing.getColumns().length; i++) {
+      const column = this.processing.getColumns()[i]
       const columnId = column.id
       const positionX = getX(String(i))!
       column.x = positionX
@@ -126,8 +133,8 @@ class EventMatrix extends EventEmitter {
       storage.lookupTable[columnId].x = positionX as number
     }
 
-    for (let i = 0; i < storage.rows.length; i++) {
-      storage.rows[i].y = getY(String(i)) ?? 0
+    for (let i = 0; i < this.processing.getRows().length; i++) {
+      this.processing.getRows()[i].y = getY(String(i)) ?? 0
     }
 
     this.x = getX
@@ -139,7 +146,7 @@ class EventMatrix extends EventEmitter {
    */
   private createLookupTable() {
     const lookupTable: ILookupTable = {}
-    storage.entries.forEach((entry) => {
+    this.processing.getEntries().forEach((entry) => {
       const columnId = entry.columnId
       const rowId = entry.rowId
       if (lookupTable[columnId] === undefined) {
@@ -185,8 +192,8 @@ class EventMatrix extends EventEmitter {
     this.width = Number(width)
     this.height = Number(height)
 
-    if (this.height / storage.rows.length < storage.minCellHeight) {
-      this.height = storage.rows.length * storage.minCellHeight
+    if (this.height / this.processing.getRows().length < storage.minCellHeight) {
+      this.height = this.processing.getRows().length * storage.minCellHeight
     }
     this.calculatePositions()
     this.charts.forEach((chart) => {
@@ -199,7 +206,7 @@ class EventMatrix extends EventEmitter {
    * Sorts donors by score
    */
   private sortColumnsByScores() {
-    storage.columns.sort((columnA: IColumn, columnB: IColumn) => {
+    this.processing.getColumns().sort((columnA: IColumn, columnB: IColumn) => {
       const scoreA = Object.values(columnA.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
       const scoreB = Object.values(columnB.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
       if (scoreA < scoreB) {
@@ -213,7 +220,7 @@ class EventMatrix extends EventEmitter {
   }
 
   private sortRowsByScores() {
-    storage.rows.sort((rowA: IRow, rowB: IRow) => {
+    this.processing.getRows().sort((rowA: IRow, rowB: IRow) => {
       const scoreA = Object.values(rowA.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
       const scoreB = Object.values(rowB.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
       if (scoreA < scoreB) {
@@ -273,7 +280,7 @@ class EventMatrix extends EventEmitter {
    * Computes the number of observations for a given donor.
    */
   private computeColumnCounts() {
-    for (const column of storage.columns) {
+    for (const column of this.processing.getColumns()) {
       const rows = Object.values(storage.lookupTable[column.id] ?? {})
       column.count = 0
       for (const item of rows) {
@@ -281,7 +288,7 @@ class EventMatrix extends EventEmitter {
       }
 
       column.countByRow = {}
-      for (const obs of storage.entries) {
+      for (const obs of this.processing.getEntries()) {
         if (column.id === obs.columnId) {
           if (column.countByRow[obs.rowId] === undefined) {
             column.countByRow[obs.rowId] = 0
@@ -296,10 +303,10 @@ class EventMatrix extends EventEmitter {
    * Computes the number of entries for a given row.
    */
   private computeRowCounts() {
-    for (const row of storage.rows) {
+    for (const row of this.processing.getRows()) {
       row.count = 0
       row.countByColumn = {}
-      for (const obs of storage.entries) {
+      for (const obs of this.processing.getEntries()) {
         if (row.id === obs.rowId) {
           row.count++
           if (row.countByColumn[obs.columnId] === undefined) {

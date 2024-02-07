@@ -1,5 +1,4 @@
-import {BlockType, CssMarginProps} from './base.interface'
-import {IColumn, IEntry, IRow} from './bioinformatics.interface'
+import {BlockType, CssMarginProps, IColumn, IEntity, IEntry, IRow} from './base.interface'
 
 export interface ICustomFunctions {
   // eslint-disable-next-line no-unused-vars
@@ -22,6 +21,10 @@ export interface IFrame {
   y: [number, number],
   z: [number, number],
 }
+
+// eslint-disable-next-line no-unused-vars
+export type IFilterFunction = (val: IEntity) => boolean
+export type IFilter = Record<string, string | IFilterFunction>
 
 export type MainGridParams = {
   leftTextWidth?: number
@@ -70,9 +73,6 @@ export interface HistogramParams {
 export type IDomainEntity = IRow & IColumn
 
 export interface IStorageOptions {
-  rows: IRow[]
-  columns: IColumn[]
-  entries: IEntry[]
   minCellHeight?: number
   prefix?: string
   // eslint-disable-next-line no-unused-vars

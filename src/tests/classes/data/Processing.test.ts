@@ -1,5 +1,5 @@
 import Processing from '../../../classes/data/Processing'
-import {IColumn, IEntry, IRow} from '../../../interfaces/bioinformatics.interface'
+import {IColumn, IEntry, IRow} from '../../../interfaces/base.interface'
 
 
 function createTestRows(count = 2): IRow[] {
@@ -79,10 +79,10 @@ describe('Processing', () => {
     })
   })
 
-  describe('getFrameView', () => {
+  describe('getCroppedMatrix', () => {
     it('should return cropped matrix based on frame settings', () => {
       processing.setFrame([0, 1], [0, 1])
-      const frameView = processing.getFrameView()
+      const frameView = processing.getCroppedMatrix()
 
       expect(frameView.size).toBe(1)
       expect(frameView.get('row1')?.get('col1')).toBeDefined()

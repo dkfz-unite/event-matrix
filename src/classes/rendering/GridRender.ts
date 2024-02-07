@@ -1,19 +1,12 @@
-import {ScaleBand} from 'd3-scale'
-import {pointer, select, selectAll, Selection} from 'd3-selection'
-import {BlockType, CssMarginProps, IColumn, IEntry, IRow} from '../interfaces/base.interface'
-import {
-  HistogramParams,
-  IDescriptionBlockParams,
-  IDomainEntity,
-  IEnhancedEvent,
-  MainGridParams
-} from '../interfaces/main-grid.interface'
-import {eventBus, innerEvents, publicEvents, renderEvents} from '../utils/event-bus'
-import {storage} from '../utils/storage'
-import DescriptionBlock from './DescriptionBlock'
-import Histogram from './Histogram'
+import Processing from '../data/Processing'
 
-class MainGrid {
+class GridRender {
+  private width = 500
+  private height = 500
+  private minCellHeight = 10
+  private processing: Processing
+
+
   private params: MainGridParams
   private x: ScaleBand<string>
   private y: ScaleBand<string>
@@ -45,6 +38,16 @@ class MainGrid {
   private row: Selection<SVGGElement, IRow, SVGGElement, unknown>
   private rowMap: Record<string, IRow>
   public fullscreen = false
+
+  constructor(width: number, height: number, options: any) {
+    this.width = width
+    this.height = height
+    this.minCellHeight = options.minCellHeight
+    this.processing = Processing.getInstance()
+
+    this.descriptionRender = new DescriptionRender()
+  }
+
 
   constructor(params: MainGridParams, x: ScaleBand<string>, y: ScaleBand<string>) {
     this.params = params
@@ -692,14 +695,6 @@ class MainGrid {
     }
   }
 
-  private createRowMap() {
-    const rowMap = {}
-    for (const row of storage.rows) {
-      rowMap[row.id] = row
-    }
-    this.rowMap = rowMap
-  }
-
   /**
    * Function that determines the y position of a mutation within a cell
    */
@@ -838,4 +833,4 @@ class MainGrid {
   }
 }
 
-export default MainGrid
+export default GridRender
