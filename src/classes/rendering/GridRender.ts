@@ -1,7 +1,7 @@
 import {pointer, select, Selection} from 'd3-selection'
 import {BlockType, IEntry} from '../../interfaces/base.interface'
-import {IEnhancedEvent, IMatrix} from '../../interfaces/main-grid.interface'
-import {eventBus, publicEvents, renderEvents} from '../../utils/event-bus'
+import {IEnhancedEvent, IMatrix, IMatrixColumn, IMatrixEntry, IMatrixRow} from '../../interfaces/main-grid.interface'
+import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
 
@@ -114,10 +114,12 @@ class GridRender {
       }
       const rowId = target.dataset.row
       const columnId = target.dataset.column
+      const row = this.matrix.find((mRow) => mRow.id === rowId)
+      const column = row.columns.find((mCol) => mCol.id === columnId)
 
       eventBus.emit(publicEvents.GRID_CELL_HOVER, {
         target: target,
-        entryIds: this.processing.getCellEntries(rowId, columnId),
+        entryIds: column.entries.map((entry) => entry.id),
         entryId,
         columnId,
         rowId,
@@ -143,63 +145,116 @@ class GridRender {
     })
   }
 
-  private drawCells() {
-    const entriesMap = this.processing.getEntriesMap()
-    const rows = this.processing.getRows()
-    const columns = this.processing.getColumns()
+  private drawRow(svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>, matrixRow: IMatrixRow, index: number) {
+    const rowElement = svg
+      .append('g')
+      .attr('class', `${storage.prefix}row-row ${storage.prefix}grid__row ${storage.prefix}grid-row`)
+      .attr('transform', `translate(0,${index * this.cellHeight})`)
+
+    rowElement
+      .append('text')
+      .attr('class', `${storage.prefix}${matrixRow.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font ${storage.prefix}grid-row__label`)
+      .attr('data-row', matrixRow.id)
+      .attr('x', -8)
+      .attr('y', this.cellHeight / 2)
+      .attr('dy', '.32em')
+      .attr('text-anchor', 'end')
+      .attr('style', () => {
+        if (this.cellHeight < this.minCellHeight) {
+          return 'display: none;'
+        } else {
+          return ''
+        }
+      })
+      .text(matrixRow.data.symbol)
+      .on('mouseover', (event: IEnhancedEvent) => {
+        const target = event.target
+        const rowId = target.dataset.row
+        if (!rowId) {
+          return
+        }
+        eventBus.emit(publicEvents.GRID_LABEL_HOVER, {
+          target,
+          rowId,
+        })
+      })
+      .on('click', (event: IEnhancedEvent) => {
+        const target = event.target
+        const rowId = target.dataset.row
+        if (!rowId) {
+          return
+        }
+        this.processing.sortColumns('countByRow', parseInt(rowId))
+        eventBus.emit(innerEvents.INNER_UPDATE, false)
+        eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
+          target,
+          rowId,
+        })
+      })
+
+    return rowElement
+  }
+
+  private drawCell(rowElement: Selection<SVGGElement, unknown, HTMLElement, unknown>, matrixRow: IMatrixRow, matrixColumn: IMatrixColumn, index: number) {
+    const cellX = index * this.cellWidth
+    // Define cell container itself
+    return rowElement
+      .append('rect')
+      .attr('width', this.cellWidth)
+      .attr('height', this.cellHeight)
+      .attr('x', cellX)
+      .attr('y', 0)
+      .attr('data-row', matrixRow.id)
+      .attr('data-column', matrixColumn.id)
+      .attr('class', `${storage.prefix}grid__cell ${storage.prefix}grid-cell`)
+  }
+
+  private drawEntries(cellElement: Selection<SVGRectElement, unknown, HTMLElement, unknown>, entries: IMatrixEntry[]) {
     const heatMapColor = this.heatMapColor
     const heatMap = this.heatMap
-    for (const i in rows) {
-      const row = rows[i]
-      for (const j in columns) {
-        const column = columns[j]
-        const cellEntries = this.matrix.get(row.id).get(column.id)
-        const cellX = j * this.cellWidth
-        const cellY = i * this.cellHeight
-        const entryHeight = heatMap ? this.cellHeight : this.cellHeight / cellEntries.length
+    const entryHeight = heatMap ? this.cellHeight : this.cellHeight / entries.length
+    // Draw the entries inside the cell container
+    cellElement
+      .data(entries)
+      .enter()
+      .append('rect')
+      .attr('width', this.cellWidth)
+      .attr('height', entryHeight)
+      .attr('x', 0)
+      .attr('y', (matrixEntry: IMatrixEntry, num: number) => {
+        return heatMap ? 0 : num * entryHeight
+      })
+      .attr('class', `${storage.prefix}sortable-rect ${storage.prefix}grid-cell__entry`)
+      .attr('data-row', (matrixEntry: IMatrixEntry) => matrixEntry.data.rowId)
+      .attr('data-column', (matrixEntry: IMatrixEntry) => matrixEntry.data.columnId)
+      .attr('data-entry', (matrixEntry: IMatrixEntry) => matrixEntry.id)
+      .each(function (matrixEntry: IMatrixEntry) {
+        let color = heatMapColor
+        let opacity = heatMap ? 0.25 : 1
+        if (!heatMap) {
+          const appearance = (storage.customFunctions[BlockType.Entries])(matrixEntry.data)
+          color = appearance.color
+          opacity = appearance.opacity
+        }
 
-        // Define cell container itself
-        const cell = this.svg
-          .append('rect')
-          .attr('width', this.cellWidth)
-          .attr('height', this.cellHeight)
-          .attr('x', cellX)
-          .attr('y', cellY)
-          .attr('data-row', row.id)
-          .attr('data-column', column.id)
-          .attr('class', `${storage.prefix}grid__cell ${storage.prefix}grid-cell`)
+        // "this" in the context is a selected DOM element. If you see an error below, everything is fine
+        // "this as string" - is just a trick to bypass WebStorm types check
+        const element = select(this as string)
+        element.attr('fill', color)
+        element.attr('opacity', opacity)
+      })
+  }
 
-        // Draw the entries inside the cell container
-        cell
-          .data(cellEntries)
-          .enter()
-          .append('rect')
-          .attr('width', this.cellWidth)
-          .attr('height', entryHeight)
-          .attr('x', 0)
-          .attr('y', (entryId: string, num: number) => {
-            return heatMap ? 0 : num * entryHeight
-          })
-          .attr('class', `${storage.prefix}sortable-rect ${storage.prefix}grid-cell__entry`)
-          .attr('data-row', row.id)
-          .attr('data-column', column.id)
-          .attr('data-entry', (entryId) => entryId)
-          .each(function (entryId) {
-            const entry = entriesMap[entryId]
-            let color = heatMapColor
-            let opacity = heatMap ? 0.25 : 1
-            if (!heatMap) {
-              const appearance = (storage.customFunctions[BlockType.Entries])(entry)
-              color = appearance.color
-              opacity = appearance.opacity
-            }
+  private drawCells() {
+    for (let i = 0; i < this.matrix.length; i++) {
+      const matrixRow = this.matrix[i]
+      const rowElement = this.drawRow(this.svg, matrixRow, i)
 
-            // "this" in the context is a selected DOM element. If you see an error below, everything is fine
-            // "this as string" - is just a trick to bypass WebStorm types check
-            const element = select(this as string)
-            element.attr('fill', color)
-            element.attr('opacity', opacity)
-          })
+      for (let j = 0; j < matrixRow.columns.length; j++) {
+        const matrixColumn = matrixRow.columns[j]
+
+        const cellElement = this.drawCell(rowElement, matrixRow, matrixColumn, j)
+        this.drawEntries(cellElement, matrixColumn.entries)
       }
     }
   }

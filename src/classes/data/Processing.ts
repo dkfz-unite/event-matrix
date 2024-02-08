@@ -1,5 +1,12 @@
 import {IColumn, IEntity, IEntry, IRow} from '../../interfaces/base.interface'
-import {IFilter, IMatrix, ISortOrder} from '../../interfaces/main-grid.interface'
+import {
+  IFilter,
+  IMatrix,
+  IMatrixColumn,
+  IMatrixEntry,
+  IMatrixRow,
+  ISortOrder
+} from '../../interfaces/main-grid.interface'
 import Frame from './Frame'
 
 class Processing {
@@ -12,7 +19,7 @@ class Processing {
   private entriesOriginal: IEntry[] = []
   private entries: IEntry[] = []
   private entriesMap: Map<string, IEntry> = new Map()
-  private matrix: IMatrix = new Map()
+  private matrix: IMatrix = []
   private frame: Frame
   private filters = {
     entries: {},
@@ -62,30 +69,40 @@ class Processing {
     return this.entries
   }
 
-  public getCellEntries(rowId: string, columnId: string) {
-    return this.matrix.get(rowId).get(columnId)
-  }
-
   public setFilter(type: 'rows' | 'columns' | 'entries', filterObj: IFilter) {
     this.filters[type] = filterObj
   }
 
   public getCroppedMatrix() {
     const {x, y, z} = this.frame.getSizes()
-    const croppedMatrix: IMatrix = new Map()
-    const croppedRows = this.rows.slice(y[0], y[1])
-    const croppedColumns = this.columns.slice(x[0], x[1])
+    const croppedMatrix: IMatrix = []
 
-    croppedRows.forEach((row) => {
-      const rowMap = new Map()
-      croppedMatrix.set(row.id, rowMap)
-
-      croppedColumns.forEach((column) => {
-        const cellEntries = this.matrix.get(row.id)?.get(column.id) ?? []
-        const croppedEntries = cellEntries.slice(z[0], z[1])
-        rowMap.set(column.id, croppedEntries)
-      })
-    })
+    for (let i = y[0]; i <= y[1]; i++) {
+      const row = this.matrix[i]
+      const mRow: IMatrixRow = {
+        id: row.id,
+        data: row.data,
+        columns: [],
+      }
+      croppedMatrix.push(mRow)
+      for (let j = x[0]; j <= x[1]; j++) {
+        const column = row.columns[j]
+        const mColumn: IMatrixColumn = {
+          id: column.id,
+          data: column.data,
+          entries: [],
+        }
+        mRow.columns.push(mColumn)
+        for (let k = z[0]; k <= Math.min(column.entries.length, z[1]); k++) {
+          const entry = column.entries[k]
+          const mEntry: IMatrixEntry = {
+            id: entry.id,
+            data: entry.data,
+          }
+          mColumn.entries.push(mEntry)
+        }
+      }
+    }
 
     return croppedMatrix
   }
@@ -114,7 +131,6 @@ class Processing {
     }
     if (Object.keys(this.filters.entries).length > 0) {
       this.entries = this.entries.filter(filterFunc(this.filters.entries))
-      this.updateCellDepth()
     }
   }
 
@@ -122,43 +138,39 @@ class Processing {
     this.frame = new Frame(this.columns.length - 1, this.rows.length - 1, this.maxCellDepth - 1)
   }
 
-
-  private updateCellDepth() {
-    this.maxCellDepth = 0
-    for (const columns of this.matrix.values()) {
-      for (const entries of columns.values()) {
-        if (entries.length > this.maxCellDepth) {
-          this.maxCellDepth = entries.length
-        }
-      }
-    }
-  }
-
   private generateMatrix() {
-    const matrix: IMatrix = new Map()
-
-    this.rows.forEach((row) => {
-      const rowMap = new Map()
-      matrix.set(row.id, rowMap)
-
-      this.columns.forEach((column) => {
-        rowMap.set(column.id, [])
+    const matrix: IMatrix = this.rows.map((row) => {
+      const columns = this.columns.map((column) => {
+        return {
+          id: column.id,
+          data: column,
+          entries: [],
+        }
       })
+      return {
+        id: row.id,
+        data: row,
+        columns,
+      }
     })
 
-    this.entries.forEach(({id, rowId, columnId}) => {
-      const rowMatrix = matrix.get(rowId)
+    this.entries.forEach((entry) => {
+      const {id, rowId, columnId} = entry
+      const rowMatrix = matrix.find((mRow) => mRow.id === rowId)
       if (!rowMatrix) {
         return
       }
 
-      const columnMatrix = rowMatrix.get(columnId)
+      const columnMatrix = rowMatrix.columns.find((mCol) => mCol.id === columnId)
       if (!columnMatrix) {
         return
       }
-      columnMatrix.push(id)
-      if (this.maxCellDepth < columnMatrix.length) {
-        this.maxCellDepth = columnMatrix.length
+      columnMatrix.entries.push({
+        id,
+        data: entry,
+      })
+      if (this.maxCellDepth < columnMatrix.entries.length) {
+        this.maxCellDepth = columnMatrix.entries.length
       }
     })
 
