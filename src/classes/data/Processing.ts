@@ -76,6 +76,10 @@ class Processing {
   public getCroppedMatrix() {
     const {x, y, z} = this.frame.getSizes()
     const croppedMatrix: IMatrix = []
+    console.log('matrix:')
+    console.log(this.matrix)
+    console.log('frame sizes:')
+    console.log(x, y, z)
 
     for (let i = y[0]; i <= y[1]; i++) {
       const row = this.matrix[i]
@@ -93,7 +97,7 @@ class Processing {
           entries: [],
         }
         mRow.columns.push(mColumn)
-        for (let k = z[0]; k <= Math.min(column.entries.length, z[1]); k++) {
+        for (let k = z[0]; k < Math.min(column.entries.length, z[1] + 1); k++) {
           const entry = column.entries[k]
           const mEntry: IMatrixEntry = {
             id: entry.id,

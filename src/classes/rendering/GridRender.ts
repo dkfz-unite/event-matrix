@@ -68,7 +68,7 @@ class GridRender {
   }
 
   private prepareContainer() {
-    this.svg = this.container.append('svg')
+    this.svg = this.wrapper.append('svg')
       .attr('class', `${storage.prefix}maingrid-svg`)
       .attr('id', `${storage.prefix}maingrid-svg`)
       .attr('width', '100%')
