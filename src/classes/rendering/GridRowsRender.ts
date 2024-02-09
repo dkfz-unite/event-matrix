@@ -62,7 +62,7 @@ class GridRowsRender {
 
     if (!rowElement) {
       rowElement = this.container
-        .append('g')
+        .append('svg')
         .attr('id', `grid-row-${matrixRow.id}`)
         .attr('class', `${storage.prefix}row-row ${storage.prefix}grid__row ${storage.prefix}grid-row`)
         .attr('transform', `translate(0,${index * this.cellHeight})`)

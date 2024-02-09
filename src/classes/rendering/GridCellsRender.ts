@@ -1,4 +1,4 @@
-import {BaseType, Selection} from 'd3-selection'
+import {Selection} from 'd3-selection'
 import {IMatrixColumn} from '../../interfaces/main-grid.interface'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
@@ -6,7 +6,7 @@ import GridEntriesRender from './GridEntriesRender'
 
 class GridCellsRender {
   container: Selection<SVGGElement, unknown, HTMLElement, unknown>
-  cells: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
+  cells: Map<string, Selection<SVGGElement, unknown, HTMLElement, unknown>> = new Map()
   cellWidth = 10
   cellHeight = 10
   parentId: string
@@ -66,7 +66,7 @@ class GridCellsRender {
     if (!cellElement) {
       // Define cell container itself
       cellElement = this.container
-        .append('rect')
+        .append('svg')
         .attr('id', `grid-row-${this.parentId}-cell-${matrixColumn.id}`)
         .attr('width', this.cellWidth)
         .attr('height', this.cellHeight)

@@ -41,6 +41,7 @@ class GridEntriesRender {
   }
 
   public drawEntry(matrixEntry: IMatrixEntry, entryHeight: number, index: number) {
+    console.log(matrixEntry, entryHeight, index)
     const entryId = matrixEntry.id
     let entryElement = this.entries.get(entryId)
 
@@ -64,9 +65,9 @@ class GridEntriesRender {
         .attr('x', 0)
         .attr('y', heatMap ? 0 : index * entryHeight)
         .attr('class', `${storage.prefix}sortable-rect ${storage.prefix}grid-cell__entry`)
-        .attr('data-row', (matrixEntry: IMatrixEntry) => matrixEntry.data.rowId)
-        .attr('data-column', (matrixEntry: IMatrixEntry) => matrixEntry.data.columnId)
-        .attr('data-entry', (matrixEntry: IMatrixEntry) => matrixEntry.id)
+        .attr('data-row', matrixEntry.data.rowId)
+        .attr('data-column', matrixEntry.data.columnId)
+        .attr('data-entry', matrixEntry.id)
         .attr('fill', color)
         .attr('opacity', opacity)
 

@@ -35,6 +35,8 @@ class GridRender {
     this.leftTextWidth = options.leftTextWidth
 
     this.processing = Processing.getInstance()
+
+    this.initDimensions(width, height)
     // this.gridLinesRender = new GridLinesRender()
     // this.crosshairRender = new CrosshairRender()
     this.gridRowsRender = new GridRowsRender({
