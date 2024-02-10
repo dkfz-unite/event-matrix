@@ -43,9 +43,12 @@ class EventMatrix extends EventEmitter {
       .attr('class', `${storage.prefix}container`)
       .style('position', 'relative')
 
-    this.gridRender = new GridRender(params.width ?? 500, params.height ?? 500, {
-      minCellHeight: params.minCellHeight,
-    })
+    const gridWidth = params.width ?? 500
+    const gridHeight = Math.max(this.processing.rows.length * storage.cellHeight, params.height ?? 500)
+
+    storage.setCellDimensions(gridWidth / this.processing.columns.length, gridHeight / this.processing.rows.length)
+
+    this.gridRender = new GridRender(gridWidth, gridHeight, {})
     // this.bottomDescriptionRender = new BottomDescriptionRender()
     // this.rightDescriptionRender = new RightDescriptionRender()
     // this.topHistogramRender = new TopHistogramRender()

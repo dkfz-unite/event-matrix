@@ -7,17 +7,10 @@ import Processing from '../data/Processing'
 class GridEntriesRender {
   container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   entries: Map<string, Selection<SVGRectElement, unknown, HTMLElement, unknown>> = new Map()
-  cellWidth = 10
-  cellHeight = 10
   parentId: string
   processing: Processing
 
-  constructor(parentId: string, container: Selection<SVGGElement, unknown, HTMLElement, unknown>, {
-    cellWidth,
-    cellHeight,
-  }: { cellWidth, cellHeight }) {
-    this.cellWidth = cellWidth
-    this.cellHeight = cellHeight
+  constructor(parentId: string, container: Selection<SVGGElement, unknown, HTMLElement, unknown>, options: any) {
     this.parentId = parentId
     this.container = container
     this.processing = Processing.getInstance()
@@ -32,21 +25,23 @@ class GridEntriesRender {
     }
   }
 
-  public draw(matrixEntries: IMatrixEntry[]) {
-    const entryHeight = storage.heatMap ? this.cellHeight : this.cellHeight / matrixEntries.length
+  public draw(matrixEntries: IMatrixEntry[], indexX: number) {
+    const entryHeight = storage.heatMap ? storage.cellHeight : storage.cellHeight / matrixEntries.length
     for (let j = 0; j < matrixEntries.length; j++) {
       const matrixEntry = matrixEntries[j]
-      this.drawEntry(matrixEntry, entryHeight, j)
+      this.drawEntry(matrixEntry, entryHeight, indexX, j)
     }
   }
 
-  public drawEntry(matrixEntry: IMatrixEntry, entryHeight: number, index: number) {
-    console.log(matrixEntry, entryHeight, index)
+  public drawEntry(matrixEntry: IMatrixEntry, entryHeight: number, indexX: number, indexY: number) {
+    // console.log(matrixEntry, entryHeight, indexX, indexY)
     const entryId = matrixEntry.id
     let entryElement = this.entries.get(entryId)
 
     const heatMapColor = storage.heatMapColor
     const heatMap = storage.heatMap
+    const entryX = indexX * storage.cellWidth
+    const entryY = heatMap ? 0 : indexY * entryHeight
 
     let color = heatMapColor
     let opacity = heatMap ? 0.25 : 1
@@ -60,10 +55,10 @@ class GridEntriesRender {
       // Draw the entries inside the cell container
       entryElement = this.container
         .append('rect')
-        .attr('width', this.cellWidth)
+        .attr('width', storage.cellWidth)
         .attr('height', entryHeight)
-        .attr('x', 0)
-        .attr('y', heatMap ? 0 : index * entryHeight)
+        .attr('x', entryX)
+        .attr('y', entryY)
         .attr('class', `${storage.prefix}sortable-rect ${storage.prefix}grid-cell__entry`)
         .attr('data-row', matrixEntry.data.rowId)
         .attr('data-column', matrixEntry.data.columnId)
@@ -74,10 +69,10 @@ class GridEntriesRender {
       this.entries.set(entryId, entryElement)
     } else {
       entryElement
-        .attr('width', this.cellWidth)
+        .attr('width', storage.cellWidth)
         .attr('height', entryHeight)
-        .attr('x', 0)
-        .attr('y', heatMap ? 0 : index * entryHeight)
+        .attr('x', entryX)
+        .attr('y', entryY)
         .attr('fill', color)
         .attr('opacity', opacity)
     }

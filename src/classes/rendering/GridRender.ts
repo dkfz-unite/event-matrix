@@ -19,30 +19,21 @@ class GridRender {
   private drawGridLines = false
   private crosshair = false
   private matrix: IMatrix
-  private leftTextWidth = 80
   private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
   private gridContainer: Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private cellWidth: number
-  private cellHeight: number
 
   constructor(width: number, height: number, options: any) {
     this.width = width
     this.height = height
-
-    // TODO: check this legacy options
-    this.leftTextWidth = options.leftTextWidth
 
     this.processing = Processing.getInstance()
 
     this.initDimensions(width, height)
     // this.gridLinesRender = new GridLinesRender()
     // this.crosshairRender = new CrosshairRender()
-    this.gridRowsRender = new GridRowsRender({
-      cellHeight: this.cellHeight,
-      cellWidth: this.cellWidth,
-    })
+    this.gridRowsRender = new GridRowsRender({})
     this.wrapper = select(`.${storage.prefix}container`)
   }
 
@@ -74,6 +65,17 @@ class GridRender {
       .attr('class', `${storage.prefix}maingrid-svg`)
       .attr('id', `${storage.prefix}maingrid-svg`)
       .attr('width', '100%')
+    //     .attr('width', width)
+    //     .attr('height', height)
+    //     .attr('viewBox', `0 0 ${width} ${height}`)
+    //
+    //   this.container
+    //     .attr('transform', 'translate(' +
+    //       (this.margin.left + this.leftTextWidth) + ',' +
+    //       (this.margin.top + histogramHeight + 10) +
+    //       ')')
+
+
     this.gridRowsRender.setContainer(this.svg)
   }
 
@@ -230,21 +232,9 @@ class GridRender {
   //     })
   // }
 
-  private initDimensions(width?: number, height?: number) {
-    if (width !== undefined) {
-      this.width = width
-    }
-    if (height !== undefined) {
-      this.height = height
-    }
-
-    this.cellWidth = this.width / this.processing.columns.length
-    this.cellHeight = this.height / this.processing.rows.length
-
-    if (this.cellHeight < storage.minCellHeight) {
-      this.cellHeight = storage.minCellHeight
-      this.height = this.processing.rows.length * storage.minCellHeight
-    }
+  private initDimensions(width: number, height: number) {
+    this.width = width
+    this.height = height
   }
 
   public resize(width: number, height: number) {

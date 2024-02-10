@@ -8,17 +8,10 @@ import GridCellsRender from './GridCellsRender'
 class GridRowsRender {
   container: Selection<BaseType, unknown, HTMLElement, unknown>
   rows: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
-  cellWidth = 10
-  cellHeight = 10
   processing: Processing
   gridCellsRenders: Map<string, GridCellsRender>
 
-  constructor({
-    cellHeight,
-    cellWidth,
-  }: { cellHeight: number, cellWidth: number }) {
-    this.cellWidth = cellWidth
-    this.cellHeight = cellHeight
+  constructor(options: any) {
     this.container = select(`.${storage.prefix}container`)
     this.processing = Processing.getInstance()
     this.gridCellsRenders = new Map()
@@ -41,10 +34,7 @@ class GridRowsRender {
   private getChildrenRender(parentId: string, container) {
     let render = this.gridCellsRenders.get(parentId)
     if (!render) {
-      render = new GridCellsRender(parentId, container, {
-        cellWidth: this.cellWidth,
-        cellHeight: this.cellHeight,
-      })
+      render = new GridCellsRender(parentId, container, {})
       this.gridCellsRenders.set(parentId, render)
     }
     return render
@@ -64,8 +54,9 @@ class GridRowsRender {
       rowElement = this.container
         .append('svg')
         .attr('id', `grid-row-${matrixRow.id}`)
+        .attr('height', storage.cellHeight)
         .attr('class', `${storage.prefix}row-row ${storage.prefix}grid__row ${storage.prefix}grid-row`)
-        .attr('transform', `translate(0,${index * this.cellHeight})`)
+        .attr('transform', `translate(0,${index * storage.cellHeight})`)
 
       this.rows.set(matrixRow.id, rowElement)
 
@@ -74,11 +65,11 @@ class GridRowsRender {
         .attr('class', `${storage.prefix}${matrixRow.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font ${storage.prefix}grid-row__label`)
         .attr('data-row', matrixRow.id)
         .attr('x', -8)
-        .attr('y', this.cellHeight / 2)
+        .attr('y', storage.cellHeight / 2)
         .attr('dy', '.32em')
         .attr('text-anchor', 'end')
         .attr('style', () => {
-          if (this.cellHeight < storage.minCellHeight) {
+          if (storage.cellHeight < storage.minCellHeight) {
             return 'display: none;'
           } else {
             return ''
@@ -111,9 +102,9 @@ class GridRowsRender {
         })
     } else {
       rowElement
-        .attr('transform', `translate(0,${index * this.cellHeight})`)
+        .attr('transform', `translate(0,${index * storage.cellHeight})`)
         .attr('style', () => {
-          if (this.cellHeight < storage.minCellHeight) {
+          if (storage.cellHeight < storage.minCellHeight) {
             return 'display: none;'
           } else {
             return ''

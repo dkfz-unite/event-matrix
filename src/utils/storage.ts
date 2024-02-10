@@ -8,6 +8,8 @@ export class Storage {
   }
 
   public minCellHeight = 10
+  public cellHeight = 10
+  public cellWidth = 10
   public layer: string | null = null
   public prefix = 'og-'
   public heatMap = false
@@ -24,6 +26,11 @@ export class Storage {
 
   public setLookupTable(lookupTable: ILookupTable) {
     this.lookupTable = lookupTable
+  }
+
+  setCellDimensions(width: number, height: number) {
+    this.cellWidth = width
+    this.cellHeight = height
   }
 
   public setOptions({
