@@ -3,6 +3,7 @@ import {IEnhancedEvent, IMatrix} from '../../interfaces/main-grid.interface'
 import {eventBus, publicEvents, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
+import GridLinesRender from './GridLinesRender'
 import GridRowsRender from './GridRowsRender'
 
 class GridRender {
@@ -10,13 +11,13 @@ class GridRender {
   private height = 500
   private processing: Processing
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
-  // private gridLinesRender: GridLinesRender
+  private gridLinesRender: GridLinesRender
   // private crosshairRender: CrosshairRender
   private gridRowsRender: GridRowsRender
 
   // TODO: check this legacy options
   private minCellHeight = 10
-  private drawGridLines = false
+  private drawGridLines = true
   private crosshair = false
   private matrix: IMatrix
   private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
@@ -31,7 +32,7 @@ class GridRender {
     this.processing = Processing.getInstance()
 
     this.initDimensions(width, height)
-    // this.gridLinesRender = new GridLinesRender()
+    this.gridLinesRender = new GridLinesRender(width, height)
     // this.crosshairRender = new CrosshairRender()
     this.gridRowsRender = new GridRowsRender({})
     this.wrapper = select(`.${storage.prefix}container`)
@@ -43,11 +44,11 @@ class GridRender {
 
     eventBus.emit(renderEvents.RENDER_GRID_START)
     this.drawBackground()
-    // if (this.drawGridLines) {
-    //   this.gridLinesRender.render()
-    // } else {
-    //   this.gridLinesRender.destroy()
-    // }
+    if (this.drawGridLines) {
+      this.gridLinesRender.render()
+    } else {
+      this.gridLinesRender.destroy()
+    }
     // if (this.crosshair) {
     //   this.crosshairRender.render()
     // } else {
@@ -68,19 +69,19 @@ class GridRender {
       .attr('height', this.height)
       .attr('viewBox', `0 0 ${this.width + 80} ${this.height}`)
 
+    this.container = this.svg.append('g')
+      .attr('transform', 'translate(80,0)')
+
     this.gridRowsRender.setContainer(this.svg)
   }
 
   private drawBackground() {
-    this.container = this.svg.append('g')
-
     this.background = this.container.append('rect')
       .attr('class', `${storage.prefix}background`)
       .attr('width', this.width)
       .attr('height', this.height)
-      .attr('transform', 'translate(80,0)')
-
     this.gridContainer = this.container.append('g')
+    this.gridLinesRender.setContainer(this.gridContainer)
   }
 
   private addGridEvents() {
