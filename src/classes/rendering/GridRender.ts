@@ -64,17 +64,9 @@ class GridRender {
     this.svg = this.wrapper.append('svg')
       .attr('class', `${storage.prefix}maingrid-svg`)
       .attr('id', `${storage.prefix}maingrid-svg`)
-      .attr('width', '100%')
-    //     .attr('width', width)
-    //     .attr('height', height)
-    //     .attr('viewBox', `0 0 ${width} ${height}`)
-    //
-    //   this.container
-    //     .attr('transform', 'translate(' +
-    //       (this.margin.left + this.leftTextWidth) + ',' +
-    //       (this.margin.top + histogramHeight + 10) +
-    //       ')')
-
+      .attr('width', this.width + 80)
+      .attr('height', this.height)
+      .attr('viewBox', `0 0 ${this.width + 80} ${this.height}`)
 
     this.gridRowsRender.setContainer(this.svg)
   }
@@ -86,6 +78,7 @@ class GridRender {
       .attr('class', `${storage.prefix}background`)
       .attr('width', this.width)
       .attr('height', this.height)
+      .attr('transform', 'translate(80,0)')
 
     this.gridContainer = this.container.append('g')
   }

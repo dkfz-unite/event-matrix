@@ -40,7 +40,7 @@ class GridEntriesRender {
 
     const heatMapColor = storage.heatMapColor
     const heatMap = storage.heatMap
-    const entryX = indexX * storage.cellWidth
+    const entryX = 80 + indexX * storage.cellWidth
     const entryY = heatMap ? 0 : indexY * entryHeight
 
     let color = heatMapColor

@@ -64,7 +64,7 @@ class GridRowsRender {
         .append('text')
         .attr('class', `${storage.prefix}${matrixRow.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font ${storage.prefix}grid-row__label`)
         .attr('data-row', matrixRow.id)
-        .attr('x', -8)
+        .attr('x', 80 - 8)
         .attr('y', storage.cellHeight / 2)
         .attr('dy', '.32em')
         .attr('text-anchor', 'end')
