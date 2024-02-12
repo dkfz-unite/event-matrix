@@ -26,7 +26,7 @@ class GridEntriesRender {
   }
 
   public draw(matrixEntries: IMatrixEntry[], indexX: number) {
-    const entryHeight = storage.heatMap ? storage.cellHeight : storage.cellHeight / matrixEntries.length
+    const entryHeight = storage.heatMap ? storage.cellHeight : (storage.cellHeight / matrixEntries.length)
     for (let j = 0; j < matrixEntries.length; j++) {
       const matrixEntry = matrixEntries[j]
       this.drawEntry(matrixEntry, entryHeight, indexX, j)

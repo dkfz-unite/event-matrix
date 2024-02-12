@@ -30,11 +30,11 @@ export class Storage {
 
   setCellDimensions(width: number, height: number) {
     this.cellWidth = width
-    this.cellHeight = height
+    this.cellHeight = Math.max(height, this.minCellHeight)
   }
 
   public setOptions({
-    minCellHeight,
+    minCellHeight = this.minCellHeight,
     prefix = this.prefix,
     heatMapColor = this.heatMapColor,
     heatMap = this.heatMap,
@@ -42,8 +42,8 @@ export class Storage {
     rowsAppearanceFunc,
     cellAppearanceFunc,
   }: IStorageOptions) {
-    this.minCellHeight = minCellHeight ?? 10
-    this.prefix = prefix ?? 'og-'
+    this.minCellHeight = minCellHeight
+    this.prefix = prefix
     this.heatMapColor = heatMapColor
     this.heatMap = heatMap
 

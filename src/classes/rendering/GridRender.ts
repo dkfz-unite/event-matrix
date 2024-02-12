@@ -16,7 +16,6 @@ class GridRender {
   private gridRowsRender: GridRowsRender
 
   // TODO: check this legacy options
-  private minCellHeight = 10
   private drawGridLines = true
   private crosshair = false
   private matrix: IMatrix
@@ -62,29 +61,50 @@ class GridRender {
   }
 
   private prepareContainer() {
-    this.svg = this.wrapper.append('svg')
-      .attr('class', `${storage.prefix}maingrid-svg`)
-      .attr('id', `${storage.prefix}maingrid-svg`)
-      .attr('width', this.width + 80)
-      .attr('height', this.height)
-      .attr('viewBox', `0 0 ${this.width + 80} ${this.height}`)
+    if (!this.svg) {
+      this.svg = this.wrapper.append('svg')
+        .attr('class', `${storage.prefix}maingrid-svg`)
+        .attr('id', `${storage.prefix}maingrid-svg`)
+        .attr('width', this.width + 80)
+        .attr('height', this.height)
+        .attr('viewBox', `0 0 ${this.width + 80} ${this.height}`)
+    } else {
+      this.svg
+        .attr('width', this.width + 80)
+        .attr('height', this.height)
+        .attr('viewBox', `0 0 ${this.width + 80} ${this.height}`)
+    }
 
-    this.container = this.svg.append('g')
-      .attr('transform', 'translate(80,0)')
+    if (!this.container) {
+      this.container = this.svg.append('g')
+        .attr('transform', 'translate(80,0)')
+    } else {
+      this.container
+        .attr('transform', 'translate(80,0)')
+    }
 
     this.gridRowsRender.setContainer(this.svg)
   }
 
   private drawBackground() {
-    this.background = this.container.append('rect')
-      .attr('class', `${storage.prefix}background`)
-      .attr('width', this.width)
-      .attr('height', this.height)
-    this.gridContainer = this.container.append('g')
-    this.gridLinesRender.setContainer(this.gridContainer)
+    if (!this.background) {
+      this.background = this.container.append('rect')
+        .attr('class', `${storage.prefix}background`)
+        .attr('width', this.width)
+        .attr('height', this.height)
+
+      this.gridContainer = this.container.append('g')
+      this.gridLinesRender.setContainer(this.gridContainer)
+    } else {
+      this.background
+        .attr('width', this.width)
+        .attr('height', this.height)
+    }
   }
 
   private addGridEvents() {
+    this.removeGridEvents()
+
     this.svg.on('mouseover', (event: IEnhancedEvent) => {
       const target = event.target
       const entryId = target.dataset.entry
@@ -523,54 +543,22 @@ class GridRender {
   //   return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(entry)) + ' H ' + x1 + 'Z'
   // }
 
-  // /**
-  //  * set the entry rects between heatmap and regular mode.
-  //  */
-  // public setHeatmap(active: boolean) {
-  //   if (active === this.heatMap) return this.heatMap
-  //   this.heatMap = active
-  //   const heatMapColor = this.heatMapColor
-  //
-  //   selectAll(`.${storage.prefix}sortable-rect`)
-  //     .attr('d', (obs: IEntry) => {
-  //       return this.getRectangularPath(obs)
-  //     })
-  //     .each(function (entry: IEntry) {
-  //       let color = heatMapColor
-  //       let opacity = active ? 0.25 : 1
-  //       if (!active) {
-  //         const appearance = (storage.customFunctions[BlockType.Entries])(entry)
-  //         color = appearance.color
-  //         opacity = appearance.opacity
-  //       }
-  //
-  //       // "this" in the context is a selected DOM element. If you see an error below, everything is fine
-  //       // "this as string" - is just a trick to bypass WebStorm types check
-  //       const element = select(this as string)
-  //       element.attr('fill', color)
-  //       element.attr('opacity', opacity)
-  //     })
-  //
-  //   return this.heatMap
-  // }
-  //
-  // public setGridLines(active: boolean) {
-  //   if (this.drawGridLines === active) return this.drawGridLines
-  //   this.drawGridLines = active
-  //
-  //   this.verticalDescriptionBlock.setGridLines(this.drawGridLines)
-  //   this.horizontalDescriptionBlock.setGridLines(this.drawGridLines)
-  //
-  //   this.computeCoordinates()
-  //
-  //   return this.drawGridLines
-  // }
+  public setHeatmap(active: boolean) {
+    storage.heatMap = active
+    this.render()
+  }
 
-  // public setCrosshair(active: boolean) {
-  //   this.crosshair = active
-  //
-  //   return this.crosshair
-  // }
+  public setGridLines(active: boolean) {
+    this.drawGridLines = active
+
+    // this.verticalDescriptionBlock.setGridLines(this.drawGridLines)
+    // this.horizontalDescriptionBlock.setGridLines(this.drawGridLines)
+    this.render()
+  }
+
+  public setCrosshair(active: boolean) {
+    this.crosshair = active
+  }
 
   // /**
   //  * Removes all elements corresponding to the given row and then removes it from the row list.

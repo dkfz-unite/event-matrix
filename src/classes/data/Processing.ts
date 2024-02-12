@@ -71,6 +71,7 @@ class Processing {
 
   public setFilter(type: 'rows' | 'columns' | 'entries', filterObj: IFilter) {
     this.filters[type] = filterObj
+    this.applyFilters()
   }
 
   public getCroppedMatrix() {
@@ -117,8 +118,10 @@ class Processing {
 
   private applyFilters() {
     const filterFunc = (filter: IFilter) => ((entity: IEntity) => {
-      Object.keys(filter).every((field) => {
+      console.log(entity)
+      return Object.keys(filter).every((field) => {
         const value = filter[field]
+        console.log(field, value, entity[field])
         if (typeof value === 'function') {
           return value.call(entity[field], entity)
         } else {
@@ -126,6 +129,8 @@ class Processing {
         }
       })
     })
+
+    console.log(this.filters.entries)
 
     if (Object.keys(this.filters.rows).length > 0) {
       this.rows = this.rows.filter(filterFunc(this.filters.rows))

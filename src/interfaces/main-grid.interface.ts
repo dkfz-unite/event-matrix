@@ -85,8 +85,8 @@ export interface HistogramParams {
 export type IDomainEntity = IRow & IColumn
 
 export interface IStorageOptions {
-  minCellHeight?: number
-  prefix?: string
+  minCellHeight: number
+  prefix: string
   // eslint-disable-next-line no-unused-vars
   columnsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
   // eslint-disable-next-line no-unused-vars
@@ -97,7 +97,7 @@ export interface IStorageOptions {
 
 export type EventMatrixParams = {
   prefix: string
-  minCellHeight?: number
+  minCellHeight: number
   element: string
   entries: IEntry[]
 } & MainGridParams

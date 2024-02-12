@@ -44,7 +44,7 @@ class EventMatrix extends EventEmitter {
       .style('position', 'relative')
 
     const gridWidth = params.width ?? 500
-    const gridHeight = Math.max(this.processing.rows.length * storage.cellHeight, params.height ?? 500)
+    const gridHeight = Math.max(this.processing.rows.length * storage.minCellHeight, params.height ?? 500)
 
     storage.setCellDimensions(gridWidth / this.processing.columns.length, gridHeight / this.processing.rows.length)
 
@@ -75,22 +75,10 @@ class EventMatrix extends EventEmitter {
     return new EventMatrix(params)
   }
 
-  // public setLayer(layer: string | null) {
-  //   if (storage.layer !== layer) {
-  //     this.processing.setFilter('entries', {
-  //       layer,
-  //     })
-  //
-  //     this.createLookupTable()
-  //     this.computeColumnCounts()
-  //     this.computeRowCounts()
-  //     this.calculatePositions()
-  //
-  //     this.charts.forEach((chart) => {
-  //       chart.render()
-  //     })
-  //   }
-  // }
+  public setFilter(type: 'rows' | 'columns' | 'entries', filter: Record<string, any>) {
+    this.processing.setFilter(type, filter)
+    this.render()
+  }
 
   // /**
   //  * Instantiate charts
@@ -256,7 +244,7 @@ class EventMatrix extends EventEmitter {
    */
   public setHeatmap(active: boolean) {
     this.heatMapMode = active
-    this.mainGrid.setHeatmap(active)
+    this.gridRender.setHeatmap(active)
   }
 
   /**
@@ -268,7 +256,7 @@ class EventMatrix extends EventEmitter {
 
   public setGridLines(active: boolean) {
     this.drawGridLines = active
-    this.mainGrid.setGridLines(active)
+    this.gridRender.setGridLines(active)
   }
 
   public toggleGridLines() {
