@@ -265,7 +265,7 @@ class EventMatrix extends EventEmitter {
 
   public setCrosshair(active: boolean) {
     this.crosshairMode = active
-    this.mainGrid.setCrosshair(active)
+    this.gridRender.setCrosshair(active)
   }
 
   public toggleCrosshair() {
