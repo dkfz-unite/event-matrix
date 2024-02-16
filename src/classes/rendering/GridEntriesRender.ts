@@ -17,7 +17,8 @@ class GridEntriesRender {
   }
 
   public cleanOldEntries(activeEntryIds: string[]) {
-    for (const entryId of this.entries.keys()) {
+    const oldEntries = Array.from(this.entries.keys())
+    for (const entryId of oldEntries) {
       if (!activeEntryIds.includes(entryId)) {
         this.entries.get(entryId).remove()
         this.entries.delete(entryId)

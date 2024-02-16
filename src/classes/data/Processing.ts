@@ -28,8 +28,10 @@ class Processing {
   }
   private maxCellDepth = 0
 
+  private rowsPrevFieldName?: string
   private rowsPrevIndex?: string | number
   private rowsOrder?: ISortOrder
+  private columnsPrevFieldName?: string
   private columnsPrevIndex?: string | number
   private columnsOrder?: ISortOrder
 
@@ -37,6 +39,7 @@ class Processing {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
     this.entriesOriginal = entries
+    console.log('entriesOriginal', this.entriesOriginal)
 
     this.reset()
   }
@@ -45,8 +48,6 @@ class Processing {
     this.rows = [...this.rowsOriginal]
     this.columns = [...this.columnsOriginal]
     this.entries = [...this.entriesOriginal]
-    this.entriesMap = new Map()
-    this.entries.forEach((entry) => this.entriesMap.set(entry.id, entry))
 
     this.applyFilters()
     this.generateMatrix()
@@ -71,16 +72,27 @@ class Processing {
 
   public setFilter(type: 'rows' | 'columns' | 'entries', filterObj: IFilter) {
     this.filters[type] = filterObj
+
+    this.rows = [...this.rowsOriginal]
+    this.columns = [...this.columnsOriginal]
+    this.entries = [...this.entriesOriginal]
     this.applyFilters()
+    this.applySort()
+    this.generateMatrix()
+  }
+
+  private applySort() {
+    this.sortItems(this.rows, this.rowsPrevFieldName ?? 'id', this.rowsPrevIndex, this.rowsOrder)
+    this.sortItems(this.columns, this.columnsPrevFieldName ?? 'id', this.columnsPrevIndex, this.columnsOrder)
   }
 
   public getCroppedMatrix() {
     const {x, y, z} = this.frame.getSizes()
     const croppedMatrix: IMatrix = []
-    console.log('matrix:')
-    console.log(this.matrix)
-    console.log('frame sizes:')
-    console.log(x, y, z)
+    // console.log('matrix:')
+    // console.log(this.matrix)
+    // console.log('frame sizes:')
+    // console.log(x, y, z)
 
     for (let i = y[0]; i <= y[1]; i++) {
       const row = this.matrix[i]
@@ -117,29 +129,36 @@ class Processing {
   }
 
   private applyFilters() {
-    const filterFunc = (filter: IFilter) => ((entity: IEntity) => {
-      console.log(entity)
-      return Object.keys(filter).every((field) => {
-        const value = filter[field]
-        console.log(field, value, entity[field])
-        if (typeof value === 'function') {
-          return value.call(entity[field], entity)
-        } else {
-          return entity[field] === value
-        }
-      })
-    })
+    const filterFunc = (filter: IFilter) => {
+      return (entity: IEntity) => {
+        return Object.keys(filter).filter((field) => filter[field] !== undefined).every((field) => {
+          const value = filter[field]
+          if (typeof value === 'function') {
+            return value.call(entity[field], entity)
+          } else {
+            return entity[field] === value
+          }
+        })
+      }
+    }
 
-    console.log(this.filters.entries)
+    const rowsFilter = filterFunc(this.filters.rows)
+    const columnsFilter = filterFunc(this.filters.columns)
+    const entriesFilter = filterFunc(this.filters.entries)
+
+    // console.log('applyFilters')
+    // console.log(JSON.parse(JSON.stringify(this.filters.entries)))
+    // console.log(JSON.parse(JSON.stringify(this.entries)), entriesFilter(this.entries[0] ?? {}))
+    // console.log(JSON.parse(JSON.stringify(this.entries.filter(entriesFilter))))
 
     if (Object.keys(this.filters.rows).length > 0) {
-      this.rows = this.rows.filter(filterFunc(this.filters.rows))
+      this.rows = this.rows.filter(rowsFilter)
     }
     if (Object.keys(this.filters.columns).length > 0) {
-      this.columns = this.columns.filter(filterFunc(this.filters.columns))
+      this.columns = this.columns.filter(columnsFilter)
     }
     if (Object.keys(this.filters.entries).length > 0) {
-      this.entries = this.entries.filter(filterFunc(this.filters.entries))
+      this.entries = this.entries.filter(entriesFilter)
     }
   }
 
@@ -204,6 +223,7 @@ class Processing {
   }
 
   public sortRows(fieldName = 'id', index?: string | number) {
+    this.rowsPrevFieldName = fieldName
     if (index === undefined || index === this.rowsPrevIndex) {
       this.rowsOrder = this.toggleOrder(this.rowsOrder)
     }
@@ -212,6 +232,7 @@ class Processing {
   }
 
   public sortColumns(fieldName = 'id', index?: string | number) {
+    this.columnsPrevFieldName = fieldName
     if (index === undefined || index === this.columnsPrevIndex) {
       this.columnsOrder = this.toggleOrder(this.columnsOrder)
     }

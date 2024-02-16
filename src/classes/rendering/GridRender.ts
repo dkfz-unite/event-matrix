@@ -147,6 +147,7 @@ class GridRender {
 
   private drawGrid() {
     this.gridRowsRender.draw(this.matrix)
+    this.gridRowsRender.cleanOldRows(this.matrix.map((mRow) => mRow.id))
   }
 
   private removeGridEvents() {

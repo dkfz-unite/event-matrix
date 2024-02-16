@@ -30,7 +30,8 @@ class GridCellsRender {
   }
 
   public cleanOldCells(activeColumnIds: string[]) {
-    for (const cellId of this.gridEntitiesRenders.keys()) {
+    const oldCells = Array.from(this.gridEntitiesRenders.keys())
+    for (const cellId of oldCells) {
       if (!activeColumnIds.includes(cellId)) {
         this.gridEntitiesRenders.get(cellId).destroy()
       }

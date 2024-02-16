@@ -22,7 +22,8 @@ class GridRowsRender {
   }
 
   public cleanOldRows(activeRowIds: string[]) {
-    for (const rowId of this.rows.keys()) {
+    const oldRows = Array.from(this.rows.keys())
+    for (const rowId of oldRows) {
       if (!activeRowIds.includes(rowId)) {
         this.gridCellsRenders.get(rowId).destroy()
         this.rows.get(rowId).remove()
