@@ -82,7 +82,8 @@ class GridEntriesRender {
   }
 
   destroy() {
-    for (const entryId of this.entries.keys()) {
+    const entryIds = Array.from(this.entries.keys())
+    for (const entryId of entryIds) {
       this.entries.get(entryId).remove()
       this.entries.delete(entryId)
     }

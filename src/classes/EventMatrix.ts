@@ -44,15 +44,11 @@ class EventMatrix extends EventEmitter {
       .style('position', 'relative')
 
     const gridWidth = params.width ?? 500
-    const gridHeight = Math.max(this.processing.rows.length * storage.minCellHeight, params.height ?? 500)
-    const processingMatrix = this.processing.getCroppedMatrix()
-    storage.setCellDimensions(gridWidth / (processingMatrix[0]?.columns ?? []).length, gridHeight / processingMatrix.length)
+    const gridHeight = params.height ?? 500
 
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
-      const processingMatrix = this.processing.getCroppedMatrix()
-      storage.setCellDimensions(gridWidth / (processingMatrix[0]?.columns ?? []).length, gridHeight / processingMatrix.length)
       this.gridRender.render()
     })
 

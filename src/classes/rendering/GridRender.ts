@@ -40,6 +40,8 @@ class GridRender {
 
   public render() {
     this.matrix = this.processing.getCroppedMatrix()
+    storage.setCellDimensions(this.width / (this.matrix[0]?.columns ?? []).length, this.height / this.matrix.length)
+
     this.prepareContainer()
 
     eventBus.emit(renderEvents.RENDER_GRID_START)
@@ -110,6 +112,7 @@ class GridRender {
       }
       const rowId = target.dataset.row
       const columnId = target.dataset.column
+      console.log(rowId, columnId, entryId)
       const row = this.matrix.find((mRow) => mRow.id === rowId)
       const column = row.columns.find((mCol) => mCol.id === columnId)
 
@@ -143,6 +146,7 @@ class GridRender {
 
   private drawGrid() {
     this.gridRowsRender.draw(this.matrix)
+    console.log(this.matrix.map((mRow) => mRow.id))
     this.gridRowsRender.cleanOldRows(this.matrix.map((mRow) => mRow.id))
   }
 

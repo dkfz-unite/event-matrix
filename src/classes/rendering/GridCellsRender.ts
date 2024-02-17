@@ -53,8 +53,10 @@ class GridCellsRender {
   }
 
   destroy() {
-    for (const render of this.gridEntitiesRenders.values()) {
-      render.destroy()
+    const rendererIds = Array.from(this.gridEntitiesRenders.keys())
+    for (const rendererId of rendererIds) {
+      this.gridEntitiesRenders.get(rendererId).destroy()
+      this.gridEntitiesRenders.delete(rendererId)
     }
   }
 }

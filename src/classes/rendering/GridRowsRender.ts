@@ -26,6 +26,7 @@ class GridRowsRender {
     for (const rowId of oldRows) {
       if (!activeRowIds.includes(rowId)) {
         this.gridCellsRenders.get(rowId).destroy()
+        this.gridCellsRenders.delete(rowId)
         this.rows.get(rowId).remove()
         this.rows.delete(rowId)
       }
@@ -122,8 +123,10 @@ class GridRowsRender {
 
 
   destroy() {
-    for (const rowId of this.rows.keys()) {
+    const rowIds = Array.from(this.rows.keys())
+    for (const rowId of rowIds) {
       this.gridCellsRenders.get(rowId).destroy()
+      this.gridCellsRenders.delete(rowId)
       this.rows.get(rowId).remove()
       this.rows.delete(rowId)
     }
