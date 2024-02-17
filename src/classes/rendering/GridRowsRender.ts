@@ -105,6 +105,7 @@ class GridRowsRender {
     } else {
       rowElement
         .attr('transform', `translate(0,${index * storage.cellHeight})`)
+        .attr('height', storage.cellHeight)
         .attr('style', () => {
           if (storage.cellHeight < storage.minCellHeight) {
             return 'display: none;'

@@ -27,6 +27,9 @@ class GridEntriesRender {
   }
 
   public draw(matrixEntries: IMatrixEntry[], indexX: number) {
+    if (matrixEntries.length === 0) {
+      return
+    }
     const entryHeight = storage.heatMap ? storage.cellHeight : (storage.cellHeight / matrixEntries.length)
     for (let j = 0; j < matrixEntries.length; j++) {
       const matrixEntry = matrixEntries[j]
@@ -35,9 +38,10 @@ class GridEntriesRender {
   }
 
   public drawEntry(matrixEntry: IMatrixEntry, entryHeight: number, indexX: number, indexY: number) {
-    // console.log(matrixEntry, entryHeight, indexX, indexY)
+    console.log(matrixEntry, entryHeight, indexX, indexY)
     const entryId = matrixEntry.id
     let entryElement = this.entries.get(entryId)
+    console.log(entryElement)
 
     const heatMapColor = storage.heatMapColor
     const heatMap = storage.heatMap
