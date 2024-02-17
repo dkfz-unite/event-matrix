@@ -2,7 +2,7 @@ import {ScaleBand} from 'd3-scale'
 import {select, Selection} from 'd3-selection'
 import EventEmitter from 'eventemitter3'
 import {EventMatrixParams} from '../interfaces/main-grid.interface'
-import {eventBus, renderEvents} from '../utils/event-bus'
+import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import Processing from './data/Processing'
 import MainGrid from './MainGrid'
@@ -45,10 +45,17 @@ class EventMatrix extends EventEmitter {
 
     const gridWidth = params.width ?? 500
     const gridHeight = Math.max(this.processing.rows.length * storage.minCellHeight, params.height ?? 500)
-
-    storage.setCellDimensions(gridWidth / this.processing.columns.length, gridHeight / this.processing.rows.length)
+    const processingMatrix = this.processing.getCroppedMatrix()
+    storage.setCellDimensions(gridWidth / (processingMatrix[0]?.columns ?? []).length, gridHeight / processingMatrix.length)
 
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
+
+    eventBus.on(innerEvents.INNER_UPDATE, () => {
+      const processingMatrix = this.processing.getCroppedMatrix()
+      storage.setCellDimensions(gridWidth / (processingMatrix[0]?.columns ?? []).length, gridHeight / processingMatrix.length)
+      this.gridRender.render()
+    })
+
     // this.bottomDescriptionRender = new BottomDescriptionRender()
     // this.rightDescriptionRender = new RightDescriptionRender()
     // this.topHistogramRender = new TopHistogramRender()

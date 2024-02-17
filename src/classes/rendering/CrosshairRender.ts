@@ -64,6 +64,10 @@ class CrosshairRender {
     }
   }
 
+  public setVisible(visible: boolean) {
+    this.visible = visible
+  }
+
   public render() {
     this.verticalCross = this.container.append('line')
       .attr('class', `${storage.prefix}vertical-cross`)
@@ -183,10 +187,14 @@ class CrosshairRender {
     const y1 = Number(this.selectionRegion.attr('y'))
     const y2 = y1 + Number(this.selectionRegion.attr('height'))
 
-    const columnIndexStart = Math.min(x1 / storage.cellWidth)
-    const columnIndexEnd = Math.min(x2 / storage.cellWidth)
-    const rowIndexStart = Math.min(y1 / storage.cellHeight)
-    const rowIndexEnd = Math.min(y2 / storage.cellHeight)
+    console.log(x1, x2, y1, y2)
+
+    const columnIndexStart = Math.floor(x1 / storage.cellWidth)
+    const columnIndexEnd = Math.floor(x2 / storage.cellWidth)
+    const rowIndexStart = Math.floor(y1 / storage.cellHeight)
+    const rowIndexEnd = Math.floor(y2 / storage.cellHeight)
+    console.log(storage.cellWidth, storage.cellHeight)
+    console.log(columnIndexStart, columnIndexEnd, rowIndexStart, rowIndexEnd)
 
     this.processing.getFrame().setSizes([columnIndexStart, columnIndexEnd], [rowIndexStart, rowIndexEnd])
 

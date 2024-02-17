@@ -49,16 +49,10 @@ class GridRender {
     } else {
       this.gridLinesRender.destroy()
     }
-    if (this.crosshair) {
-      this.crosshairRender.render()
-    } else {
-      this.crosshairRender.destroy()
-    }
     this.drawGrid()
     this.addGridEvents()
+    this.crosshairRender.render()
     eventBus.emit(renderEvents.RENDER_GRID_END)
-
-    // this.defineCrosshairBehaviour()
   }
 
   private prepareContainer() {
@@ -261,6 +255,7 @@ class GridRender {
 
   public setCrosshair(active: boolean) {
     this.crosshair = active
+    this.crosshairRender.setVisible(active)
   }
 
   // /**
