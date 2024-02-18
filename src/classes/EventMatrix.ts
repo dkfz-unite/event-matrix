@@ -275,6 +275,12 @@ class EventMatrix extends EventEmitter {
     this.setCrosshair(!this.crosshairMode)
   }
 
+  public shiftFrame(x: number, y: number) {
+    this.processing.getFrame().shiftFrameX(x)
+    this.processing.getFrame().shiftFrameY(y)
+    eventBus.emit(innerEvents.INNER_UPDATE, true)
+  }
+
   // /**
   //  * Computes the number of observations for a given donor.
   //  */
