@@ -29,13 +29,17 @@ class Frame {
   }
 
   public setSizes(x: [number, number], y: [number, number], z?: [number, number]) {
-    this.xStart = x[0]
-    this.xEnd = x[1]
-    this.yStart = y[0]
-    this.yEnd = y[1]
+    // It's not an error - we set sizes when zoom in, especially when zoom in inside other zoom, so we get only relative coords. We need to crwate absolute coords from them
+    const leftShift = this.xStart
+    const topShift = this.yStart
+    const frontShift = this.zStart
+    this.xStart = leftShift + x[0]
+    this.xEnd = leftShift + x[1]
+    this.yStart = topShift + y[0]
+    this.yEnd = topShift + y[1]
     if (z !== undefined) {
-      this.zStart = z[0]
-      this.zEnd = z[1]
+      this.zStart = frontShift + z[0]
+      this.zEnd = frontShift + z[1]
     }
   }
 
