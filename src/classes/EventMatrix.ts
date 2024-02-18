@@ -281,6 +281,16 @@ class EventMatrix extends EventEmitter {
     eventBus.emit(innerEvents.INNER_UPDATE, true)
   }
 
+  public zoomOut(step: number) {
+    this.processing.getFrame().incrementFrameSize(step)
+    eventBus.emit(innerEvents.INNER_UPDATE, true)
+  }
+
+  public zoomIn(step: number) {
+    this.processing.getFrame().decrementFrameSize(step)
+    eventBus.emit(innerEvents.INNER_UPDATE, true)
+  }
+
   // /**
   //  * Computes the number of observations for a given donor.
   //  */
