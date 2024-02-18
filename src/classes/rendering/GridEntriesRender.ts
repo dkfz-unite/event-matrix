@@ -38,10 +38,8 @@ class GridEntriesRender {
   }
 
   public drawEntry(matrixEntry: IMatrixEntry, entryHeight: number, indexX: number, indexY: number) {
-    console.log(matrixEntry, entryHeight, indexX, indexY)
     const entryId = matrixEntry.id
     let entryElement = this.entries.get(entryId)
-    console.log(entryElement)
 
     const heatMapColor = storage.heatMapColor
     const heatMap = storage.heatMap
@@ -59,6 +57,7 @@ class GridEntriesRender {
     if (!entryElement) {
       // Draw the entries inside the cell container
       entryElement = this.container
+        .select('svg')
         .append('rect')
         .attr('width', storage.cellWidth)
         .attr('height', entryHeight)

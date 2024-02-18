@@ -54,15 +54,22 @@ class GridRowsRender {
 
     if (!rowElement) {
       rowElement = this.container
-        .append('svg')
+        .append('g')
         .attr('id', `grid-row-${matrixRow.id}`)
+        .attr('class', `${storage.prefix}grid__row-wrapper`)
+        .attr('style', `transform:translateY(${index * storage.cellHeight}px)`)
+
+      rowElement
+        .append('svg')
+        .attr('version', '2.0')
         .attr('height', storage.cellHeight)
         .attr('class', `${storage.prefix}row-row ${storage.prefix}grid__row ${storage.prefix}grid-row`)
-        .attr('transform', `translate(0,${index * storage.cellHeight})`)
+      // .attr('y', index * storage.cellHeight)
 
       this.rows.set(matrixRow.id, rowElement)
 
       rowElement
+        .select('svg')
         .append('text')
         .attr('class', `${storage.prefix}${matrixRow.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font ${storage.prefix}grid-row__label`)
         .attr('data-row', matrixRow.id)
@@ -104,8 +111,15 @@ class GridRowsRender {
         })
     } else {
       rowElement
-        .attr('transform', `translate(0,${index * storage.cellHeight})`)
+        .attr('style', `transform:translateY(${index * storage.cellHeight}px)`)
+
+      rowElement
+        .select('svg')
         .attr('height', storage.cellHeight)
+
+      const text = rowElement.select(`.${storage.prefix}row-label`)
+      text
+        .attr('y', storage.cellHeight / 2)
         .attr('style', () => {
           if (storage.cellHeight < storage.minCellHeight) {
             return 'display: none;'

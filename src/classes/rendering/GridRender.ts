@@ -60,6 +60,7 @@ class GridRender {
   private prepareContainer() {
     if (!this.svg) {
       this.svg = this.wrapper.append('svg')
+        .attr('version', '2.0')
         .attr('class', `${storage.prefix}maingrid-svg`)
         .attr('id', `${storage.prefix}maingrid-svg`)
         .attr('width', this.width + 80)
@@ -112,7 +113,6 @@ class GridRender {
       }
       const rowId = target.dataset.row
       const columnId = target.dataset.column
-      console.log(rowId, columnId, entryId)
       const row = this.matrix.find((mRow) => mRow.id === rowId)
       const column = row.columns.find((mCol) => mCol.id === columnId)
 
@@ -146,7 +146,6 @@ class GridRender {
 
   private drawGrid() {
     this.gridRowsRender.draw(this.matrix)
-    console.log(this.matrix.map((mRow) => mRow.id))
     this.gridRowsRender.cleanOldRows(this.matrix.map((mRow) => mRow.id))
   }
 

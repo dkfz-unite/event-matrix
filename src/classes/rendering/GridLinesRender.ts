@@ -21,56 +21,75 @@ class GridLinesRender {
   }
 
   public render() {
-    for (let i = 0; i < this.processing.columns.length; i++) {
+    const matrix = this.processing.getCroppedMatrix()
+    const columnsCount = matrix.length > 0 ? matrix[0].columns.length : 0
+    const rowsCount = matrix.length
+    // console.log('draw some columns. Before:')
+    // console.log([...this.columns])
+    for (let i = 0; i < columnsCount; i++) {
       let column = this.columns[i]
       if (!column) {
         column = this.container
           .append('line')
-          .attr('x1', i * storage.cellWidth)
-          .attr('x2', i * storage.cellWidth)
+          .attr('id', `grid-column-${i}`)
+          .attr('x1', 0)
+          .attr('x2', 0)
+          .attr('style', `transform:translateX(${i * storage.cellWidth}px)`)
           .attr('y1', 0)
           .attr('y2', this.height)
           .attr('class', `${storage.prefix}column-column ${storage.prefix}gridlines__column ${storage.prefix}gridlines-column`)
+          .attr('data-num', i)
           .style('pointer-events', 'none')
         this.columns.push(column)
       } else {
         column
-          .attr('x1', i * storage.cellWidth)
-          .attr('x2', i * storage.cellWidth)
+          // .attr('x1', i * storage.cellWidth)
+          // .attr('x2', i * storage.cellWidth)
+          .attr('style', `transform:translateX(${i * storage.cellWidth}px)`)
           .attr('y2', this.height)
       }
     }
-    if (this.processing.columns.length < this.columns.length) {
-      for (let i = this.processing.columns.length - 1; i < this.columns.length; i++) {
+    // console.log('draw some columns. After:')
+    // console.log([...this.columns])
+    // console.log(columnsCount)
+    if (columnsCount < this.columns.length) {
+      for (let i = columnsCount; i < this.columns.length; i++) {
+        // console.log(`remove obsolete column ${i}: `, JSON.stringify(this.columns[i]))
         this.columns[i].remove()
       }
-      this.columns.splice(this.processing.columns.length - 1, this.columns.length - this.processing.columns.length)
+      // console.log(`splice ${this.columns.length - columnsCount} from ${columnsCount}`)
+      this.columns.splice(columnsCount, this.columns.length - columnsCount)
     }
+    // console.log([...this.columns])
 
-    for (let i = 0; i < this.processing.rows.length; i++) {
+    for (let i = 0; i < rowsCount; i++) {
       let line = this.lines[i]
       if (!line) {
         line = this.container
           .append('line')
+          .attr('id', `grid-row-${i}`)
           .attr('x1', 0)
           .attr('x2', this.width)
-          .attr('y1', i * storage.cellHeight)
-          .attr('y2', i * storage.cellHeight)
+          .attr('y1', 0)
+          .attr('y2', 0)
+          .attr('style', `transform:translateY(${i * storage.cellHeight}px)`)
           .attr('class', `${storage.prefix}gridlines__row ${storage.prefix}gridlines-row`)
+          .attr('data-num', i)
           .style('pointer-events', 'none')
         this.lines.push(line)
       } else {
         line
           .attr('x2', this.width)
-          .attr('y1', i * storage.cellHeight)
-          .attr('y2', i * storage.cellHeight)
+          .attr('style', `transform:translateY(${i * storage.cellHeight}px)`)
+        // .attr('y1', i * storage.cellHeight)
+        // .attr('y2', i * storage.cellHeight)
       }
     }
-    if (this.processing.rows.length < this.lines.length) {
-      for (let i = this.processing.rows.length - 1; i < this.lines.length; i++) {
+    if (rowsCount < this.lines.length) {
+      for (let i = rowsCount; i < this.lines.length; i++) {
         this.lines[i].remove()
       }
-      this.lines.splice(this.processing.rows.length - 1, this.lines.length - this.processing.rows.length)
+      this.lines.splice(rowsCount, this.lines.length - rowsCount)
     }
   }
 

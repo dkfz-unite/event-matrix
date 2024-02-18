@@ -30,7 +30,7 @@ export class Storage {
 
   setCellDimensions(width: number, height: number) {
     this.cellWidth = width
-    this.cellHeight = Math.max(height, this.minCellHeight)
+    this.cellHeight = height
   }
 
   public setOptions({
