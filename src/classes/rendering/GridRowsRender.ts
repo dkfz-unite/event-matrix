@@ -102,7 +102,7 @@ class GridRowsRender {
           if (!rowId) {
             return
           }
-          this.processing.sortColumns('countByRow', parseInt(rowId))
+          this.processing.sortMatrixColumns(rowId)
           eventBus.emit(innerEvents.INNER_UPDATE, false)
           eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
             target,

@@ -75,9 +75,19 @@ class Processing {
     this.rows = [...this.rowsOriginal]
     this.columns = [...this.columnsOriginal]
     this.entries = [...this.entriesOriginal]
+    this.makeCalculations()
     this.applyFilters()
     this.applySort()
     this.generateMatrix()
+  }
+
+  private makeCalculations() {
+    this.entries.forEach((entry) => {
+      // const rowId = entry.rowId
+      // const columnId = entry.columnId
+      //
+      // const row = this.rows.find((rowId))
+    })
   }
 
   private applySort() {
@@ -188,6 +198,7 @@ class Processing {
       if (!columnMatrix) {
         return
       }
+
       columnMatrix.entries.push({
         id,
         data: entry,
@@ -215,6 +226,39 @@ class Processing {
 
       return order === 'ASC' ? aVal.toString().localeCompare(bVal) : bVal.toString().localeCompare(aVal)
     })
+  }
+
+  public sortMatrixRows(columnId: string) {
+    if (this.rowsPrevIndex === columnId) {
+      this.rowsOrder = this.toggleOrder(this.rowsOrder)
+    }
+    this.rowsPrevIndex = columnId
+    const columnIndex = this.matrix.length > 0 ? this.matrix[0].columns.findIndex((c) => c.id === columnId) : -1
+    if (columnIndex !== -1) {
+      this.matrix.sort((mRowA, mRowB) => {
+        const delta = mRowA.columns[columnIndex].entries.length - mRowB.columns[columnIndex].entries.length
+        return this.rowsOrder === 'ASC' ? delta : -delta
+      })
+    }
+  }
+
+  public sortMatrixColumns(rowId: string) {
+    if (this.columnsPrevIndex === rowId) {
+      this.columnsOrder = this.toggleOrder(this.columnsOrder)
+    }
+    this.columnsPrevIndex = rowId
+    const rowIndex = this.matrix.findIndex((mRow) => mRow.id === rowId)
+    const columnIndexOrders = this.matrix[rowIndex].columns.sort((mColA, mColB) => {
+      const delta = mColA.entries.length - mColB.entries.length
+      return this.columnsOrder === 'ASC' ? delta : -delta
+    }).map((mCol) => mCol.id)
+
+    for (const mRow of this.matrix) {
+      const arrayCopy = [...mRow.columns]
+      for (let i = 0; i < columnIndexOrders.length; i++) {
+        mRow.columns[i] = arrayCopy.find((col) => col.id === columnIndexOrders[i])
+      }
+    }
   }
 
   public sortRows(fieldName = 'id', index?: string | number) {
