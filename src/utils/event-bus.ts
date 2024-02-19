@@ -24,6 +24,8 @@ export enum publicEvents {
 export enum innerEvents {
   INNER_RESIZE = 'inner:resize',
   INNER_UPDATE = 'inner:update',
+  INNER_EVENTS_LOCK = 'inner:events:lock',
+  INNER_EVENTS_UNLOCK = 'inner:events:unlock',
 }
 
 export enum renderEvents {

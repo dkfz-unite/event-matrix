@@ -179,6 +179,7 @@ class CrosshairRender {
     if (!this.visible || this.selectionRegion === undefined) {
       return
     }
+
     event.stopPropagation()
 
     const x1 = Number(this.selectionRegion.attr('x'))
@@ -196,6 +197,7 @@ class CrosshairRender {
 
     this.selectionRegion.remove()
     delete this.selectionRegion
+    this.setVisible(false)
 
     eventBus.emit(publicEvents.GRID_SELECTION_FINISHED, {
       target: event.target,

@@ -1,6 +1,6 @@
 import {select, Selection} from 'd3-selection'
 import {IEnhancedEvent, IMatrix} from '../../interfaces/main-grid.interface'
-import {eventBus, publicEvents, renderEvents} from '../../utils/event-bus'
+import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
 import CrosshairRender from './CrosshairRender'
@@ -105,10 +105,14 @@ class GridRender {
     this.removeGridEvents()
 
     this.svg.on('mouseover', (event: IEnhancedEvent) => {
+      if (this.crosshair) {
+        return
+      }
+
       const target = event.target
       const entryId = target.dataset.entry
 
-      if (!entryId || this.crosshair) {
+      if (!entryId) {
         return
       }
       const rowId = target.dataset.row
@@ -141,6 +145,21 @@ class GridRender {
         columnId,
         entryId,
       })
+    })
+
+    eventBus.on(innerEvents.INNER_EVENTS_LOCK, () => {
+      const hasClass = this.svg.attr('class').split(' ').includes(`${storage.prefix}maingrid-svg--locked`)
+      if (!hasClass) {
+        this.svg.attr('class', `${this.svg.attr('class')} ${storage.prefix}maingrid-svg--locked`)
+      }
+    })
+    eventBus.on(innerEvents.INNER_EVENTS_UNLOCK, () => {
+      const classes = this.svg.attr('class').split(' ')
+      const classIndex = classes.indexOf(`${storage.prefix}maingrid-svg--locked`)
+      if (classIndex !== -1) {
+        classes.splice(classIndex, 1)
+        this.svg.attr('class', classes.join(' '))
+      }
     })
   }
 
@@ -258,7 +277,13 @@ class GridRender {
 
   public setCrosshair(active: boolean) {
     this.crosshair = active
+    // hack, until I find the way to handle entries events while moving the crosshair
     this.crosshairRender.setVisible(active)
+    if (active) {
+      eventBus.emit(innerEvents.INNER_EVENTS_LOCK)
+    } else {
+      eventBus.emit(innerEvents.INNER_EVENTS_UNLOCK)
+    }
   }
 
   // /**
