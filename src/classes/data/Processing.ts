@@ -48,6 +48,8 @@ class Processing {
     this.columns = [...this.columnsOriginal]
     this.entries = [...this.entriesOriginal]
 
+    this.makeCalculations()
+    this.applyDefaultSort()
     this.applyFilters()
     this.generateMatrix()
     this.generateFrame()
@@ -82,11 +84,24 @@ class Processing {
   }
 
   private makeCalculations() {
+    this.rows.forEach((row) => {
+      row.total = 0
+    })
+    this.columns.forEach((column) => {
+      column.total = 0
+    })
+    const rowsMap = new Map(Object.entries(this.rows).map((entry) => ([entry[1].id, entry[1]])))
+    const columnsMap = new Map(Object.entries(this.columns).map((entry) => ([entry[1].id, entry[1]])))
+
     this.entries.forEach((entry) => {
-      // const rowId = entry.rowId
-      // const columnId = entry.columnId
-      //
-      // const row = this.rows.find((rowId))
+      const row = rowsMap.get(entry.rowId)
+      if (row) {
+        row.total++
+      }
+      const column = columnsMap.get(entry.columnId)
+      if (column) {
+        column.total++
+      }
     })
   }
 
@@ -224,7 +239,9 @@ class Processing {
         return 0
       }
 
-      return order === 'ASC' ? aVal.toString().localeCompare(bVal) : bVal.toString().localeCompare(aVal)
+      const delta = aVal > bVal ? 1 : -1
+
+      return order === 'ASC' ? delta : -delta
     })
   }
 
@@ -284,6 +301,13 @@ class Processing {
       this.instance = new this(rows, columns, entries)
     }
     return this.instance
+  }
+
+  public applyDefaultSort() {
+    this.rowsOrder = 'ASC'
+    this.columnsOrder = 'ASC'
+    this.sortRows('total')
+    this.sortColumns('total')
   }
 
   public static getInstance(): Processing {

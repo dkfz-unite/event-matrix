@@ -172,75 +172,13 @@ class EventMatrix extends EventEmitter {
     })
   }
 
-  // /**
-  //  * Updates all charts
-  //  */
-  // private update() {
-  //   this.calculatePositions()
-  //   this.charts.forEach((chart) => {
-  //     chart.update(this.x, this.y)
-  //   })
-  // }
-
-  // /**
-  //  * Triggers a resize of EventMatrix to desired width and height.
-  //  */
-  // public resize(width: number, height: number, fullscreen: boolean) {
-  //   this.fullscreen = fullscreen
-  //   this.mainGrid.fullscreen = fullscreen
-  //   this.width = Number(width)
-  //   this.height = Number(height)
-  //
-  //   if (this.height / this.processing.getRows().length < storage.minCellHeight) {
-  //     this.height = this.processing.getRows().length * storage.minCellHeight
-  //   }
-  //   this.calculatePositions()
-  //   this.charts.forEach((chart) => {
-  //     chart.fullscreen = fullscreen
-  //     chart.resize(this.width, this.height, this.x, this.y)
-  //   })
-  // }
-
-  // /**
-  //  * Sorts donors by score
-  //  */
-  // private sortColumnsByScores() {
-  //   this.processing.getColumns().sort((columnA: IColumn, columnB: IColumn) => {
-  //     const scoreA = Object.values(columnA.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
-  //     const scoreB = Object.values(columnB.countByRow).reduce((sum, num) => (sum + (num ?? 0)), 0)
-  //     if (scoreA < scoreB) {
-  //       return 1
-  //     } else if (scoreA > scoreB) {
-  //       return -1
-  //     } else {
-  //       return columnA.id >= columnB.id ? 1 : -1
-  //     }
-  //   })
-  // }
-  //
-  // private sortRowsByScores() {
-  //   this.processing.getRows().sort((rowA: IRow, rowB: IRow) => {
-  //     const scoreA = Object.values(rowA.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
-  //     const scoreB = Object.values(rowB.countByColumn).reduce((sum, num) => (sum + (num ?? 0)), 0)
-  //     if (scoreA < scoreB) {
-  //       return 1
-  //     } else if (scoreA > scoreB) {
-  //       return -1
-  //     } else {
-  //       return rowA.id >= rowB.id ? 1 : -1
-  //     }
-  //   })
-  // }
-
-  // /**
-  //  * Sorts genes by scores and recomputes and sorts donors.
-  //  * Clusters towards top left corner of grid.
-  //  */
-  // public cluster() {
-  //   this.sortColumnsByScores()
-  //   this.sortRowsByScores()
-  //   this.update()
-  // }
+  /**
+   * Updates all charts
+   */
+  public reset() {
+    this.processing.reset()
+    eventBus.emit(innerEvents.INNER_UPDATE)
+  }
 
   /**
    * set EventMatrix between heatmap mode and regular mode showing individual value types.
@@ -291,48 +229,6 @@ class EventMatrix extends EventEmitter {
     eventBus.emit(innerEvents.INNER_UPDATE, true)
   }
 
-  // /**
-  //  * Computes the number of observations for a given donor.
-  //  */
-  // private computeColumnCounts() {
-  //   for (const column of this.processing.getColumns()) {
-  //     const rows = Object.values(storage.lookupTable[column.id] ?? {})
-  //     column.count = 0
-  //     for (const item of rows) {
-  //       column.count += item.length
-  //     }
-  //
-  //     column.countByRow = {}
-  //     for (const obs of this.processing.getEntries()) {
-  //       if (column.id === obs.columnId) {
-  //         if (column.countByRow[obs.rowId] === undefined) {
-  //           column.countByRow[obs.rowId] = 0
-  //         }
-  //         column.countByRow[obs.rowId]++
-  //       }
-  //     }
-  //   }
-  // }
-
-  // /**
-  //  * Computes the number of entries for a given row.
-  //  */
-  // private computeRowCounts() {
-  //   for (const row of this.processing.getRows()) {
-  //     row.count = 0
-  //     row.countByColumn = {}
-  //     for (const obs of this.processing.getEntries()) {
-  //       if (row.id === obs.rowId) {
-  //         row.count++
-  //         if (row.countByColumn[obs.columnId] === undefined) {
-  //           row.countByColumn[obs.columnId] = 0
-  //         }
-  //         row.countByColumn[obs.columnId]++
-  //       }
-  //     }
-  //   }
-  // }
-
   /**
    *  Cleanup function to ensure the svg and any bindings are removed from the dom.
    */
@@ -340,19 +236,6 @@ class EventMatrix extends EventEmitter {
     this.gridRender.destroy()
     this.container.remove()
   }
-
-  // public reload() {
-  //   this.charts.forEach((chart) => {
-  //     chart.destroy()
-  //   })
-  //   storage.reset()
-  //   this.container = select(this.params.element || 'body')
-  //     .append('div')
-  //     .attr('class', `${storage.prefix}container`)
-  //     .style('position', 'relative')
-  //   this.initCharts(true)
-  //   this.render()
-  // }
 }
 
 export default EventMatrix
