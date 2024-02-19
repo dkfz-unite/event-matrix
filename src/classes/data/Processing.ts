@@ -48,9 +48,9 @@ class Processing {
     this.columns = [...this.columnsOriginal]
     this.entries = [...this.entriesOriginal]
 
+    this.applyFilters()
     this.makeCalculations()
     this.applyDefaultSort()
-    this.applyFilters()
     this.generateMatrix()
     this.generateFrame()
   }
@@ -77,8 +77,8 @@ class Processing {
     this.rows = [...this.rowsOriginal]
     this.columns = [...this.columnsOriginal]
     this.entries = [...this.entriesOriginal]
-    this.makeCalculations()
     this.applyFilters()
+    this.makeCalculations()
     this.applySort()
     this.generateMatrix()
   }

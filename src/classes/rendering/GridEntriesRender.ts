@@ -26,14 +26,14 @@ class GridEntriesRender {
     }
   }
 
-  public draw(matrixEntries: IMatrixEntry[], indexX: number) {
+  public draw(matrixEntries: IMatrixEntry[]) {
     if (matrixEntries.length === 0) {
       return
     }
     const entryHeight = storage.heatMap ? storage.cellHeight : (storage.cellHeight / matrixEntries.length)
     for (let j = 0; j < matrixEntries.length; j++) {
       const matrixEntry = matrixEntries[j]
-      this.drawEntry(matrixEntry, entryHeight, indexX, j)
+      this.drawEntry(matrixEntry, entryHeight, 0, j)
     }
   }
 
@@ -43,7 +43,7 @@ class GridEntriesRender {
 
     const heatMapColor = storage.heatMapColor
     const heatMap = storage.heatMap
-    const entryX = 80 + indexX * storage.cellWidth
+    const entryX = 0
     const entryY = heatMap ? 0 : indexY * entryHeight
 
     let color = heatMapColor
@@ -57,7 +57,6 @@ class GridEntriesRender {
     if (!entryElement) {
       // Draw the entries inside the cell container
       entryElement = this.container
-        .select('svg')
         .append('rect')
         .attr('width', storage.cellWidth)
         .attr('height', entryHeight)

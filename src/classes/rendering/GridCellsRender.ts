@@ -1,5 +1,6 @@
-import {Selection} from 'd3-selection'
+import {BaseType, Selection} from 'd3-selection'
 import {IMatrixColumn} from '../../interfaces/main-grid.interface'
+import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
 import GridEntriesRender from './GridEntriesRender'
 
@@ -8,16 +9,13 @@ class GridCellsRender {
   parentId: string
   processing: Processing
   gridEntitiesRenders: Map<string, GridEntriesRender>
+  cells: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
 
   constructor(parentId: string, container: Selection<SVGGElement, unknown, HTMLElement, unknown>, options: any) {
     this.parentId = parentId
     this.container = container
     this.processing = Processing.getInstance()
     this.gridEntitiesRenders = new Map()
-  }
-
-  public setContainer(container: Selection<SVGGElement, unknown, HTMLElement, unknown>) {
-    this.container = container
   }
 
   private getChildrenRender(parentId: string, container) {
@@ -34,6 +32,9 @@ class GridCellsRender {
     for (const cellId of oldCells) {
       if (!activeColumnIds.includes(cellId)) {
         this.gridEntitiesRenders.get(cellId).destroy()
+        this.gridEntitiesRenders.delete(cellId)
+        this.cells.get(cellId).remove()
+        this.cells.delete(cellId)
       }
     }
   }
@@ -47,16 +48,35 @@ class GridCellsRender {
 
   public drawCell(matrixColumn: IMatrixColumn, index: number) {
     const cellId = matrixColumn.id
-    const render = this.getChildrenRender(cellId, this.container)
-    render.draw(matrixColumn.entries, index)
+    let cellElement = this.cells.get(cellId)
+
+    if (!cellElement) {
+      cellElement = this.container
+        .select('svg')
+        .append('g')
+        .attr('id', `grid-row-${this.parentId}-cell-${cellId}`)
+        .attr('class', `${storage.prefix}grid__row-cell ${storage.prefix}grid-row__cell ${storage.prefix}grid-cell`)
+        .attr('style', `transform:translateX(${80 + index * storage.cellWidth}px)`)
+
+      this.cells.set(cellId, cellElement)
+    } else {
+      cellElement
+        .attr('style', `transform:translateX(${80 + index * storage.cellWidth}px)`)
+    }
+
+    const render = this.getChildrenRender(cellId, cellElement)
+    render.draw(matrixColumn.entries)
     render.cleanOldEntries(matrixColumn.entries.map((entry) => entry.id))
+    return cellElement
   }
 
   destroy() {
-    const rendererIds = Array.from(this.gridEntitiesRenders.keys())
-    for (const rendererId of rendererIds) {
-      this.gridEntitiesRenders.get(rendererId).destroy()
-      this.gridEntitiesRenders.delete(rendererId)
+    const cellIds = Array.from(this.cells.keys())
+    for (const cellId of cellIds) {
+      this.gridEntitiesRenders.get(cellId).destroy()
+      this.gridEntitiesRenders.delete(cellId)
+      this.cells.get(cellId).remove()
+      this.cells.delete(cellId)
     }
   }
 }
