@@ -29,10 +29,10 @@ class Processing {
   private maxCellDepth = 0
 
   private rowsPrevFieldName?: string
-  private rowsPrevIndex?: string | number
+  private rowsPrevIndex?: string
   private rowsOrder?: ISortOrder
   private columnsPrevFieldName?: string
-  private columnsPrevIndex?: string | number
+  private columnsPrevIndex?: string
   private columnsOrder?: ISortOrder
 
   constructor(rows: IRow[], columns: IColumn[], entries: IEntry[]) {
@@ -50,8 +50,8 @@ class Processing {
 
     this.applyFilters()
     this.makeCalculations()
-    this.applyDefaultSort()
     this.generateMatrix()
+    this.applyDefaultSort()
     this.generateFrame()
   }
 
@@ -79,8 +79,8 @@ class Processing {
     this.entries = [...this.entriesOriginal]
     this.applyFilters()
     this.makeCalculations()
-    this.applySort()
     this.generateMatrix()
+    this.applySort()
   }
 
   private makeCalculations() {
@@ -106,8 +106,16 @@ class Processing {
   }
 
   private applySort() {
-    this.sortItems(this.rows, this.rowsPrevFieldName ?? 'id', this.rowsPrevIndex, this.rowsOrder)
-    this.sortItems(this.columns, this.columnsPrevFieldName ?? 'id', this.columnsPrevIndex, this.columnsOrder)
+    if (this.rowsPrevIndex !== undefined) {
+      this.sortMatrixRowsByEntries(this.rowsPrevIndex, true)
+    } else {
+      this.sortRows(this.rowsPrevFieldName ?? 'total', true)
+    }
+    if (this.columnsPrevIndex !== undefined) {
+      this.sortMatrixColumnsByEntries(this.columnsPrevIndex, true)
+    } else {
+      this.sortColumns(this.columnsPrevFieldName ?? 'total', true)
+    }
   }
 
   public getCroppedMatrix() {
@@ -230,10 +238,10 @@ class Processing {
     return currentOrder === 'ASC' ? 'DESC' : 'ASC'
   }
 
-  private sortItems(items: IEntity[], fieldName: string, index?: string | number, order?: ISortOrder): void {
+  private sortItems(items: IEntity[], fieldName: string, order?: ISortOrder): void {
     items.sort((a, b) => {
-      const aVal = (index === undefined ? a[fieldName] : a[fieldName][index]) ?? '0'
-      const bVal = (index === undefined ? b[fieldName] : b[fieldName][index]) ?? '0'
+      const aVal = a[fieldName] ?? '0'
+      const bVal = b[fieldName] ?? '0'
 
       if (aVal === bVal) {
         return 0
@@ -245,8 +253,8 @@ class Processing {
     })
   }
 
-  public sortMatrixRows(columnId: string) {
-    if (this.rowsPrevIndex === columnId) {
+  public sortMatrixRowsByEntries(columnId: string, lockOrder = false) {
+    if (!lockOrder && this.rowsPrevIndex === columnId) {
       this.rowsOrder = this.toggleOrder(this.rowsOrder)
     }
     this.rowsPrevIndex = columnId
@@ -259,8 +267,8 @@ class Processing {
     }
   }
 
-  public sortMatrixColumns(rowId: string) {
-    if (this.columnsPrevIndex === rowId) {
+  public sortMatrixColumnsByEntries(rowId: string, lockOrder = false) {
+    if (!lockOrder && this.columnsPrevIndex === rowId) {
       this.columnsOrder = this.toggleOrder(this.columnsOrder)
     }
     this.columnsPrevIndex = rowId
@@ -278,22 +286,46 @@ class Processing {
     }
   }
 
-  public sortRows(fieldName = 'id', index?: string | number) {
-    this.rowsPrevFieldName = fieldName
-    if (index === undefined || index === this.rowsPrevIndex) {
-      this.rowsOrder = this.toggleOrder(this.rowsOrder)
-    }
-    this.rowsPrevIndex = index
-    this.sortItems(this.rows, fieldName, index, this.rowsOrder)
+  public sortMatrixRows(fieldName: string) {
+    this.matrix.sort((mRowA, mRowB) => {
+      const delta = mRowA.data[fieldName] - mRowB.data[fieldName]
+      return this.rowsOrder === 'ASC' ? delta : -delta
+    })
   }
 
-  public sortColumns(fieldName = 'id', index?: string | number) {
-    this.columnsPrevFieldName = fieldName
-    if (index === undefined || index === this.columnsPrevIndex) {
+  public sortMatrixColumns(fieldName: string) {
+    if (this.matrix.length === 0) {
+      return
+    }
+
+    const columnIndexOrders = this.matrix[0].columns.sort((mColA, mColB) => {
+      const delta = mColA.data[fieldName] - mColB.data[fieldName]
+      return this.columnsOrder === 'ASC' ? delta : -delta
+    }).map((mCol) => mCol.id)
+
+    for (const mRow of this.matrix) {
+      const arrayCopy = [...mRow.columns]
+      for (let i = 0; i < columnIndexOrders.length; i++) {
+        mRow.columns[i] = arrayCopy.find((col) => col.id === columnIndexOrders[i])
+      }
+    }
+  }
+
+  public sortRows(fieldName = 'total', lockOrder = false) {
+    if (!lockOrder && fieldName === this.rowsPrevFieldName) {
+      this.rowsOrder = this.toggleOrder(this.rowsOrder)
+    }
+    this.rowsPrevFieldName = fieldName
+
+    this.sortMatrixRows(fieldName)
+  }
+
+  public sortColumns(fieldName = 'total', lockOrder = false) {
+    if (!lockOrder && fieldName === this.columnsPrevFieldName) {
       this.columnsOrder = this.toggleOrder(this.columnsOrder)
     }
-    this.columnsPrevIndex = index
-    this.sortItems(this.columns, fieldName, index, this.columnsOrder)
+    this.columnsPrevFieldName = fieldName
+    this.sortMatrixColumns(fieldName)
   }
 
   public static createInstance(rows: IRow[], columns: IColumn[], entries: IEntry[]): Processing {
@@ -304,10 +336,10 @@ class Processing {
   }
 
   public applyDefaultSort() {
-    this.rowsOrder = 'ASC'
-    this.columnsOrder = 'ASC'
-    this.sortRows('total')
-    this.sortColumns('total')
+    this.rowsOrder = 'DESC'
+    this.columnsOrder = 'DESC'
+    this.sortMatrixRows('total')
+    this.sortMatrixColumns('total')
   }
 
   public static getInstance(): Processing {
