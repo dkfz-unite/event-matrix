@@ -7,6 +7,7 @@ import {storage} from '../utils/storage'
 import Processing from './data/Processing'
 import MainGrid from './MainGrid'
 import GridRender from './rendering/GridRender'
+import TopHistogramRender from './rendering/TopHistogramRender'
 
 class EventMatrix extends EventEmitter {
   private readonly params: EventMatrixParams
@@ -25,7 +26,8 @@ class EventMatrix extends EventEmitter {
   private gridRender: GridRender
   // private bottomDescriptionRender: BottomDescriptionRender
   // private rightDescriptionRender: RightDescriptionRender
-  // private topHistogramRender: TopHistogramRender
+  private topHistogramRender: TopHistogramRender
+
   // private rightHistogramRender: RightHistogramRender
 
   constructor(params: EventMatrixParams) {
@@ -43,18 +45,26 @@ class EventMatrix extends EventEmitter {
       .attr('class', `${storage.prefix}container`)
       .style('position', 'relative')
 
+    this.container
+      .append('div')
+      .attr('id', `${storage.prefix}container__histogram-top`)
+    this.container
+      .append('div')
+      .attr('id', `${storage.prefix}container__grid`)
+
     const gridWidth = params.width ?? 500
     const gridHeight = params.height ?? 500
 
+    this.topHistogramRender = new TopHistogramRender(gridWidth, 80, {})
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
+      this.topHistogramRender.render()
       this.gridRender.render()
     })
 
     // this.bottomDescriptionRender = new BottomDescriptionRender()
     // this.rightDescriptionRender = new RightDescriptionRender()
-    // this.topHistogramRender = new TopHistogramRender()
     // this.rightHistogramRender = new RightHistogramRender()
 
     // this.params = params
@@ -167,6 +177,7 @@ class EventMatrix extends EventEmitter {
   public render() {
     eventBus.emit(renderEvents.RENDER_ALL_START)
     setTimeout(() => {
+      this.topHistogramRender.render()
       this.gridRender.render()
       eventBus.emit(renderEvents.RENDER_ALL_END)
     })

@@ -35,7 +35,7 @@ class GridRender {
     this.gridLinesRender = new GridLinesRender(width, height)
     this.crosshairRender = new CrosshairRender(width, height)
     this.gridRowsRender = new GridRowsRender({})
-    this.wrapper = select(`.${storage.prefix}container`)
+    this.wrapper = select(`#${storage.prefix}container__grid`)
   }
 
   public render() {

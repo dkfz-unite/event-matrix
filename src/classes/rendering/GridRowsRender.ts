@@ -21,18 +21,6 @@ class GridRowsRender {
     this.container = container
   }
 
-  public cleanOldRows(activeRowIds: string[]) {
-    const oldRows = Array.from(this.rows.keys())
-    for (const rowId of oldRows) {
-      if (!activeRowIds.includes(rowId)) {
-        this.gridCellsRenders.get(rowId).destroy()
-        this.gridCellsRenders.delete(rowId)
-        this.rows.get(rowId).remove()
-        this.rows.delete(rowId)
-      }
-    }
-  }
-
   private getChildrenRender(parentId: string, container) {
     let render = this.gridCellsRenders.get(parentId)
     if (!render) {
@@ -136,6 +124,17 @@ class GridRowsRender {
     return rowElement
   }
 
+  public cleanOldRows(activeRowIds: string[]) {
+    const oldRows = Array.from(this.rows.keys())
+    for (const rowId of oldRows) {
+      if (!activeRowIds.includes(rowId)) {
+        this.gridCellsRenders.get(rowId).destroy()
+        this.gridCellsRenders.delete(rowId)
+        this.rows.get(rowId).remove()
+        this.rows.delete(rowId)
+      }
+    }
+  }
 
   destroy() {
     const rowIds = Array.from(this.rows.keys())
