@@ -122,11 +122,15 @@ class Processing {
     const {x, y, z} = this.frame.getSizes()
     const croppedMatrix: IMatrix = []
 
+    const totalByColumn = {}
     for (let i = y[0]; i <= y[1]; i++) {
       const row = this.matrix[i]
       const mRow: IMatrixRow = {
         id: row.id,
-        data: row.data,
+        data: {
+          ...row.data,
+          total: 0,
+        },
         columns: [],
       }
       croppedMatrix.push(mRow)
@@ -146,8 +150,19 @@ class Processing {
           }
           mColumn.entries.push(mEntry)
         }
+        mRow.data.total += mColumn.entries.length
+        if (totalByColumn[mColumn.id] === undefined) {
+          totalByColumn[mColumn.id] = 0
+        }
+        totalByColumn[mColumn.id] += mColumn.entries.length
       }
     }
+
+    croppedMatrix.forEach((mRow) => {
+      mRow.columns.forEach((mCol) => {
+        mCol.data.total = totalByColumn[mCol.id] ?? 0
+      })
+    })
 
     return croppedMatrix
   }

@@ -59,6 +59,9 @@ class EventMatrix extends EventEmitter {
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
+      const matrix = this.processing.getCroppedMatrix()
+      storage.setCellDimensions(gridWidth / (matrix[0]?.columns ?? []).length, gridHeight / matrix.length)
+
       this.topHistogramRender.render()
       this.gridRender.render()
     })
@@ -176,11 +179,8 @@ class EventMatrix extends EventEmitter {
    */
   public render() {
     eventBus.emit(renderEvents.RENDER_ALL_START)
-    setTimeout(() => {
-      this.topHistogramRender.render()
-      this.gridRender.render()
-      eventBus.emit(renderEvents.RENDER_ALL_END)
-    })
+    eventBus.emit(innerEvents.INNER_UPDATE)
+    eventBus.emit(renderEvents.RENDER_ALL_END)
   }
 
   /**

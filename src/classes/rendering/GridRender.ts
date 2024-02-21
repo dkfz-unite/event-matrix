@@ -40,7 +40,6 @@ class GridRender {
 
   public render() {
     this.matrix = this.processing.getCroppedMatrix()
-    storage.setCellDimensions(this.width / (this.matrix[0]?.columns ?? []).length, this.height / this.matrix.length)
 
     this.prepareContainer()
 
