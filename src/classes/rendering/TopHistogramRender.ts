@@ -44,17 +44,14 @@ class TopHistogramRender {
         .attr('version', '2.0')
         .attr('class', `${storage.prefix}histogram ${storage.prefix}histogram--top`)
         .attr('id', `${storage.prefix}histogram-top`)
-        .attr('width', this.width + 80)
-        .attr('height', this.height)
-        .attr('viewBox', `0 0 ${this.width + 80} ${this.height}`)
 
       this.axisRender.setContainer(this.container)
-    } else {
-      this.container
-        .attr('width', this.width + 80)
-        .attr('height', this.height)
-        .attr('viewBox', `0 0 ${this.width + 80} ${this.height}`)
     }
+
+    this.container
+      .attr('width', this.width + 80)
+      .attr('height', this.height + 6)
+      .attr('viewBox', `0 0 ${this.width + 80} ${this.height + 6}`)
   }
 
   private addEvents() {
@@ -126,7 +123,7 @@ class TopHistogramRender {
         .attr('y', this.height - barHeight)
     }
   }
-  
+
   public cleanOldBars(activeColumnIds: string[]) {
     const oldBars = Array.from(this.bars.keys())
     for (const columnId of oldBars) {

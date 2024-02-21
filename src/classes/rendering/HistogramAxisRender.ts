@@ -45,7 +45,7 @@ class HistogramAxisRender {
     this.bottomAxis
       .attr('y1', this.height + 5)
       .attr('y2', this.height + 5)
-      .attr('x1', 0)
+      .attr('x1', 80 - 5)
       .attr('x2', this.width + 80)
   }
 
@@ -83,7 +83,7 @@ class HistogramAxisRender {
       this.topText = this.container
         .append('text')
         .attr('class', `${storage.prefix}label-text-font`)
-        .attr('dy', '.32em')
+        .attr('dy', '1em')
         .attr('text-anchor', 'end')
     }
 
