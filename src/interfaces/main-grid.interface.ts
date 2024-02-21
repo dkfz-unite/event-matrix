@@ -99,6 +99,7 @@ export type EventMatrixParams = {
   prefix: string
   minCellHeight: number
   element: string
+  topHistogramLabel: string
   entries: IEntry[]
 } & MainGridParams
 

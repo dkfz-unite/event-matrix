@@ -55,7 +55,7 @@ class EventMatrix extends EventEmitter {
     const gridWidth = params.width ?? 500
     const gridHeight = params.height ?? 500
 
-    this.topHistogramRender = new TopHistogramRender(gridWidth, 80, {})
+    this.topHistogramRender = new TopHistogramRender(gridWidth, 80, params.topHistogramLabel ?? '', {})
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
