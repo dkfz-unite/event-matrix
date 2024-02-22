@@ -7,6 +7,7 @@ import {storage} from '../utils/storage'
 import Processing from './data/Processing'
 import MainGrid from './MainGrid'
 import GridRender from './rendering/GridRender'
+import SideHistogramRender from './rendering/SideHistogramRender'
 import TopHistogramRender from './rendering/TopHistogramRender'
 
 class EventMatrix extends EventEmitter {
@@ -27,8 +28,7 @@ class EventMatrix extends EventEmitter {
   // private bottomDescriptionRender: BottomDescriptionRender
   // private rightDescriptionRender: RightDescriptionRender
   private topHistogramRender: TopHistogramRender
-
-  // private rightHistogramRender: RightHistogramRender
+  private sideHistogramRender: SideHistogramRender
 
   constructor(params: EventMatrixParams) {
     super()
@@ -50,12 +50,16 @@ class EventMatrix extends EventEmitter {
       .attr('id', `${storage.prefix}container__histogram-top`)
     this.container
       .append('div')
+      .attr('id', `${storage.prefix}container__histogram-side`)
+    this.container
+      .append('div')
       .attr('id', `${storage.prefix}container__grid`)
 
     const gridWidth = params.width ?? 500
     const gridHeight = params.height ?? 500
 
     this.topHistogramRender = new TopHistogramRender(gridWidth, 80, params.topHistogramLabel ?? '', {})
+    this.sideHistogramRender = new SideHistogramRender(gridHeight, 80, params.sideHistogramLabel ?? '', {})
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
@@ -63,12 +67,12 @@ class EventMatrix extends EventEmitter {
       storage.setCellDimensions(gridWidth / (matrix[0]?.columns ?? []).length, gridHeight / matrix.length)
 
       this.topHistogramRender.render()
+      this.sideHistogramRender.render()
       this.gridRender.render()
     })
 
     // this.bottomDescriptionRender = new BottomDescriptionRender()
     // this.rightDescriptionRender = new RightDescriptionRender()
-    // this.rightHistogramRender = new RightHistogramRender()
 
     // this.params = params
     // this.width = params.width ?? 500
@@ -95,84 +99,6 @@ class EventMatrix extends EventEmitter {
     this.processing.setFilter(type, filter)
     this.render()
   }
-
-  // /**
-  //  * Instantiate charts
-  //  */
-  // private initCharts(reloading?: boolean) {
-  //   this.createLookupTable()
-  //   this.computeColumnCounts()
-  //   this.computeRowCounts()
-  //   this.sortColumnsByScores()
-  //   this.sortRowsByScores()
-  //
-  //   this.calculatePositions()
-  //   if (reloading) {
-  //     this.params.width = this.width
-  //     this.params.height = this.height
-  //   }
-  //   this.mainGrid = new MainGrid(this.params, this.x, this.y)
-  //
-  //   eventBus.off(innerEvents.INNER_RESIZE)
-  //   eventBus.off(innerEvents.INNER_UPDATE)
-  //   eventBus.on(innerEvents.INNER_RESIZE, () => {
-  //     this.resize(this.width, this.height, this.fullscreen)
-  //   })
-  //   eventBus.on(innerEvents.INNER_UPDATE, () => {
-  //     this.update()
-  //   })
-  //
-  //   this.heatMapMode = this.mainGrid.heatMap
-  //   this.drawGridLines = this.mainGrid.drawGridLines
-  //   this.crosshairMode = this.mainGrid.crosshair
-  //   this.charts = []
-  //   this.charts.push(this.mainGrid)
-  // }
-  //
-  // private calculatePositions() {
-  //   const getX = scaleBand()
-  //     .domain(range(this.processing.getColumns().length).map(String))
-  //     .range([0, this.width])
-  //
-  //   const getY = scaleBand()
-  //     .domain(range(this.processing.getRows().length).map(String))
-  //     .range([0, this.height])
-  //
-  //   for (let i = 0; i < this.processing.getColumns().length; i++) {
-  //     const column = this.processing.getColumns()[i]
-  //     const columnId = column.id
-  //     const positionX = getX(String(i))!
-  //     column.x = positionX
-  //     storage.lookupTable[columnId] = storage.lookupTable[columnId] || {}
-  //     storage.lookupTable[columnId].x = positionX as number
-  //   }
-  //
-  //   for (let i = 0; i < this.processing.getRows().length; i++) {
-  //     this.processing.getRows()[i].y = getY(String(i)) ?? 0
-  //   }
-  //
-  //   this.x = getX
-  //   this.y = getY
-  // }
-
-  // /**
-  //  * Creates a for constant time checks if an observation exists for a given donor, gene coordinate.
-  //  */
-  // private createLookupTable() {
-  //   const lookupTable: ILookupTable = {}
-  //   this.processing.getEntries().forEach((entry) => {
-  //     const columnId = entry.columnId
-  //     const rowId = entry.rowId
-  //     if (lookupTable[columnId] === undefined) {
-  //       lookupTable[columnId] = {}
-  //     }
-  //     if (lookupTable[columnId][rowId] === undefined) {
-  //       lookupTable[columnId][rowId] = []
-  //     }
-  //     lookupTable[columnId][rowId].push(entry.id)
-  //   })
-  //   storage.setLookupTable(lookupTable)
-  // }
 
   /**
    * Initializes and creates the main SVG with rows and columns. Does prelim sort on data
