@@ -1,6 +1,6 @@
 import {select, Selection} from 'd3-selection'
 import {BlockType} from '../../interfaces/base.interface'
-import {IMatrix, IMatrixColumn} from '../../interfaces/main-grid.interface'
+import {IMatrix, IMatrixRow} from '../../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
@@ -13,6 +13,7 @@ class SideHistogramRender {
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private bars: Map<string, Selection<SVGRectElement, unknown, HTMLElement, unknown>> = new Map()
 
+  // TODO: check this legacy options
   private matrix: IMatrix
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private axisRender: HistogramAxisRender
@@ -59,14 +60,14 @@ class SideHistogramRender {
     this.container
       .on('mouseover', (event) => {
         const target = event.target
-        const columnId = target.dataset.column
-        if (!columnId) {
+        const rowId = target.dataset.row
+        if (!rowId) {
           return
         }
         eventBus.emit(publicEvents.HISTOGRAM_HOVER, {
           target,
-          domainId: columnId,
-          type: BlockType.Columns,
+          domainId: rowId,
+          type: BlockType.Rows,
         })
       })
       .on('mouseout', () => {
@@ -74,46 +75,46 @@ class SideHistogramRender {
       })
       .on('click', (event) => {
         const target = event.target
-        const columnId = target.dataset.column
-        if (!columnId) {
+        const rowId = target.dataset.row
+        if (!rowId) {
           return
         }
-        this.processing.sortMatrixRowsByEntries(columnId)
+        this.processing.sortMatrixColumnsByEntries(rowId)
         eventBus.emit(innerEvents.INNER_UPDATE, false)
         eventBus.emit(publicEvents.HISTOGRAM_CLICK, {
           target,
-          domainId: columnId,
-          type: BlockType.Columns,
+          domainId: rowId,
+          type: BlockType.Rows,
         })
       })
   }
 
   private draw() {
-    const matrixColumns = this.matrix[0]?.columns ?? []
-    const topTotal = Math.max(...matrixColumns.map((mColumn) => mColumn.data.total))
-    for (let i = 0; i < matrixColumns.length; i++) {
-      this.drawBar(matrixColumns[i], i, topTotal)
+    const matrixRows = this.matrix ?? []
+    const topTotal = Math.max(...matrixRows.map((mRow) => mRow.data.total))
+    for (let i = 0; i < matrixRows.length; i++) {
+      this.drawBar(matrixRows[i], i, topTotal)
     }
-    this.cleanOldBars(matrixColumns.map((mColumn) => mColumn.id))
+    this.cleanOldBars(matrixRows.map((mRow) => mRow.id))
 
     this.axisRender.render(topTotal)
   }
 
-  private drawBar(matrixColumn: IMatrixColumn, index: number, topTotal: number) {
-    let barElement = this.bars.get(matrixColumn.id)
-    const barHeight = this.height * matrixColumn.data.total / topTotal
+  private drawBar(matrixRow: IMatrixRow, index: number, topTotal: number) {
+    let barElement = this.bars.get(matrixRow.id)
+    const barHeight = this.height * matrixRow.data.total / topTotal
 
     if (!barElement) {
       barElement = this.container
         .append('rect')
         .attr('class', `${storage.prefix}sortable-bar`)
-        .attr('data-column', matrixColumn.id)
+        .attr('data-row', matrixRow.id)
         .attr('width', storage.cellWidth - (storage.cellWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
         .attr('height', barHeight)
         .attr('x', 80 + index * storage.cellWidth)
         .attr('y', this.height - barHeight)
         .attr('fill', '#1693C0')
-      this.bars.set(matrixColumn.id, barElement)
+      this.bars.set(matrixRow.id, barElement)
     } else {
       barElement
         .attr('width', storage.cellWidth - (storage.cellWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
@@ -123,12 +124,12 @@ class SideHistogramRender {
     }
   }
 
-  public cleanOldBars(activeColumnIds: string[]) {
+  public cleanOldBars(activeRowIds: string[]) {
     const oldBars = Array.from(this.bars.keys())
-    for (const columnId of oldBars) {
-      if (!activeColumnIds.includes(columnId)) {
-        this.bars.get(columnId).remove()
-        this.bars.delete(columnId)
+    for (const rowId of oldBars) {
+      if (!activeRowIds.includes(rowId)) {
+        this.bars.get(rowId).remove()
+        this.bars.delete(rowId)
       }
     }
   }
