@@ -1,7 +1,7 @@
 import {Selection} from 'd3-selection'
 import {storage} from '../../utils/storage'
 
-class HistogramAxisRender {
+class TopHistogramAxisRender {
   private width = 500
   private height = 80
 
@@ -125,4 +125,4 @@ class HistogramAxisRender {
   }
 }
 
-export default HistogramAxisRender
+export default TopHistogramAxisRender

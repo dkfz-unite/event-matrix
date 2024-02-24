@@ -45,21 +45,30 @@ class EventMatrix extends EventEmitter {
       .attr('class', `${storage.prefix}container`)
       .style('position', 'relative')
 
-    this.container
+    const topContainer = this.container
       .append('div')
-      .attr('id', `${storage.prefix}container__histogram-top`)
-    this.container
+      .attr('id', `${storage.prefix}container-top`)
+      .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--top`)
+    topContainer
       .append('div')
-      .attr('id', `${storage.prefix}container__histogram-side`)
-    this.container
+      .attr('id', `${storage.prefix}histogram-container-top`)
+
+    const mainContainer = this.container
       .append('div')
-      .attr('id', `${storage.prefix}container__grid`)
+      .attr('id', `${storage.prefix}container-main`)
+      .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--main`)
+    mainContainer
+      .append('div')
+      .attr('id', `${storage.prefix}grid-container`)
+    mainContainer
+      .append('div')
+      .attr('id', `${storage.prefix}histogram-container-side`)
 
     const gridWidth = params.width ?? 500
     const gridHeight = params.height ?? 500
 
     this.topHistogramRender = new TopHistogramRender(gridWidth, 80, params.topHistogramLabel ?? '', {})
-    this.sideHistogramRender = new SideHistogramRender(gridHeight, 80, params.sideHistogramLabel ?? '', {})
+    this.sideHistogramRender = new SideHistogramRender(80, gridHeight, params.sideHistogramLabel ?? '', {})
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {

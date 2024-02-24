@@ -4,7 +4,7 @@ import {IMatrix, IMatrixColumn} from '../../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
-import HistogramAxisRender from './HistogramAxisRender'
+import TopHistogramAxisRender from './TopHistogramAxisRender'
 
 class TopHistogramRender {
   private width = 500
@@ -16,15 +16,15 @@ class TopHistogramRender {
   // TODO: check this legacy options
   private matrix: IMatrix
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
-  private axisRender: HistogramAxisRender
+  private axisRender: TopHistogramAxisRender
 
   constructor(width: number, height: number, label: string, options: any) {
     this.width = width
     this.height = height
     this.processing = Processing.getInstance()
-    this.axisRender = new HistogramAxisRender(width, height, label, {})
+    this.axisRender = new TopHistogramAxisRender(width, height, label, {})
 
-    this.wrapper = select(`#${storage.prefix}container__histogram-top`)
+    this.wrapper = select(`#${storage.prefix}histogram-container-top`)
   }
 
   public render() {

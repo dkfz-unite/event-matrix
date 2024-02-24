@@ -4,7 +4,7 @@ import {IMatrix, IMatrixRow} from '../../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
-import HistogramAxisRender from './HistogramAxisRender'
+import SideHistogramAxisRender from './SideHistogramAxisRender'
 
 class SideHistogramRender {
   private width = 500
@@ -15,15 +15,15 @@ class SideHistogramRender {
 
   private matrix: IMatrix
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
-  private axisRender: HistogramAxisRender
+  private axisRender: SideHistogramAxisRender
 
   constructor(width: number, height: number, label: string, options: any) {
     this.width = width
     this.height = height
     this.processing = Processing.getInstance()
-    this.axisRender = new HistogramAxisRender(width, height, label, {})
+    this.axisRender = new SideHistogramAxisRender(width, height, label, {})
 
-    this.wrapper = select(`#${storage.prefix}container__histogram-side`)
+    this.wrapper = select(`#${storage.prefix}histogram-container-side`)
   }
 
   public render() {
@@ -43,15 +43,14 @@ class SideHistogramRender {
         .attr('version', '2.0')
         .attr('class', `${storage.prefix}histogram ${storage.prefix}histogram--side`)
         .attr('id', `${storage.prefix}histogram-side`)
-        .attr('transform', 'rotate(90)')
 
       this.axisRender.setContainer(this.container)
     }
 
     this.container
-      .attr('width', this.width + 80)
-      .attr('height', this.height + 6)
-      .attr('viewBox', `0 0 ${this.width + 80} ${this.height + 6}`)
+      .attr('width', this.width + 6)
+      .attr('height', this.height)
+      .attr('viewBox', `0 0 ${this.width + 6} ${this.height}`)
   }
 
   private addEvents() {
@@ -102,26 +101,22 @@ class SideHistogramRender {
 
   private drawBar(matrixRow: IMatrixRow, index: number, topTotal: number) {
     let barElement = this.bars.get(matrixRow.id)
-    const barHeight = this.height * matrixRow.data.total / topTotal
+    const barHeight = this.width * matrixRow.data.total / topTotal
 
     if (!barElement) {
       barElement = this.container
         .append('rect')
         .attr('class', `${storage.prefix}sortable-bar`)
         .attr('data-row', matrixRow.id)
-        .attr('width', storage.cellHeight - (storage.cellHeight < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-        .attr('height', barHeight)
-        .attr('x', 10 + index * storage.cellHeight)
-        .attr('y', this.height - barHeight)
         .attr('fill', '#1693C0')
       this.bars.set(matrixRow.id, barElement)
-    } else {
-      barElement
-        .attr('width', storage.cellHeight - (storage.cellHeight < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-        .attr('height', barHeight)
-        .attr('x', 10 + index * storage.cellHeight)
-        .attr('y', this.height - barHeight)
     }
+
+    barElement
+      .attr('width', barHeight) // If bars are small, do not use whitespace.
+      .attr('height', storage.cellHeight - (storage.cellHeight < 3 ? 0 : 1))
+      .attr('x', 5)
+      .attr('y', 30 + index * storage.cellHeight)
   }
 
   public cleanOldBars(activeRowIds: string[]) {
