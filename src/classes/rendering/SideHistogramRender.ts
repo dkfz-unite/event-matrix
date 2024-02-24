@@ -13,7 +13,6 @@ class SideHistogramRender {
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private bars: Map<string, Selection<SVGRectElement, unknown, HTMLElement, unknown>> = new Map()
 
-  // TODO: check this legacy options
   private matrix: IMatrix
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private axisRender: HistogramAxisRender
@@ -44,6 +43,7 @@ class SideHistogramRender {
         .attr('version', '2.0')
         .attr('class', `${storage.prefix}histogram ${storage.prefix}histogram--side`)
         .attr('id', `${storage.prefix}histogram-side`)
+        .attr('transform', 'rotate(90)')
 
       this.axisRender.setContainer(this.container)
     }
@@ -109,17 +109,17 @@ class SideHistogramRender {
         .append('rect')
         .attr('class', `${storage.prefix}sortable-bar`)
         .attr('data-row', matrixRow.id)
-        .attr('width', storage.cellWidth - (storage.cellWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
+        .attr('width', storage.cellHeight - (storage.cellHeight < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
         .attr('height', barHeight)
-        .attr('x', 80 + index * storage.cellWidth)
+        .attr('x', 10 + index * storage.cellHeight)
         .attr('y', this.height - barHeight)
         .attr('fill', '#1693C0')
       this.bars.set(matrixRow.id, barElement)
     } else {
       barElement
-        .attr('width', storage.cellWidth - (storage.cellWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
+        .attr('width', storage.cellHeight - (storage.cellHeight < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
         .attr('height', barHeight)
-        .attr('x', 80 + index * storage.cellWidth)
+        .attr('x', 10 + index * storage.cellHeight)
         .attr('y', this.height - barHeight)
     }
   }
