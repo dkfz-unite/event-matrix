@@ -275,10 +275,16 @@ class Processing {
     this.rowsPrevIndex = columnId
     const columnIndex = this.matrix.length > 0 ? this.matrix[0].columns.findIndex((c) => c.id === columnId) : -1
     if (columnIndex !== -1) {
-      this.matrix.sort((mRowA, mRowB) => {
-        const delta = mRowA.columns[columnIndex].entries.length - mRowB.columns[columnIndex].entries.length
-        return this.rowsOrder === 'ASC' ? delta : -delta
-      })
+      const frameSizes = this.getFrame().getSizes()
+      const rows = this.matrix
+      this.matrix = [
+        ...rows.slice(0, frameSizes.y[0]),
+        ...rows.slice(frameSizes.y[0], frameSizes.y[1] + 1).sort((mRowA, mRowB) => {
+          const delta = mRowA.columns[columnIndex].entries.length - mRowB.columns[columnIndex].entries.length
+          return this.rowsOrder === 'ASC' ? delta : -delta
+        }),
+        ...rows.slice(frameSizes.y[1] + 1),
+      ]
     }
   }
 
@@ -288,10 +294,18 @@ class Processing {
     }
     this.columnsPrevIndex = rowId
     const rowIndex = this.matrix.findIndex((mRow) => mRow.id === rowId)
-    const columnIndexOrders = this.matrix[rowIndex].columns.sort((mColA, mColB) => {
-      const delta = mColA.entries.length - mColB.entries.length
-      return this.columnsOrder === 'ASC' ? delta : -delta
-    }).map((mCol) => mCol.id)
+
+    const frameSizes = this.getFrame().getSizes()
+    const columns = this.matrix[rowIndex].columns
+    const sortedColumns = [
+      ...columns.slice(0, frameSizes.x[0]),
+      ...columns.slice(frameSizes.x[0], frameSizes.x[1] + 1).sort((mColA, mColB) => {
+        const delta = mColA.entries.length - mColB.entries.length
+        return this.columnsOrder === 'ASC' ? delta : -delta
+      }),
+      ...columns.slice(frameSizes.x[1] + 1),
+    ]
+    const columnIndexOrders = sortedColumns.map((mCol) => mCol.id)
 
     for (const mRow of this.matrix) {
       const arrayCopy = [...mRow.columns]

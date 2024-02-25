@@ -49,8 +49,8 @@ class SideHistogramRender {
 
     this.container
       .attr('width', this.width + 6)
-      .attr('height', this.height)
-      .attr('viewBox', `0 0 ${this.width + 6} ${this.height}`)
+      .attr('height', this.height + 30)
+      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 30}`)
   }
 
   private addEvents() {
