@@ -1,4 +1,4 @@
-import {select, Selection} from 'd3-selection'
+import {BaseType, select, Selection} from 'd3-selection'
 import {BlockType} from '../../interfaces/base.interface'
 import {IMatrix, IMatrixColumn} from '../../interfaces/main-grid.interface'
 import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
@@ -11,7 +11,7 @@ class BottomDescriptionRender {
   private height = 500
   private processing: Processing
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
-  private bars: Map<string, Selection<SVGRectElement, unknown, HTMLElement, unknown>> = new Map()
+  private groups: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
 
   // TODO: check this legacy options
   private matrix: IMatrix
@@ -29,7 +29,6 @@ class BottomDescriptionRender {
 
   public render() {
     this.matrix = this.processing.getCroppedMatrix()
-
     this.prepareContainer()
 
     eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_START)
@@ -42,8 +41,8 @@ class BottomDescriptionRender {
     if (!this.container) {
       this.container = this.wrapper.append('svg')
         .attr('version', '2.0')
-        .attr('class', `${storage.prefix}histogram ${storage.prefix}histogram--top`)
-        .attr('id', `${storage.prefix}histogram-top`)
+        .attr('class', `${storage.prefix}description-block ${storage.prefix}description-block--bottom`)
+        .attr('id', `${storage.prefix}description-block-bottom`)
 
       this.axisRender.setContainer(this.container)
     }
