@@ -1,7 +1,6 @@
 import {BaseType, select, Selection} from 'd3-selection'
-import {BlockType} from '../../interfaces/base.interface'
-import {IMatrix, IMatrixColumn} from '../../interfaces/main-grid.interface'
-import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
+import {IMatrix} from '../../interfaces/main-grid.interface'
+import {eventBus, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
 import TopHistogramAxisRender from './TopHistogramAxisRender'
@@ -28,12 +27,10 @@ class BottomDescriptionRender {
   }
 
   public render() {
-    this.matrix = this.processing.getCroppedMatrix()
     this.prepareContainer()
 
     eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_START)
     this.draw()
-    this.addEvents()
     eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_END)
   }
 
@@ -53,55 +50,17 @@ class BottomDescriptionRender {
       .attr('viewBox', `0 0 ${this.width + 80} ${this.height + 6}`)
   }
 
-  private addEvents() {
-    this.removeEvents()
-
-    this.container
-      .on('mouseover', (event) => {
-        const target = event.target
-        const columnId = target.dataset.column
-        if (!columnId) {
-          return
-        }
-        eventBus.emit(publicEvents.HISTOGRAM_HOVER, {
-          target,
-          domainId: columnId,
-          type: BlockType.Columns,
-        })
-      })
-      .on('mouseout', () => {
-        eventBus.emit(publicEvents.HISTOGRAM_OUT)
-      })
-      .on('click', (event) => {
-        const target = event.target
-        const columnId = target.dataset.column
-        if (!columnId) {
-          return
-        }
-        this.processing.sortMatrixRowsByEntries(columnId)
-        eventBus.emit(innerEvents.INNER_UPDATE, false)
-        eventBus.emit(publicEvents.HISTOGRAM_CLICK, {
-          target,
-          domainId: columnId,
-          type: BlockType.Columns,
-        })
-      })
-  }
-
   private draw() {
-    const matrixColumns = this.matrix[0]?.columns ?? []
-    const topTotal = Math.max(...matrixColumns.map((mColumn) => mColumn.data.total))
-    for (let i = 0; i < matrixColumns.length; i++) {
-      this.drawBar(matrixColumns[i], i, topTotal)
+    const groups = this.processing.getBottomDescriptionGroups()
+    for (let i = 0; i < groups.length; i++) {
+      this.drawGroup(groups[i], i)
     }
-    this.cleanOldBars(matrixColumns.map((mColumn) => mColumn.id))
-
-    this.axisRender.render(topTotal)
+    this.cleanOldGroups(groups.map((group) => group.id))
   }
 
-  private drawBar(matrixColumn: IMatrixColumn, index: number, topTotal: number) {
-    let barElement = this.bars.get(matrixColumn.id)
-    const barHeight = this.height * matrixColumn.data.total / topTotal
+  private drawGroup(group: IMatrixDescriptionGroup, index: number) {
+    const groupElement = this.groups.get(group.id)
+    const groupHeight = this.height * matrixColumn.data.total / topTotal
 
     if (!barElement) {
       barElement = this.container
@@ -133,14 +92,7 @@ class BottomDescriptionRender {
     }
   }
 
-  private removeEvents() {
-    this.container.on('mouseover', null)
-    this.container.on('mouseout', null)
-    this.container.on('click', null)
-  }
-
   public destroy() {
-    this.removeEvents()
     this.container.remove()
     delete this.container
   }
