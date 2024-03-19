@@ -1,8 +1,9 @@
 import {BaseType, select, Selection} from 'd3-selection'
-import {IMatrix} from '../../interfaces/main-grid.interface'
-import {eventBus, renderEvents} from '../../utils/event-bus'
+import {IEnhancedEvent, IMatrix} from '../../interfaces/main-grid.interface'
+import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
 import {storage} from '../../utils/storage'
 import Processing from '../data/Processing'
+import BottomDescriptionFieldRender from './BottomDescriptionFieldRender'
 import TopHistogramAxisRender from './TopHistogramAxisRender'
 
 class BottomDescriptionRender {
@@ -11,6 +12,7 @@ class BottomDescriptionRender {
   private processing: Processing
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private groups: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
+  private descriptionFieldRenders: Map<string, BottomDescriptionFieldRender> = new Map()
 
   // TODO: check this legacy options
   private matrix: IMatrix
@@ -59,35 +61,107 @@ class BottomDescriptionRender {
   }
 
   private drawGroup(group: IMatrixDescriptionGroup, index: number) {
-    const groupElement = this.groups.get(group.id)
-    const groupHeight = this.height * matrixColumn.data.total / topTotal
+    let groupElement = this.groups.get(group.id)
 
-    if (!barElement) {
-      barElement = this.container
-        .append('rect')
-        .attr('class', `${storage.prefix}sortable-bar`)
-        .attr('data-column', matrixColumn.id)
-        .attr('width', storage.cellWidth - (storage.cellWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-        .attr('height', barHeight)
-        .attr('x', 80 + index * storage.cellWidth)
-        .attr('y', this.height - barHeight)
-        .attr('fill', '#1693C0')
-      this.bars.set(matrixColumn.id, barElement)
+    if (!groupElement) {
+      groupElement = this.container
+        .append('g')
+        .attr('id', `grid-row-${group.id}`)
+        .attr('class', `${storage.prefix}grid__row-wrapper`)
+        .attr('style', `transform:translateY(${index * storage.cellHeight}px)`)
+
+      groupElement
+        .append('svg')
+        .attr('version', '2.0')
+        .attr('height', storage.cellHeight)
+        .attr('class', `${storage.prefix}row-row ${storage.prefix}grid__row ${storage.prefix}grid-row`)
+      // .attr('y', index * storage.cellHeight)
+
+      this.groups.set(groupElement.id, groupElement)
+
+      groupElement
+        .select('svg')
+        .append('text')
+        .attr('class', `${storage.prefix}${matrixRow.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font ${storage.prefix}grid-row__label`)
+        .attr('data-row', matrixRow.id)
+        .attr('x', 80 - 8)
+        .attr('y', storage.cellHeight / 2)
+        .attr('dy', '.32em')
+        .attr('text-anchor', 'end')
+        .attr('style', () => {
+          if (storage.cellHeight < storage.minCellHeight) {
+            return 'display: none;'
+          } else {
+            return ''
+          }
+        })
+        .text(groupElement.data.symbol)
+        .on('mouseover', (event: IEnhancedEvent) => {
+          const target = event.target
+          const rowId = target.dataset.row
+          if (!rowId) {
+            return
+          }
+          eventBus.emit(publicEvents.GRID_LABEL_HOVER, {
+            target,
+            rowId,
+          })
+        })
+        .on('click', (event: IEnhancedEvent) => {
+          const target = event.target
+          const rowId = target.dataset.row
+          if (!rowId) {
+            return
+          }
+          this.processing.sortMatrixColumnsByEntries(rowId)
+          eventBus.emit(innerEvents.INNER_UPDATE, false)
+          eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
+            target,
+            rowId,
+          })
+        })
     } else {
-      barElement
-        .attr('width', storage.cellWidth - (storage.cellWidth < 3 ? 0 : 1)) // If bars are small, do not use whitespace.
-        .attr('height', barHeight)
-        .attr('x', 80 + index * storage.cellWidth)
-        .attr('y', this.height - barHeight)
+      groupElement
+        .attr('style', `transform:translateY(${index * storage.cellHeight}px)`)
+
+      groupElement
+        .select('svg')
+        .attr('height', storage.cellHeight)
+
+      const text = groupElement.select(`.${storage.prefix}row-label`)
+      text
+        .attr('y', storage.cellHeight / 2)
+        .attr('style', () => {
+          if (storage.cellHeight < storage.minCellHeight) {
+            return 'display: none;'
+          } else {
+            return ''
+          }
+        })
     }
+
+    const render = this.getChildrenRender(group.id, groupElement)
+    render.draw(group.fields)
+
+    render.cleanOldGroups(group.fields.map((field) => field.id))
+    return groupElement
   }
 
-  public cleanOldBars(activeColumnIds: string[]) {
-    const oldBars = Array.from(this.bars.keys())
-    for (const columnId of oldBars) {
-      if (!activeColumnIds.includes(columnId)) {
-        this.bars.get(columnId).remove()
-        this.bars.delete(columnId)
+  private getChildrenRender(parentId: string, container) {
+    let render = this.descriptionFieldRenders.get(parentId)
+    if (!render) {
+      render = new BottomDescriptionFieldRender(parentId, container, {})
+      this.descriptionFieldRenders.set(parentId, render)
+    }
+    return render
+  }
+
+  public cleanOldGroups(activeGroupIds: string[]) {
+    const oldGroupIds = Array.from(this.groups.keys())
+    for (const groupId of oldGroupIds) {
+      if (!activeGroupIds.includes(groupId)) {
+        this.groups.get(groupId).remove()
+        this.groups.delete(groupId)
       }
     }
   }
