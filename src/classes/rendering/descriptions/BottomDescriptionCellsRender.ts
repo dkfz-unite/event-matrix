@@ -1,4 +1,5 @@
 import {BaseType, Selection} from 'd3-selection'
+import {IMatrixDescriptionCell} from '../../../interfaces/matrix.interface'
 import {storage} from '../../../utils/storage'
 
 class BottomDescriptionCellsRender {
@@ -11,14 +12,14 @@ class BottomDescriptionCellsRender {
     this.container = container
   }
 
-  public draw(cells: IMatrixDescriptionGroupCell[]) {
+  public draw(cells: IMatrixDescriptionCell[]) {
     for (let j = 0; j < cells.length; j++) {
       const cell = cells[j]
       this.drawCell(cell, j)
     }
   }
 
-  public drawCell(cell: IMatrixDescriptionGroupCell, index: number) {
+  public drawCell(cell: IMatrixDescriptionCell, index: number) {
     const cellId = cell.id
     let cellElement = this.cells.get(cellId)
 

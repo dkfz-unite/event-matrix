@@ -7,6 +7,7 @@ import {
   IMatrixRow,
   ISortOrder
 } from '../../interfaces/main-grid.interface'
+import {IMatrixDescriptionGroup} from '../../interfaces/matrix.interface'
 import Frame from './Frame'
 
 class Processing {
@@ -35,10 +36,17 @@ class Processing {
   private columnsPrevIndex?: string
   private columnsOrder?: ISortOrder
 
-  constructor(rows: IRow[], columns: IColumn[], entries: IEntry[]) {
+  private descriptionFields = {
+    columns: [],
+    rows: [],
+  }
+
+  constructor(rows: IRow[], columns: IColumn[], entries: IEntry[], columnsFields: any[] = [], rowsFields: any[]) {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
     this.entriesOriginal = entries
+    this.descriptionFields.columns = columnsFields
+    this.descriptionFields.rows = rowsFields
 
     this.reset()
   }
@@ -357,9 +365,9 @@ class Processing {
     this.sortMatrixColumns(fieldName)
   }
 
-  public static createInstance(rows: IRow[], columns: IColumn[], entries: IEntry[]): Processing {
+  public static createInstance(rows: IRow[], columns: IColumn[], entries: IEntry[], columnsFields = [], rowsFields = []): Processing {
     if (!this.instance) {
-      this.instance = new this(rows, columns, entries)
+      this.instance = new this(rows, columns, entries, columnsFields, rowsFields)
     }
     return this.instance
   }
@@ -369,6 +377,108 @@ class Processing {
     this.columnsOrder = 'DESC'
     this.sortMatrixRows('total')
     this.sortMatrixColumns('total')
+  }
+
+  public getCroppedColumns() {
+    const {x} = this.frame.getSizes()
+    const croppedColumns: IMatrixColumn[] = []
+
+    const row = this.matrix[0]
+    for (let i = x[0]; i <= x[1]; i++) {
+      croppedColumns.push({
+        ...row.columns[i],
+        entries: [],
+      })
+    }
+    return croppedColumns
+  }
+
+  public getCroppedRows() {
+    const {y} = this.frame.getSizes()
+    const croppedRows: IMatrixRow[] = []
+
+    for (let i = y[0]; i <= y[1]; i++) {
+      croppedRows.push({
+        ...this.matrix[i],
+        columns: [],
+      })
+    }
+    return croppedRows
+  }
+
+  public getBottomDescriptionGroups(): IMatrixDescriptionGroup[] {
+    const groups = []
+    for (const columnField of this.descriptionFields.columns) {
+      let existedGroup = groups.find((group) => group.id === columnField.group)
+      if (!existedGroup) {
+        existedGroup = {
+          id: columnField.group,
+          fields: [],
+        }
+        groups.push(existedGroup)
+      }
+
+      existedGroup.fields.push({
+        id: columnField.fieldName,
+        field: columnField.fieldName,
+        type: columnField.type,
+        label: columnField.name,
+        cells: [],
+      })
+    }
+
+    const croppedColumns = this.getCroppedColumns()
+    for (const matrixColumn of croppedColumns) {
+      for (const group of groups) {
+        for (const field of group.fields) {
+          field.cells.push({
+            value: matrixColumn.data[field.field],
+            displayValue: matrixColumn.data[field.field] ?? null,
+            id: matrixColumn.id,
+          })
+        }
+      }
+    }
+
+    return groups
+  }
+
+  public getRightDescriptionGroups(): IMatrixDescriptionGroup[] {
+    const groups = []
+    for (const rowField of this.descriptionFields.rows) {
+      let existedGroup = groups.find((group) => group.id === rowField.group)
+      if (!existedGroup) {
+        existedGroup = {
+          id: rowField.group,
+          label: rowField.group,
+          fields: [],
+        }
+        groups.push(existedGroup)
+      }
+
+      existedGroup.fields.push({
+        id: rowField.fieldName,
+        field: rowField.fieldName,
+        type: rowField.type,
+        label: rowField.name,
+        cells: [],
+      })
+    }
+
+    const croppedRows = this.getCroppedRows()
+    for (const matrixRow of croppedRows) {
+      for (const group of groups) {
+        for (const field of group.fields) {
+          field.cells.push({
+            value: matrixRow.data[field.field],
+            displayValue: matrixRow.data[field.field] ?? null,
+            id: matrixRow.id,
+          })
+        }
+      }
+    }
+
+    return groups
   }
 
   public static getInstance(): Processing {

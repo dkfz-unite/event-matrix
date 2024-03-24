@@ -23,7 +23,7 @@ class BottomDescriptionFieldsRender {
     return 16
   }
 
-  private draw(fields: IMatrixDescriptionGroupField[]) {
+  public draw(fields: IMatrixDescriptionGroupField[]) {
     for (let i = 0; i < fields.length; i++) {
       this.drawField(fields[i], i)
     }
