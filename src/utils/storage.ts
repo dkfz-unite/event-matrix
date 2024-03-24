@@ -1,5 +1,6 @@
 import {BlockType, IEntry} from '../interfaces/base.interface'
-import {ICustomFunctions, ILookupTable, IPreparedFieldData, IStorageOptions} from '../interfaces/main-grid.interface'
+import {ICustomFunctions, ILookupTable, IStorageOptions} from '../interfaces/main-grid.interface'
+import {IMatrixDescriptionCell} from '../interfaces/matrix.interface'
 
 export class Storage {
   private static instance: Storage | null = null
@@ -17,9 +18,9 @@ export class Storage {
   public lookupTable: ILookupTable = {}
   public customFunctions: ICustomFunctions = {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    [BlockType.Rows]: (fieldData: IPreparedFieldData) => ({color: 'black', opacity: 1}),
+    [BlockType.Rows]: (cellData: IMatrixDescriptionCell) => ({color: 'black', opacity: 1}),
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    [BlockType.Columns]: (fieldData: IPreparedFieldData) => ({color: 'black', opacity: 1}),
+    [BlockType.Columns]: (cellData: IMatrixDescriptionCell) => ({color: 'black', opacity: 1}),
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [BlockType.Entries]: (entry: IEntry) => ({color: 'black', opacity: 1}),
   }

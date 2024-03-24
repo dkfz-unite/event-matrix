@@ -5,18 +5,19 @@ import Processing from '../../data/Processing'
 import BottomDescriptionGroupsRender from './BottomDescriptionGroupsRender'
 
 class BottomDescriptionRender {
-  private width = 500
-  private height = 500
+  private width = 0
+  private height = 0
   private processing: Processing
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private groupsRenderer: BottomDescriptionGroupsRender
 
-  constructor(width: number, label: string, options: any) {
+  constructor(width: number, options: any) {
     this.width = width
 
     this.groupsRenderer = new BottomDescriptionGroupsRender(width, {})
+    this.processing = Processing.getInstance()
     // Initial height calculates approximately
     const groups = this.processing.getBottomDescriptionGroups()
     this.height = groups.reduce((sum, group) => {
@@ -25,7 +26,7 @@ class BottomDescriptionRender {
 
     this.processing = Processing.getInstance()
 
-    this.wrapper = select(`#${storage.prefix}histogram-container-top`)
+    this.wrapper = select(`#${storage.prefix}bottom-description-block`)
   }
 
   public render() {
@@ -56,12 +57,13 @@ class BottomDescriptionRender {
 
     this.container
       .attr('width', this.width + 80)
-      .attr('height', +6)
+      .attr('height', this.height + 6)
       .attr('viewBox', `0 0 ${this.width + 80} ${this.height + 6}`)
   }
 
   private draw() {
     const groups = this.processing.getBottomDescriptionGroups()
+    console.log(groups)
     this.groupsRenderer.draw(groups)
   }
 

@@ -36,13 +36,13 @@ class BottomDescriptionGroupsRender {
 
     if (!groupElement) {
       groupElement = this.container
-        .append('g')
+        .append('svg')
         .attr('id', `${storage.prefix}description-group-${group.id}`)
         .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--bottom`)
 
       groupElement.append('text')
-        .attr('x', -6)
-        .attr('y', -11)
+        .attr('x', 6)
+        .attr('y', 11)
         .attr('dy', '.32em')
         .attr('text-anchor', 'end')
         .attr('class', `${storage.prefix}track-group-label ${storage.prefix}description-group__label`)
@@ -56,34 +56,12 @@ class BottomDescriptionGroupsRender {
 
 
       this.groupLegends.set(group.id, legend)
-
-      const height = group.fields.length * 16
-      groupElement
-        .append('rect')
-        .attr('class', `${storage.prefix}background`)
-        .attr('width', this.width)
-        .attr('height', height)
-
       this.groups.set(group.id, groupElement)
-    } else {
-      groupElement
-        .attr('style', `transform:translateY(${index * storage.cellHeight}px)`)
-
-      groupElement
-        .select('rect')
-        .attr('height', group.fields.length * 16)
-
-      const text = groupElement.select(`.${storage.prefix}row-label`)
-      text
-        .attr('y', storage.cellHeight / 2)
-        .attr('style', () => {
-          if (storage.cellHeight < storage.minCellHeight) {
-            return 'display: none;'
-          } else {
-            return ''
-          }
-        })
     }
+
+    groupElement
+      .attr('height', group.fields.length * 16 + 10)
+      .attr('style', `transform:translateY(${index * storage.cellHeight}px)`)
 
     const render = this.getChildrenRender(group.id, groupElement)
     render.draw(group.fields)

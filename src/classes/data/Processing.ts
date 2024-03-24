@@ -408,11 +408,13 @@ class Processing {
 
   public getBottomDescriptionGroups(): IMatrixDescriptionGroup[] {
     const groups = []
+    let id = 0
     for (const columnField of this.descriptionFields.columns) {
-      let existedGroup = groups.find((group) => group.id === columnField.group)
+      let existedGroup = groups.find((group) => group.label === columnField.group)
       if (!existedGroup) {
         existedGroup = {
-          id: columnField.group,
+          id: ++id,
+          label: columnField.group,
           fields: [],
         }
         groups.push(existedGroup)
@@ -445,22 +447,23 @@ class Processing {
 
   public getRightDescriptionGroups(): IMatrixDescriptionGroup[] {
     const groups = []
-    for (const rowField of this.descriptionFields.rows) {
-      let existedGroup = groups.find((group) => group.id === rowField.group)
+    let id = 0
+    for (const field of this.descriptionFields.rows) {
+      let existedGroup = groups.find((group) => group.id === field.group)
       if (!existedGroup) {
         existedGroup = {
-          id: rowField.group,
-          label: rowField.group,
+          id: ++id,
+          label: field.group,
           fields: [],
         }
         groups.push(existedGroup)
       }
 
       existedGroup.fields.push({
-        id: rowField.fieldName,
-        field: rowField.fieldName,
-        type: rowField.type,
-        label: rowField.name,
+        id: field.fieldName,
+        field: field.fieldName,
+        type: field.type,
+        label: field.name,
         cells: [],
       })
     }

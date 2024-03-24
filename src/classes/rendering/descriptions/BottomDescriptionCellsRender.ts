@@ -1,4 +1,5 @@
 import {BaseType, Selection} from 'd3-selection'
+import {BlockType} from '../../../interfaces/base.interface'
 import {IMatrixDescriptionCell} from '../../../interfaces/matrix.interface'
 import {storage} from '../../../utils/storage'
 
@@ -23,19 +24,33 @@ class BottomDescriptionCellsRender {
     const cellId = cell.id
     let cellElement = this.cells.get(cellId)
 
+    const fixedCellHeight = 15
     if (!cellElement) {
+      const {color, opacity} = (storage.customFunctions[BlockType.Columns])({
+        type: this.parentId,
+        ...cell,
+      })
       cellElement = this.container
-        .select('svg')
-        .append('g')
-        .attr('id', `grid-row-${this.parentId}-cell-${cellId}`)
-        .attr('class', `${storage.prefix}grid__row-cell ${storage.prefix}grid-row__cell ${storage.prefix}grid-cell`)
-        .attr('style', `transform:translateX(${80 + index * storage.cellWidth}px)`)
+        .append('rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('fill', color)
+        .attr('opacity', opacity)
+        .attr('width', storage.cellWidth)
+        .attr('height', fixedCellHeight)
+        .attr('data-track-data-index', index)
+        .attr('class', [
+          `${storage.prefix}track-data`,
+          `${storage.prefix}description-cell__${cell.id}`,
+          `${storage.prefix}${cell.id}-cell`,
+        ].join(' '))
 
       this.cells.set(cellId, cellElement)
-    } else {
-      cellElement
-        .attr('style', `transform:translateX(${80 + index * storage.cellWidth}px)`)
     }
+
+    cellElement
+      .attr('width', storage.cellWidth)
+      .attr('style', `transform:translateX(${80 + index * storage.cellWidth}px)`)
 
     return cellElement
   }

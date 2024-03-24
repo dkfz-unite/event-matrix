@@ -6,6 +6,7 @@ import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import Processing from './data/Processing'
 import MainGrid from './MainGrid'
+import BottomDescriptionRender from './rendering/descriptions/BottomDescriptionRender'
 import GridRender from './rendering/GridRender'
 import SideHistogramRender from './rendering/SideHistogramRender'
 import TopHistogramRender from './rendering/TopHistogramRender'
@@ -29,6 +30,7 @@ class EventMatrix extends EventEmitter {
   // private rightDescriptionRender: RightDescriptionRender
   private topHistogramRender: TopHistogramRender
   private sideHistogramRender: SideHistogramRender
+  private bottomDescriptionRender: BottomDescriptionRender
 
   constructor(params: EventMatrixParams) {
     super()
@@ -39,7 +41,7 @@ class EventMatrix extends EventEmitter {
       rowsAppearanceFunc: params.rowsAppearanceFunc,
       cellAppearanceFunc: params.cellAppearanceFunc,
     })
-    this.processing = Processing.createInstance(params.rows, params.columns, params.entries)
+    this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.columnFields, params.rowFields)
     this.container = select(params.element || 'body')
       .append('div')
       .attr('class', `${storage.prefix}container`)
@@ -64,12 +66,21 @@ class EventMatrix extends EventEmitter {
       .append('div')
       .attr('id', `${storage.prefix}histogram-container-side`)
 
+    const bottomContainer = this.container
+      .append('div')
+      .attr('id', `${storage.prefix}container-bottom`)
+      .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--bottom`)
+    bottomContainer
+      .append('div')
+      .attr('id', `${storage.prefix}bottom-description-block`)
+
     const gridWidth = params.width ?? 500
     const gridHeight = params.height ?? 500
 
     this.topHistogramRender = new TopHistogramRender(gridWidth, 80, params.topHistogramLabel ?? '', {})
     this.sideHistogramRender = new SideHistogramRender(80, gridHeight, params.sideHistogramLabel ?? '', {})
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
+    this.bottomDescriptionRender = new BottomDescriptionRender(gridWidth, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
       const matrix = this.processing.getCroppedMatrix()
@@ -78,6 +89,7 @@ class EventMatrix extends EventEmitter {
       this.topHistogramRender.render()
       this.sideHistogramRender.render()
       this.gridRender.render()
+      this.bottomDescriptionRender.render()
     })
 
     // this.bottomDescriptionRender = new BottomDescriptionRender()
@@ -179,7 +191,10 @@ class EventMatrix extends EventEmitter {
    *  Cleanup function to ensure the svg and any bindings are removed from the dom.
    */
   public destroy() {
+    this.bottomDescriptionRender.destroy()
     this.gridRender.destroy()
+    this.sideHistogramRender.destroy()
+    this.topHistogramRender.destroy()
     this.container.remove()
   }
 }
