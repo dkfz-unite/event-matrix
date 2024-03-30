@@ -25,13 +25,15 @@ class BottomDescriptionGroupsRender {
   }
 
   public draw(groups: IMatrixDescriptionGroup[]) {
-    for (let i = 0; i < groups.length; i++) {
-      this.drawGroup(groups[i], i)
+    let height = 0
+    for (const item of groups) {
+      this.drawGroup(item, height)
+      height += item.fields.length * 16 + 10 + 16
     }
     this.cleanOldGroups(groups.map((group) => group.id))
   }
 
-  private drawGroup(group: IMatrixDescriptionGroup, index: number) {
+  private drawGroup(group: IMatrixDescriptionGroup, heightOffset: number) {
     let groupElement = this.groups.get(group.id)
 
     if (!groupElement) {
@@ -53,15 +55,14 @@ class BottomDescriptionGroupsRender {
         .attr('class', `${storage.prefix}description-group__legend-icon`)
         .attr('width', 20)
         .attr('height', 20)
-
-
+      
       this.groupLegends.set(group.id, legend)
       this.groups.set(group.id, groupElement)
     }
 
     groupElement
       .attr('height', group.fields.length * 16 + 10)
-      .attr('style', `transform:translateY(${index * storage.cellHeight}px)`)
+      .attr('style', `transform:translateY(${heightOffset}px)`)
 
     const render = this.getChildrenRender(group.id, groupElement)
     render.draw(group.fields)
