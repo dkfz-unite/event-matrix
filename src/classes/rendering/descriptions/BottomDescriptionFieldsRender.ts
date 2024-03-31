@@ -19,7 +19,7 @@ class BottomDescriptionFieldsRender {
   }
 
   public calcHeight() {
-    return this.fields.size * 16
+    return this.fields.size * 16 + 16 + 10
   }
 
   public draw(fields: IMatrixDescriptionField[]) {
@@ -101,7 +101,7 @@ class BottomDescriptionFieldsRender {
     }
     fieldElement
       .attr('height', fixedCellHeight)
-      .attr('style', `transform:translateY(${index * fixedCellHeight}px)`)
+      .attr('style', `transform:translateY(${index * fixedCellHeight + 16}px)`)
 
     const render = this.getChildrenRender(field.id, fieldElement)
     render.draw(field.cells)

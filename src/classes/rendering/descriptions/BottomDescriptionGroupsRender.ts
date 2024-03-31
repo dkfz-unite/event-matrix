@@ -43,9 +43,9 @@ class BottomDescriptionGroupsRender {
         .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--bottom`)
 
       groupElement.append('text')
-        .attr('x', 6)
-        .attr('y', 11)
-        .attr('dy', '.32em')
+        .attr('x', 72)
+        .attr('y', 0)
+        .attr('dy', '1em')
         .attr('text-anchor', 'end')
         .attr('class', `${storage.prefix}track-group-label ${storage.prefix}description-group__label`)
         .text(group.label)
@@ -55,13 +55,15 @@ class BottomDescriptionGroupsRender {
         .attr('class', `${storage.prefix}description-group__legend-icon`)
         .attr('width', 20)
         .attr('height', 20)
-      
+        .attr('x', 80)
+        .attr('y', 0)
+
       this.groupLegends.set(group.id, legend)
       this.groups.set(group.id, groupElement)
     }
 
     groupElement
-      .attr('height', group.fields.length * 16 + 10)
+      .attr('height', group.fields.length * 16 + 10 + 16)
       .attr('style', `transform:translateY(${heightOffset}px)`)
 
     const render = this.getChildrenRender(group.id, groupElement)
