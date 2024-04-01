@@ -1,7 +1,7 @@
 import {select, Selection} from 'd3-selection'
-import {eventBus, renderEvents} from '../../../utils/event-bus'
-import {storage} from '../../../utils/storage'
-import Processing from '../../data/Processing'
+import {eventBus, renderEvents} from '../../../../utils/event-bus'
+import {storage} from '../../../../utils/storage'
+import Processing from '../../../data/Processing'
 import BottomDescriptionGroupsRender from './BottomDescriptionGroupsRender'
 
 class BottomDescriptionRender {

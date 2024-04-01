@@ -6,7 +6,8 @@ import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import Processing from './data/Processing'
 import MainGrid from './MainGrid'
-import BottomDescriptionRender from './rendering/descriptions/BottomDescriptionRender'
+import BottomDescriptionRender from './rendering/descriptions/bottom/BottomDescriptionRender'
+import SideDescriptionRender from './rendering/descriptions/side/SideDescriptionRender'
 import GridRender from './rendering/GridRender'
 import SideHistogramRender from './rendering/SideHistogramRender'
 import TopHistogramRender from './rendering/TopHistogramRender'
@@ -31,6 +32,7 @@ class EventMatrix extends EventEmitter {
   private topHistogramRender: TopHistogramRender
   private sideHistogramRender: SideHistogramRender
   private bottomDescriptionRender: BottomDescriptionRender
+  private sideDescriptionRender: SideDescriptionRender
 
   constructor(params: EventMatrixParams) {
     super()
@@ -81,6 +83,7 @@ class EventMatrix extends EventEmitter {
     this.sideHistogramRender = new SideHistogramRender(80, gridHeight, params.sideHistogramLabel ?? '', {})
     this.gridRender = new GridRender(gridWidth, gridHeight, {})
     this.bottomDescriptionRender = new BottomDescriptionRender(gridWidth, {})
+    this.sideDescriptionRender = new SideDescriptionRender(gridHeight, {})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
       const matrix = this.processing.getCroppedMatrix()
@@ -90,6 +93,7 @@ class EventMatrix extends EventEmitter {
       this.sideHistogramRender.render()
       this.gridRender.render()
       this.bottomDescriptionRender.render()
+      this.sideDescriptionRender.render()
     })
 
     // this.bottomDescriptionRender = new BottomDescriptionRender()
@@ -191,6 +195,7 @@ class EventMatrix extends EventEmitter {
    *  Cleanup function to ensure the svg and any bindings are removed from the dom.
    */
   public destroy() {
+    this.sideDescriptionRender.destroy()
     this.bottomDescriptionRender.destroy()
     this.gridRender.destroy()
     this.sideHistogramRender.destroy()

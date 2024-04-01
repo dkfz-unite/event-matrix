@@ -1,14 +1,14 @@
 import {BaseType, Selection} from 'd3-selection'
-import {IMatrixDescriptionField} from '../../../interfaces/matrix.interface'
-import {storage} from '../../../utils/storage'
-import Processing from '../../data/Processing'
-import BottomDescriptionCellsRender from './BottomDescriptionCellsRender'
+import {IMatrixDescriptionField} from '../../../../interfaces/matrix.interface'
+import {storage} from '../../../../utils/storage'
+import Processing from '../../../data/Processing'
+import SideDescriptionCellsRender from './SideDescriptionCellsRender'
 
-class BottomDescriptionFieldsRender {
+class SideDescriptionFieldsRender {
   private parentId
   private processing: Processing
   private fields: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
-  private cellsRenders: Map<string, BottomDescriptionCellsRender> = new Map()
+  private cellsRenders: Map<string, SideDescriptionCellsRender> = new Map()
 
   // TODO: check this legacy options
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
@@ -113,7 +113,7 @@ class BottomDescriptionFieldsRender {
   private getChildrenRender(parentId: string, container) {
     let render = this.cellsRenders.get(parentId)
     if (!render) {
-      render = new BottomDescriptionCellsRender(parentId, container, {})
+      render = new SideDescriptionCellsRender(parentId, container, {})
       this.cellsRenders.set(parentId, render)
     }
     return render
@@ -135,4 +135,4 @@ class BottomDescriptionFieldsRender {
   }
 }
 
-export default BottomDescriptionFieldsRender
+export default SideDescriptionFieldsRender

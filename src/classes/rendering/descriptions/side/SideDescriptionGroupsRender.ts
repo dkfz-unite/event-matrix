@@ -1,14 +1,14 @@
 import {BaseType, Selection} from 'd3-selection'
-import {IMatrixDescriptionGroup} from '../../../interfaces/matrix.interface'
-import {storage} from '../../../utils/storage'
-import BottomDescriptionFieldsRender from './BottomDescriptionFieldsRender'
+import {IMatrixDescriptionGroup} from '../../../../interfaces/matrix.interface'
+import {storage} from '../../../../utils/storage'
+import SideDescriptionFieldsRender from './SideDescriptionFieldsRender'
 
-class BottomDescriptionGroupsRender {
+class SideDescriptionGroupsRender {
   private width: number
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private groups: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
   private groupLegends: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
-  private fieldsRenders: Map<string, BottomDescriptionFieldsRender> = new Map()
+  private fieldsRenders: Map<string, SideDescriptionFieldsRender> = new Map()
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
 
@@ -75,7 +75,7 @@ class BottomDescriptionGroupsRender {
   private getChildrenRender(parentId: string, container) {
     let render = this.fieldsRenders.get(parentId)
     if (!render) {
-      render = new BottomDescriptionFieldsRender(parentId, container, {})
+      render = new SideDescriptionFieldsRender(parentId, container, {})
       this.fieldsRenders.set(parentId, render)
     }
     return render
@@ -97,4 +97,4 @@ class BottomDescriptionGroupsRender {
   }
 }
 
-export default BottomDescriptionGroupsRender
+export default SideDescriptionGroupsRender

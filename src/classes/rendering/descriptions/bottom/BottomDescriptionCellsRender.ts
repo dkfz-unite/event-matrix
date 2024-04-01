@@ -1,7 +1,7 @@
 import {BaseType, Selection} from 'd3-selection'
-import {BlockType} from '../../../interfaces/base.interface'
-import {IMatrixDescriptionCell} from '../../../interfaces/matrix.interface'
-import {storage} from '../../../utils/storage'
+import {BlockType} from '../../../../interfaces/base.interface'
+import {IMatrixDescriptionCell} from '../../../../interfaces/matrix.interface'
+import {storage} from '../../../../utils/storage'
 
 class BottomDescriptionCellsRender {
   container: Selection<SVGGElement, unknown, HTMLElement, unknown>
