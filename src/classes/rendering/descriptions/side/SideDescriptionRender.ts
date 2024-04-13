@@ -13,14 +13,14 @@ class SideDescriptionRender {
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private groupsRenderer: SideDescriptionGroupsRender
 
-  constructor(width: number, options: any) {
-    this.width = width
+  constructor(height: number, options: any) {
+    this.height = height
 
-    this.groupsRenderer = new SideDescriptionGroupsRender(width, {})
+    this.groupsRenderer = new SideDescriptionGroupsRender(height, {})
     this.processing = Processing.getInstance()
-    // Initial height calculates approximately
+    // Initial width calculates approximately
     const groups = this.processing.getBottomDescriptionGroups()
-    this.height = groups.reduce((sum, group) => {
+    this.width = groups.reduce((sum, group) => {
       return sum + group.fields.length * 16 + 10
     }, 0)
 
@@ -35,34 +35,34 @@ class SideDescriptionRender {
     eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_START)
     this.draw()
     eventBus.emit(renderEvents.RENDER_Y_DESCRIPTION_BLOCK_END)
-    this.calcHeight()
+    this.calcWidth()
   }
 
-  public calcHeight() {
-    this.height = this.groupsRenderer.calcHeight()
+  public calcWidth() {
+    this.width = this.groupsRenderer.calcWidth()
     this.container
-      .attr('height', this.height + 6)
-      .attr('viewBox', `0 0 ${this.width + 80} ${this.height + 6}`)
+      .attr('width', this.width + 6)
+      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 6}`)
   }
 
   private prepareContainer() {
     if (!this.container) {
       this.container = this.wrapper.append('svg')
         .attr('version', '2.0')
-        .attr('class', `${storage.prefix}description-block ${storage.prefix}description-block--bottom`)
-        .attr('id', `${storage.prefix}description-block-bottom`)
+        .attr('class', `${storage.prefix}description-block ${storage.prefix}description-block--side`)
+        .attr('id', `${storage.prefix}description-block-side`)
 
       this.groupsRenderer.setContainer(this.container)
     }
 
     this.container
-      .attr('width', this.width + 80)
+      .attr('width', this.width + 6)
       .attr('height', this.height + 6)
-      .attr('viewBox', `0 0 ${this.width + 80} ${this.height + 6}`)
+      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 6}`)
   }
 
   private draw() {
-    const groups = this.processing.getBottomDescriptionGroups()
+    const groups = this.processing.getSideDescriptionGroups()
     console.log(groups)
     this.groupsRenderer.draw(groups)
   }

@@ -18,7 +18,7 @@ class SideDescriptionFieldsRender {
     this.container = container
   }
 
-  public calcHeight() {
+  public calcWidth() {
     return this.fields.size * 16 + 16 + 10
   }
 
@@ -38,12 +38,6 @@ class SideDescriptionFieldsRender {
         .append('svg')
         .attr('version', '2.0')
         .attr('class', `${storage.prefix}description-group__field ${storage.prefix}description-field`)
-
-      // fieldElement
-      //   .append('svg')
-      //   .attr('version', '2.0')
-      //   .attr('height', storage.cellHeight)
-      //   .attr('class', `${storage.prefix}description-group__field ${storage.prefix}description-field`)
 
       this.fields.set(field.id, fieldElement)
 
@@ -100,8 +94,8 @@ class SideDescriptionFieldsRender {
         })
     }
     fieldElement
-      .attr('height', fixedCellHeight)
-      .attr('style', `transform:translateY(${index * fixedCellHeight + 16}px)`)
+      .attr('width', fixedCellHeight)
+      .attr('style', `transform:translateX(${index * fixedCellHeight + 16}px)`)
 
     const render = this.getChildrenRender(field.id, fieldElement)
     render.draw(field.cells)

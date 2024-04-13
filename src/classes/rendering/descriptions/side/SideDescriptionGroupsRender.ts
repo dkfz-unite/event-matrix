@@ -4,24 +4,23 @@ import {storage} from '../../../../utils/storage'
 import SideDescriptionFieldsRender from './SideDescriptionFieldsRender'
 
 class SideDescriptionGroupsRender {
-  private width: number
-  private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
+  private height: number
   private groups: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
   private groupLegends: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
   private fieldsRenders: Map<string, SideDescriptionFieldsRender> = new Map()
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
 
-  constructor(width: number, options: any) {
-    this.width = width
+  constructor(height: number, options: any) {
+    this.height = height
   }
 
   public setContainer(container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>) {
     this.container = container
   }
 
-  public calcHeight() {
-    return Array.from(this.fieldsRenders.values()).reduce((sum, fieldsRenderer) => (sum + fieldsRenderer.calcHeight()), 0)
+  public calcWidth() {
+    return Array.from(this.fieldsRenders.values()).reduce((sum, fieldsRenderer) => (sum + fieldsRenderer.calcWidth()), 0)
   }
 
   public draw(groups: IMatrixDescriptionGroup[]) {
@@ -40,7 +39,7 @@ class SideDescriptionGroupsRender {
       groupElement = this.container
         .append('svg')
         .attr('id', `${storage.prefix}description-group-${group.id}`)
-        .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--bottom`)
+        .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--side`)
 
       groupElement.append('text')
         .attr('x', 72)

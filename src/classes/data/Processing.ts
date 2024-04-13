@@ -445,7 +445,7 @@ class Processing {
     return groups
   }
 
-  public getRightDescriptionGroups(): IMatrixDescriptionGroup[] {
+  public getSideDescriptionGroups(): IMatrixDescriptionGroup[] {
     const groups = []
     let id = 0
     for (const field of this.descriptionFields.rows) {
