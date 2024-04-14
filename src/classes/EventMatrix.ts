@@ -67,6 +67,9 @@ class EventMatrix extends EventEmitter {
     mainContainer
       .append('div')
       .attr('id', `${storage.prefix}histogram-container-side`)
+    mainContainer
+      .append('div')
+      .attr('id', `${storage.prefix}side-description-block`)
 
     const bottomContainer = this.container
       .append('div')
