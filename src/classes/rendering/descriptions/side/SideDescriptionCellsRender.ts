@@ -26,7 +26,7 @@ class SideDescriptionCellsRender {
 
     const fixedCellHeight = 15
     if (!cellElement) {
-      const {color, opacity} = (storage.customFunctions[BlockType.Columns])({
+      const {color, opacity} = (storage.customFunctions[BlockType.Rows])({
         type: this.parentId,
         ...cell,
       })

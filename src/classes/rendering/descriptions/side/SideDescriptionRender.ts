@@ -14,7 +14,6 @@ class SideDescriptionRender {
   private groupsRenderer: SideDescriptionGroupsRender
 
   constructor(height: number, options: any) {
-    console.log(height)
     this.height = height
 
     this.groupsRenderer = new SideDescriptionGroupsRender(height, {})
