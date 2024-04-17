@@ -448,22 +448,22 @@ class Processing {
   public getSideDescriptionGroups(): IMatrixDescriptionGroup[] {
     const groups = []
     let id = 0
-    for (const field of this.descriptionFields.rows) {
-      let existedGroup = groups.find((group) => group.id === field.group)
+    for (const rowField of this.descriptionFields.rows) {
+      let existedGroup = groups.find((group) => group.label === rowField.group)
       if (!existedGroup) {
         existedGroup = {
           id: ++id,
-          label: field.group,
+          label: rowField.group,
           fields: [],
         }
         groups.push(existedGroup)
       }
 
       existedGroup.fields.push({
-        id: field.fieldName,
-        field: field.fieldName,
-        type: field.type,
-        label: field.name,
+        id: rowField.fieldName,
+        field: rowField.fieldName,
+        type: rowField.type,
+        label: rowField.name,
         cells: [],
       })
     }
