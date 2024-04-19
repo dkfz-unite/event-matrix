@@ -48,36 +48,42 @@ class EventMatrix extends EventEmitter {
       .append('div')
       .attr('class', `${storage.prefix}container`)
       .style('position', 'relative')
-
-    const topContainer = this.container
+    const mainWrapper = this.container
       .append('div')
-      .attr('id', `${storage.prefix}container-top`)
-      .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--top`)
-    topContainer
-      .append('div')
-      .attr('id', `${storage.prefix}histogram-container-top`)
+      .attr('class', `${storage.prefix}container-wrapper`)
+      .style('display', 'flex')
 
-    const mainContainer = this.container
+    const mainContainer = mainWrapper
       .append('div')
       .attr('id', `${storage.prefix}container-main`)
       .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--main`)
     mainContainer
       .append('div')
+      .attr('id', `${storage.prefix}histogram-container-top`)
+    mainContainer
+      .append('div')
       .attr('id', `${storage.prefix}grid-container`)
     mainContainer
       .append('div')
+      .attr('id', `${storage.prefix}bottom-description-block`)
+
+    const sideContainer = mainWrapper
+      .append('div')
+      .attr('id', `${storage.prefix}container-side`)
+      .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--side`)
+    sideContainer
+      .append('div')
       .attr('id', `${storage.prefix}histogram-container-side`)
-    mainContainer
+    sideContainer
       .append('div')
       .attr('id', `${storage.prefix}side-description-block`)
+      .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--side`)
+    //
+    // const bottomContainer = this.container
+    //   .append('div')
+    //   .attr('id', `${storage.prefix}container-bottom`)
+    //   .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--bottom`)
 
-    const bottomContainer = this.container
-      .append('div')
-      .attr('id', `${storage.prefix}container-bottom`)
-      .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--bottom`)
-    bottomContainer
-      .append('div')
-      .attr('id', `${storage.prefix}bottom-description-block`)
 
     const gridWidth = params.width ?? 500
     const gridHeight = params.height ?? 500

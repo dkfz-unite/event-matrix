@@ -45,9 +45,10 @@ class SideDescriptionFieldsRender {
         .append('text')
         .attr('class', `${storage.prefix}${field.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font ${storage.prefix}grid-row__label`)
         .attr('data-row', field.id)
-        .attr('x', 80 - 8)
-        .attr('y', fixedCellHeight / 2)
+        .attr('x', fixedCellHeight / 2)
+        .attr('y', -1 * (80 - 8))
         .attr('dy', '.32em')
+        .attr('transform', 'rotate(90)')
         .attr('text-anchor', 'end')
         .attr('style', () => {
           if (fixedCellHeight < storage.minCellHeight) {
