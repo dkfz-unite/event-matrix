@@ -40,6 +40,8 @@ class SideDescriptionGroupsRender {
         .append('svg')
         .attr('id', `${storage.prefix}description-group-${group.id}`)
         .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--side`)
+        .attr('x', 0)
+        .attr('y', 80)
 
       groupElement.append('text')
         .attr('x', 0)
@@ -56,7 +58,7 @@ class SideDescriptionGroupsRender {
         .attr('width', 20)
         .attr('height', 20)
         .attr('x', 80)
-        .attr('y', 0)
+        .attr('y', 80)
 
       this.groupLegends.set(group.id, legend)
       this.groups.set(group.id, groupElement)
