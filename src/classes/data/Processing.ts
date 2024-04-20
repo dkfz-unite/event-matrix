@@ -481,6 +481,8 @@ class Processing {
       }
     }
 
+    console.log(croppedRows)
+    console.log(groups)
     return groups
   }
 

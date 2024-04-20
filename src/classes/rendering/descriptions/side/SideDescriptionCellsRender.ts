@@ -36,8 +36,8 @@ class SideDescriptionCellsRender {
         .attr('y', 0)
         .attr('fill', color)
         .attr('opacity', opacity)
-        .attr('width', fixedCellHeight)
-        .attr('height', storage.cellWidth)
+        .attr('width', storage.cellWidth)
+        .attr('height', fixedCellHeight)
         .attr('data-track-data-index', index)
         .attr('class', [
           `${storage.prefix}track-data`,
@@ -50,7 +50,7 @@ class SideDescriptionCellsRender {
 
     cellElement
       .attr('height', storage.cellWidth)
-      .attr('style', `transform:translateY(${index * storage.cellWidth}px)`)
+      .attr('style', `transform:translateY(${index * fixedCellHeight}px)`)
 
     return cellElement
   }
