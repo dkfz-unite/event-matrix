@@ -42,7 +42,8 @@ class SideDescriptionRender {
     this.width = this.groupsRenderer.calcWidth()
     this.container
       .attr('width', this.width + 6)
-      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 6}`)
+      .attr('height', this.height + 6 + 80 + 6 + 6)
+      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 6 + 80 + 6 + 6}`)
   }
 
   private prepareContainer() {
