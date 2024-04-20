@@ -49,7 +49,7 @@ class SideDescriptionCellsRender {
     }
 
     cellElement
-      .attr('height', storage.cellWidth)
+      .attr('height', fixedCellHeight)
       .attr('style', `transform:translateY(${index * fixedCellHeight}px)`)
 
     return cellElement
