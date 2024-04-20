@@ -41,7 +41,7 @@ class SideDescriptionGroupsRender {
         .attr('id', `${storage.prefix}description-group-${group.id}`)
         .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--side`)
         .attr('x', 0)
-        .attr('y', 80)
+        .attr('y', 80 + 6 + 6)
 
       groupElement.append('text')
         .attr('x', 0)
