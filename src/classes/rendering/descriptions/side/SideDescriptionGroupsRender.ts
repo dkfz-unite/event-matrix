@@ -41,14 +41,14 @@ class SideDescriptionGroupsRender {
         .attr('id', `${storage.prefix}description-group-${group.id}`)
         .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--side`)
         .attr('x', 0)
-        .attr('y', 80 + 6 + 6)
+        .attr('y', 0)
 
       groupElement.append('text')
-        .attr('x', 0)
+        .attr('x', 80 + 6 + 6 - 6)
         .attr('y', -1 * (group.fields.length * 16 + 16))
         .attr('dy', '0')
         .attr('transform', 'rotate(90)')
-        .attr('text-anchor', 'start')
+        .attr('text-anchor', 'end')
         .attr('class', `${storage.prefix}track-group-label ${storage.prefix}description-group__label`)
         .text(group.label)
 
@@ -58,7 +58,7 @@ class SideDescriptionGroupsRender {
         .attr('width', 20)
         .attr('height', 20)
         .attr('x', 80)
-        .attr('y', 80)
+        .attr('y', 0)
 
       this.groupLegends.set(group.id, legend)
       this.groups.set(group.id, groupElement)
@@ -66,7 +66,7 @@ class SideDescriptionGroupsRender {
 
     groupElement
       .attr('width', group.fields.length * 16 + 10 + 16)
-      .attr('height', this.height)
+      .attr('height', this.height + 80 + 6 + 6)
       .attr('style', `transform:translateX(${heightOffset}px)`)
 
     const render = this.getChildrenRender(group.id, groupElement)
