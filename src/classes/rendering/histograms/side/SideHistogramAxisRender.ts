@@ -43,8 +43,8 @@ class SideHistogramAxisRender {
     }
 
     this.leftAxis
-      .attr('y1', 25)
-      .attr('y2', 25 + this.height)
+      .attr('y1', 33)
+      .attr('y2', 33 + this.height + 6)
       .attr('x1', 0)
       .attr('x2', 0)
   }
@@ -57,8 +57,8 @@ class SideHistogramAxisRender {
     }
 
     this.topAxis
-      .attr('y1', 25)
-      .attr('y2', 25)
+      .attr('y1', 33)
+      .attr('y2', 33)
       .attr('x1', 0)
       .attr('x2', this.width + 5)
   }
@@ -70,12 +70,12 @@ class SideHistogramAxisRender {
         .text(this.label)
         .attr('class', `${storage.prefix}label-text-font`)
         .attr('text-anchor', 'middle')
-        .attr('dy', '1em')
+        .attr('dy', '0')
     }
 
     this.topLabel
       .attr('x', this.width / 2)
-      .attr('y', 0)
+      .attr('y', 10)
   }
 
   private drawTopText(topTotal) {
@@ -89,7 +89,7 @@ class SideHistogramAxisRender {
 
     this.topText
       .attr('x', this.width)
-      .attr('y', 10)
+      .attr('y', 20)
       .text(topTotal)
   }
 
@@ -108,7 +108,7 @@ class SideHistogramAxisRender {
 
     this.middleText
       .attr('x', secondWidth)
-      .attr('y', 10)
+      .attr('y', 20)
       .text(halfInt)
   }
 

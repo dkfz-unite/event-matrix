@@ -55,14 +55,14 @@ class SideHistogramRender {
 
     this.container
       .attr('width', this.width + 6)
-      .attr('height', this.height + 80 + 6)
-      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 80 + 6}`)
+      .attr('height', this.height + 80 + 6 + 6)
+      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 80 + 6 + 6}`)
 
     this.containerInsides
       .attr('width', this.width + 6)
-      .attr('height', this.height)
-      .attr('y', 80 + 6)
-      .attr('viewBox', `0 0 ${this.width + 6} ${this.height}`)
+      .attr('height', this.height + 40)
+      .attr('y', 80 + 6 - 40 + 6)
+      .attr('viewBox', `0 0 ${this.width + 6} ${this.height + 40}`)
   }
 
   private addEvents() {
@@ -128,7 +128,7 @@ class SideHistogramRender {
       .attr('width', barHeight) // If bars are small, do not use whitespace.
       .attr('height', storage.cellHeight - (storage.cellHeight < 3 ? 0 : 1))
       .attr('x', 5)
-      .attr('y', index * storage.cellHeight)
+      .attr('y', 40 + index * storage.cellHeight)
   }
 
   public cleanOldBars(activeRowIds: string[]) {
