@@ -1,9 +1,9 @@
 import {select, Selection} from 'd3-selection'
-import {BlockType} from '../../interfaces/base.interface'
-import {IMatrix, IMatrixColumn} from '../../interfaces/main-grid.interface'
-import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
-import {storage} from '../../utils/storage'
-import Processing from '../data/Processing'
+import {BlockType} from '../../../../interfaces/base.interface'
+import {IMatrix, IMatrixColumn} from '../../../../interfaces/main-grid.interface'
+import {eventBus, innerEvents, publicEvents, renderEvents} from '../../../../utils/event-bus'
+import {storage} from '../../../../utils/storage'
+import Processing from '../../../data/Processing'
 import TopHistogramAxisRender from './TopHistogramAxisRender'
 
 class TopHistogramRender {

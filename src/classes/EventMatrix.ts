@@ -9,8 +9,8 @@ import MainGrid from './MainGrid'
 import BottomDescriptionRender from './rendering/descriptions/bottom/BottomDescriptionRender'
 import SideDescriptionRender from './rendering/descriptions/side/SideDescriptionRender'
 import GridRender from './rendering/GridRender'
-import SideHistogramRender from './rendering/SideHistogramRender'
-import TopHistogramRender from './rendering/TopHistogramRender'
+import SideHistogramRender from './rendering/histograms/side/SideHistogramRender'
+import TopHistogramRender from './rendering/histograms/top/TopHistogramRender'
 
 class EventMatrix extends EventEmitter {
   private readonly params: EventMatrixParams

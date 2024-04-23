@@ -1,16 +1,16 @@
 import {Selection} from 'd3-selection'
-import {storage} from '../../utils/storage'
+import {storage} from '../../../../utils/storage'
 
-class TopHistogramAxisRender {
+class SideHistogramAxisRender {
   private width = 500
   private height = 80
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
-  private bottomAxis: Selection<SVGLineElement, unknown, HTMLElement, unknown>
   private leftAxis: Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private topAxis: Selection<SVGLineElement, unknown, HTMLElement, unknown>
   private topText: Selection<SVGTextElement, unknown, HTMLElement, unknown>
   private middleText: Selection<SVGTextElement, unknown, HTMLElement, unknown>
-  private leftLabel: Selection<SVGTextElement, unknown, HTMLElement, unknown>
+  private topLabel: Selection<SVGTextElement, unknown, HTMLElement, unknown>
   private label: string
 
   constructor(width: number, height: number, label: string, options: any) {
@@ -28,25 +28,11 @@ class TopHistogramAxisRender {
   }
 
   private draw(topTotal: number) {
-    this.drawBottomAxis()
     this.drawLeftAxis()
+    this.drawTopAxis()
     this.drawTopText(topTotal)
     this.drawMiddleText(topTotal)
-    this.drawLeftLabel()
-  }
-
-  private drawBottomAxis() {
-    if (!this.bottomAxis) {
-      this.bottomAxis = this.container
-        .append('line')
-        .attr('class', `${storage.prefix}histogram-axis`)
-    }
-
-    this.bottomAxis
-      .attr('y1', this.height + 5)
-      .attr('y2', this.height + 5)
-      .attr('x1', 80 - 5)
-      .attr('x2', this.width + 80)
+    this.drawTopLabel()
   }
 
   private drawLeftAxis() {
@@ -57,25 +43,39 @@ class TopHistogramAxisRender {
     }
 
     this.leftAxis
-      .attr('y1', 0)
-      .attr('y2', this.height + 5)
-      .attr('x1', 80 - 5)
-      .attr('x2', 80 - 5)
+      .attr('y1', 25)
+      .attr('y2', 25 + this.height)
+      .attr('x1', 0)
+      .attr('x2', 0)
   }
 
-  private drawLeftLabel() {
-    if (!this.leftLabel) {
-      this.leftLabel = this.container
+  private drawTopAxis() {
+    if (!this.topAxis) {
+      this.topAxis = this.container
+        .append('line')
+        .attr('class', `${storage.prefix}histogram-axis`)
+    }
+
+    this.topAxis
+      .attr('y1', 25)
+      .attr('y2', 25)
+      .attr('x1', 0)
+      .attr('x2', this.width + 5)
+  }
+
+  private drawTopLabel() {
+    if (!this.topLabel) {
+      this.topLabel = this.container
         .append('text')
         .text(this.label)
         .attr('class', `${storage.prefix}label-text-font`)
         .attr('text-anchor', 'middle')
-        .attr('transform', 'rotate(-90)')
+        .attr('dy', '1em')
     }
 
-    this.leftLabel
-      .attr('x', -this.height / 2)
-      .attr('y', 80 - 12 - 15)
+    this.topLabel
+      .attr('x', this.width / 2)
+      .attr('y', 0)
   }
 
   private drawTopText(topTotal) {
@@ -88,7 +88,8 @@ class TopHistogramAxisRender {
     }
 
     this.topText
-      .attr('x', 80 - 12)
+      .attr('x', this.width)
+      .attr('y', 10)
       .text(topTotal)
   }
 
@@ -97,27 +98,27 @@ class TopHistogramAxisRender {
       this.middleText = this.container
         .append('text')
         .attr('class', `${storage.prefix}label-text-font`)
-        .attr('dy', '.32em')
+        .attr('dy', '1em')
         .attr('text-anchor', 'end')
     }
 
     // Round to a nice round number and then adjust position accordingly
     const halfInt = Math.round(topTotal / 2)
-    const secondHeight = this.height / 2
+    const secondWidth = this.width / 2
 
     this.middleText
-      .attr('x', 80 - 12)
-      .attr('y', secondHeight)
+      .attr('x', secondWidth)
+      .attr('y', 10)
       .text(halfInt)
   }
 
   public destroy() {
-    this.bottomAxis.remove()
-    delete this.bottomAxis
     this.leftAxis.remove()
     delete this.leftAxis
-    this.leftLabel.remove()
-    delete this.leftLabel
+    this.topAxis.remove()
+    delete this.topAxis
+    this.topLabel.remove()
+    delete this.topLabel
     this.topText.remove()
     delete this.topText
     this.middleText.remove()
@@ -125,4 +126,4 @@ class TopHistogramAxisRender {
   }
 }
 
-export default TopHistogramAxisRender
+export default SideHistogramAxisRender

@@ -45,10 +45,11 @@ class SideDescriptionFieldsRender {
         .append('text')
         .attr('class', `${storage.prefix}${field.id}-label ${storage.prefix}row-label ${storage.prefix}label-text-font ${storage.prefix}grid-row__label`)
         .attr('data-row', field.id)
-        .attr('x', 80 + 6 + 6 - 6)
-        .attr('y', -6)
-        .attr('transform', 'rotate(90)')
-        .attr('text-anchor', 'end')
+        .attr('x', 0)
+        .attr('y', 80 + 6 + 6 - 6)
+        .attr('dy', '1em')
+        .attr('transform', `rotate(-90, 0, ${80 + 6 + 6 - 6})`)
+        .attr('text-anchor', 'start')
         .attr('style', () => {
           if (fixedCellHeight < storage.minCellHeight) {
             return 'display: none;'
@@ -84,7 +85,6 @@ class SideDescriptionFieldsRender {
     } else {
       const text = fieldElement.select(`.${storage.prefix}row-label`)
       text
-        .attr('y', -6)
         .attr('style', () => {
           if (fixedCellHeight < storage.minCellHeight) {
             return 'display: none;'

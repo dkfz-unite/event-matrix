@@ -44,11 +44,11 @@ class SideDescriptionGroupsRender {
         .attr('y', 0)
 
       groupElement.append('text')
-        .attr('x', 80 + 6 + 6 - 6)
-        .attr('y', -1 * (group.fields.length * 16 + 16))
-        .attr('dy', '0')
-        .attr('transform', 'rotate(90)')
-        .attr('text-anchor', 'end')
+        .attr('x', 0)
+        .attr('y', 80 + 6 + 6 - 6)
+        .attr('dy', '1em')
+        .attr('transform', `rotate(-90, 0, ${80 + 6 + 6 - 6})`)
+        .attr('text-anchor', 'start')
         .attr('class', `${storage.prefix}track-group-label ${storage.prefix}description-group__label`)
         .text(group.label)
 
