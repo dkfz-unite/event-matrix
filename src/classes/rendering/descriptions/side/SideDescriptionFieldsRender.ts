@@ -1,5 +1,7 @@
 import {BaseType, Selection} from 'd3-selection'
+import {IEnhancedEvent} from '../../../../interfaces/main-grid.interface'
 import {IMatrixDescriptionField} from '../../../../interfaces/matrix.interface'
+import {eventBus, innerEvents, publicEvents} from '../../../../utils/event-bus'
 import {storage} from '../../../../utils/storage'
 import Processing from '../../../data/Processing'
 import SideDescriptionCellsRender from './SideDescriptionCellsRender'
@@ -58,30 +60,30 @@ class SideDescriptionFieldsRender {
           }
         })
         .text(field.label)
-      // .on('mouseover', (event: IEnhancedEvent) => {
-      //   const target = event.target
-      //   const rowId = target.dataset.row
-      //   if (!rowId) {
-      //     return
-      //   }
-      //   eventBus.emit(publicEvents.GRID_LABEL_HOVER, {
-      //     target,
-      //     rowId,
-      //   })
-      // })
-      // .on('click', (event: IEnhancedEvent) => {
-      //   const target = event.target
-      //   const rowId = target.dataset.row
-      //   if (!rowId) {
-      //     return
-      //   }
-      //   this.processing.sortMatrixColumnsByEntries(rowId)
-      //   eventBus.emit(innerEvents.INNER_UPDATE, false)
-      //   eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
-      //     target,
-      //     rowId,
-      //   })
-      // })
+        .on('mouseover', (event: IEnhancedEvent) => {
+          const target = event.target
+          const rowId = target.dataset.row
+          if (!rowId) {
+            return
+          }
+          eventBus.emit(publicEvents.GRID_LABEL_HOVER, {
+            target,
+            rowId,
+          })
+        })
+        .on('click', (event: IEnhancedEvent) => {
+          const target = event.target
+          const rowId = target.dataset.row
+          if (!rowId) {
+            return
+          }
+          this.processing.sortMatrixColumnsByEntries(rowId)
+          eventBus.emit(innerEvents.INNER_UPDATE, false)
+          eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
+            target,
+            rowId,
+          })
+        })
     } else {
       const text = fieldElement.select(`.${storage.prefix}row-label`)
       text
