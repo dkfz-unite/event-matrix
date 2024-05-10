@@ -1,11 +1,9 @@
-import {ScaleBand} from 'd3-scale'
 import {select, Selection} from 'd3-selection'
 import EventEmitter from 'eventemitter3'
 import {EventMatrixParams} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import Processing from './data/Processing'
-import MainGrid from './MainGrid'
 import BottomDescriptionRender from './rendering/descriptions/bottom/BottomDescriptionRender'
 import SideDescriptionRender from './rendering/descriptions/side/SideDescriptionRender'
 import GridRender from './rendering/GridRender'
@@ -13,18 +11,10 @@ import SideHistogramRender from './rendering/histograms/side/SideHistogramRender
 import TopHistogramRender from './rendering/histograms/top/TopHistogramRender'
 
 class EventMatrix extends EventEmitter {
-  private readonly params: EventMatrixParams
-  private width: number
-  private height: number
   private container: Selection<HTMLDivElement, unknown, HTMLElement, unknown>
-  private mainGrid: MainGrid
   private heatMapMode = false
   private drawGridLines = false
   private crosshairMode = false
-  private charts: MainGrid[] = []
-  private x: ScaleBand<string>
-  private y: ScaleBand<string>
-  private fullscreen = false
   private processing: Processing
   private gridRender: GridRender
   // private bottomDescriptionRender: BottomDescriptionRender

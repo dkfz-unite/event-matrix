@@ -18,6 +18,7 @@ class BottomDescriptionFieldsRender {
   constructor(parentId: string, container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>, options: any) {
     this.parentId = parentId
     this.container = container
+    this.processing = Processing.getInstance()
   }
 
   public calcHeight() {
@@ -78,15 +79,15 @@ class BottomDescriptionFieldsRender {
         })
         .on('click', (event: IEnhancedEvent) => {
           const target = event.target
-          const rowId = target.dataset.row
-          if (!rowId) {
+          const field = target.dataset.row
+          if (!field) {
             return
           }
-          this.processing.sortMatrixColumnsByEntries(rowId)
+          this.processing.sortColumns(field)
           eventBus.emit(innerEvents.INNER_UPDATE, false)
           eventBus.emit(publicEvents.GRID_LABEL_CLICK, {
             target,
-            rowId,
+            field,
           })
         })
     } else {

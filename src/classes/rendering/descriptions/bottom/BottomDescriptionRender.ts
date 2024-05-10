@@ -63,7 +63,7 @@ class BottomDescriptionRender {
 
   private draw() {
     const groups = this.processing.getBottomDescriptionGroups()
-    console.log(groups)
+    // console.log(groups)
     this.groupsRenderer.draw(groups)
   }
 

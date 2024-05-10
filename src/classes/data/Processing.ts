@@ -217,6 +217,10 @@ class Processing {
     this.frame = new Frame(this.columns.length - 1, this.rows.length - 1, this.maxCellDepth - 1)
   }
 
+  public setFrame(frame: Frame) {
+    this.frame = frame
+  }
+
   private generateMatrix() {
     const matrix: IMatrix = this.rows.map((row) => {
       const columns = this.columns.map((column) => {
@@ -325,7 +329,12 @@ class Processing {
 
   public sortMatrixRows(fieldName: string) {
     this.matrix.sort((mRowA, mRowB) => {
-      const delta = mRowA.data[fieldName] - mRowB.data[fieldName]
+      const aVal = mRowA.data[fieldName]
+      const bVal = mRowB.data[fieldName]
+      if (bVal === undefined) {
+        return this.rowsOrder === 'ASC' ? -1 : 1
+      }
+      const delta = aVal === bVal ? 0 : (aVal > bVal ? 1 : -1)
       return this.rowsOrder === 'ASC' ? delta : -delta
     })
   }
@@ -336,7 +345,12 @@ class Processing {
     }
 
     const columnIndexOrders = this.matrix[0].columns.sort((mColA, mColB) => {
-      const delta = mColA.data[fieldName] - mColB.data[fieldName]
+      const aVal = mColA.data[fieldName]
+      const bVal = mColB.data[fieldName]
+      if (bVal === undefined) {
+        return this.rowsOrder === 'ASC' ? -1 : 1
+      }
+      const delta = aVal === bVal ? 0 : (aVal > bVal ? 1 : -1)
       return this.columnsOrder === 'ASC' ? delta : -delta
     }).map((mCol) => mCol.id)
 
@@ -481,8 +495,8 @@ class Processing {
       }
     }
 
-    console.log(croppedRows)
-    console.log(groups)
+    // console.log(croppedRows)
+    // console.log(groups)
     return groups
   }
 

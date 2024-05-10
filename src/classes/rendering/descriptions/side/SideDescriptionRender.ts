@@ -64,7 +64,7 @@ class SideDescriptionRender {
 
   private draw() {
     const groups = this.processing.getSideDescriptionGroups()
-    console.log(groups)
+    // console.log(groups)
     this.groupsRenderer.draw(groups)
   }
 
