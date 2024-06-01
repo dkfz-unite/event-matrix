@@ -12,8 +12,8 @@ class BottomDescriptionGroupsRender {
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
 
-  constructor(width: number, options: any) {
-    this.width = width
+  constructor(options: any) {
+    this.width = storage.gridWidth
   }
 
   public setContainer(container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>) {

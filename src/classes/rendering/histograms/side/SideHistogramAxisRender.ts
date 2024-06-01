@@ -13,9 +13,9 @@ class SideHistogramAxisRender {
   private topLabel: Selection<SVGTextElement, unknown, HTMLElement, unknown>
   private label: string
 
-  constructor(width: number, height: number, label: string, options: any) {
+  constructor(width: number, label: string, options: any) {
     this.width = width
-    this.height = height
+    this.height = storage.gridHeight
     this.label = label
   }
 

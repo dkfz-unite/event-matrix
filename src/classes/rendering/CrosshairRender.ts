@@ -16,9 +16,9 @@ class CrosshairRender {
   private horizontalCross: Selection<SVGLineElement, unknown, HTMLElement, unknown>
   private selectionRegion: Selection<SVGRectElement, unknown, HTMLElement, unknown>
 
-  constructor(width: number, height: number) {
-    this.width = width
-    this.height = height
+  constructor() {
+    this.width = storage.gridWidth
+    this.height = storage.gridHeight
     this.processing = Processing.getInstance()
   }
 

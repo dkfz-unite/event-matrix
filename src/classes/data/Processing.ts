@@ -41,7 +41,7 @@ class Processing {
     rows: [],
   }
 
-  constructor(rows: IRow[], columns: IColumn[], entries: IEntry[], columnsFields: any[] = [], rowsFields: any[]) {
+  constructor(rows: IRow[] = [], columns: IColumn[] = [], entries: IEntry[] = [], columnsFields: any[] = [], rowsFields: any[]) {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
     this.entriesOriginal = entries

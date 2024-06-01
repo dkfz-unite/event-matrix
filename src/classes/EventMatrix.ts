@@ -27,10 +27,15 @@ class EventMatrix extends EventEmitter {
     super()
     storage.setOptions({
       minCellHeight: params.minCellHeight,
+      minCellWidth: params.minCellWidth,
       prefix: params.prefix,
       columnsAppearanceFunc: params.columnsAppearanceFunc,
       rowsAppearanceFunc: params.rowsAppearanceFunc,
       cellAppearanceFunc: params.cellAppearanceFunc,
+      columnsCount: params.columns.length,
+      rowsCount: params.rows.length,
+      gridWidth: params.width,
+      gridHeight: params.height,
     })
     this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.columnFields, params.rowFields)
     this.container = select(params.element || 'body')
@@ -73,19 +78,15 @@ class EventMatrix extends EventEmitter {
     //   .attr('id', `${storage.prefix}container-bottom`)
     //   .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--bottom`)
 
-
-    const gridWidth = params.width ?? 500
-    const gridHeight = params.height ?? 500
-
-    this.topHistogramRender = new TopHistogramRender(gridWidth, 80, params.topHistogramLabel ?? '', {})
-    this.sideHistogramRender = new SideHistogramRender(80, gridHeight, params.sideHistogramLabel ?? '', {})
-    this.gridRender = new GridRender(gridWidth, gridHeight, {})
-    this.bottomDescriptionRender = new BottomDescriptionRender(gridWidth, {})
-    this.sideDescriptionRender = new SideDescriptionRender(gridHeight, {})
+    this.topHistogramRender = new TopHistogramRender(80, params.topHistogramLabel ?? '', {})
+    this.sideHistogramRender = new SideHistogramRender(80, params.sideHistogramLabel ?? '', {})
+    this.gridRender = new GridRender({})
+    this.bottomDescriptionRender = new BottomDescriptionRender({})
+    this.sideDescriptionRender = new SideDescriptionRender({})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
       const matrix = this.processing.getCroppedMatrix()
-      storage.setCellDimensions(gridWidth / (matrix[0]?.columns ?? []).length, gridHeight / matrix.length)
+      storage.setCellDimensions(storage.gridWidth / (matrix[0]?.columns ?? []).length, storage.gridHeight / matrix.length)
 
       this.topHistogramRender.render()
       this.sideHistogramRender.render()

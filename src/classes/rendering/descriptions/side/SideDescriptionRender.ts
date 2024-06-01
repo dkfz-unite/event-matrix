@@ -13,10 +13,10 @@ class SideDescriptionRender {
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private groupsRenderer: SideDescriptionGroupsRender
 
-  constructor(height: number, options: any) {
-    this.height = height
+  constructor(options: any) {
+    this.height = storage.gridHeight
 
-    this.groupsRenderer = new SideDescriptionGroupsRender(height, {})
+    this.groupsRenderer = new SideDescriptionGroupsRender({})
     this.processing = Processing.getInstance()
     // Initial width calculates approximately
     const groups = this.processing.getBottomDescriptionGroups()

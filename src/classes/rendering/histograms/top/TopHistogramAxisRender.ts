@@ -13,8 +13,8 @@ class TopHistogramAxisRender {
   private leftLabel: Selection<SVGTextElement, unknown, HTMLElement, unknown>
   private label: string
 
-  constructor(width: number, height: number, label: string, options: any) {
-    this.width = width
+  constructor(height: number, label: string, options: any) {
+    this.width = storage.gridWidth
     this.height = height
     this.label = label
   }

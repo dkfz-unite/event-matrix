@@ -10,9 +10,9 @@ class GridLinesRender {
   width: number
   height: number
 
-  constructor(width: number, height: number) {
-    this.width = width
-    this.height = height
+  constructor() {
+    this.width = storage.gridWidth
+    this.height = storage.gridHeight
     this.processing = Processing.getInstance()
   }
 

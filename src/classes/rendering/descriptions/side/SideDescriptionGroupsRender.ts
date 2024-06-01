@@ -11,8 +11,8 @@ class SideDescriptionGroupsRender {
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
 
-  constructor(height: number, options: any) {
-    this.height = height
+  constructor(options: any) {
+    this.height = storage.gridHeight
   }
 
   public setContainer(container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>) {

@@ -86,6 +86,7 @@ export type IDomainEntity = IRow & IColumn
 
 export interface IStorageOptions {
   minCellHeight: number
+  minCellWidth: number
   prefix: string
   // eslint-disable-next-line no-unused-vars
   columnsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
@@ -93,11 +94,16 @@ export interface IStorageOptions {
   rowsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
   // eslint-disable-next-line no-unused-vars
   cellAppearanceFunc?: (entry: IEntry) => { color: string, opacity: number }
+  columnsCount: number
+  rowsCount: number
+  gridWidth?: number
+  gridHeight?: number
 }
 
 export type EventMatrixParams = {
   prefix: string
   minCellHeight: number
+  minCellWidth: number
   element: string
   topHistogramLabel: string
   sideHistogramLabel: string

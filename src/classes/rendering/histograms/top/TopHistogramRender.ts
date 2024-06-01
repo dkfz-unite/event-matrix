@@ -18,11 +18,11 @@ class TopHistogramRender {
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private axisRender: TopHistogramAxisRender
 
-  constructor(width: number, height: number, label: string, options: any) {
-    this.width = width
+  constructor(height: number, label: string, options: any) {
+    this.width = storage.gridWidth
     this.height = height
     this.processing = Processing.getInstance()
-    this.axisRender = new TopHistogramAxisRender(width, height, label, {})
+    this.axisRender = new TopHistogramAxisRender(height, label, {})
 
     this.wrapper = select(`#${storage.prefix}histogram-container-top`)
   }

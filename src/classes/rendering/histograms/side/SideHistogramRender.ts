@@ -18,11 +18,11 @@ class SideHistogramRender {
   private containerInsides: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private axisRender: SideHistogramAxisRender
 
-  constructor(width: number, height: number, label: string, options: any) {
+  constructor(width: number, label: string, options: any) {
     this.width = width
-    this.height = height
+    this.height = storage.gridHeight
     this.processing = Processing.getInstance()
-    this.axisRender = new SideHistogramAxisRender(width, height, label, {})
+    this.axisRender = new SideHistogramAxisRender(width, label, {})
 
     this.wrapper = select(`#${storage.prefix}histogram-container-side`)
   }

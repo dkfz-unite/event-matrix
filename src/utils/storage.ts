@@ -9,8 +9,11 @@ export class Storage {
   }
 
   public minCellHeight = 10
+  public minCellWidth = 30
   public cellHeight = 10
-  public cellWidth = 10
+  public cellWidth = 30
+  public gridHeight = 500
+  public gridWidth = 1000
   public layer: string | null = null
   public prefix = 'og-'
   public heatMap = false
@@ -36,14 +39,20 @@ export class Storage {
 
   public setOptions({
     minCellHeight = this.minCellHeight,
+    minCellWidth = this.minCellWidth,
     prefix = this.prefix,
     heatMapColor = this.heatMapColor,
     heatMap = this.heatMap,
     columnsAppearanceFunc,
     rowsAppearanceFunc,
     cellAppearanceFunc,
+    columnsCount,
+    rowsCount,
+    gridHeight,
+    gridWidth,
   }: IStorageOptions) {
     this.minCellHeight = minCellHeight
+    this.minCellWidth = minCellWidth
     this.prefix = prefix
     this.heatMapColor = heatMapColor
     this.heatMap = heatMap
@@ -57,6 +66,8 @@ export class Storage {
     if (cellAppearanceFunc !== undefined) {
       this.customFunctions[BlockType.Entries] = cellAppearanceFunc
     }
+    this.gridHeight = gridHeight ?? (rowsCount * minCellHeight)
+    this.gridWidth = gridWidth ?? (columnsCount * minCellWidth)
   }
 
 

@@ -13,10 +13,10 @@ class BottomDescriptionRender {
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private groupsRenderer: BottomDescriptionGroupsRender
 
-  constructor(width: number, options: any) {
-    this.width = width
+  constructor(options: any) {
+    this.width = storage.gridWidth
 
-    this.groupsRenderer = new BottomDescriptionGroupsRender(width, {})
+    this.groupsRenderer = new BottomDescriptionGroupsRender({})
     this.processing = Processing.getInstance()
     // Initial height calculates approximately
     const groups = this.processing.getBottomDescriptionGroups()

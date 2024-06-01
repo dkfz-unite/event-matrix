@@ -25,15 +25,12 @@ class GridRender {
   private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
   private gridContainer: Selection<SVGGElement, unknown, HTMLElement, unknown>
 
-  constructor(width: number, height: number, options: any) {
-    this.width = width
-    this.height = height
-
+  constructor(options: any) {
     this.processing = Processing.getInstance()
 
-    this.initDimensions(width, height)
-    this.gridLinesRender = new GridLinesRender(width, height)
-    this.crosshairRender = new CrosshairRender(width, height)
+    this.initDimensions(storage.gridWidth, storage.gridHeight)
+    this.gridLinesRender = new GridLinesRender()
+    this.crosshairRender = new CrosshairRender()
     this.gridRowsRender = new GridRowsRender({})
     this.wrapper = select(`#${storage.prefix}grid-container`)
   }
