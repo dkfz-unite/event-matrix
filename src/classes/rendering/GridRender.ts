@@ -45,6 +45,7 @@ class GridRender {
 
     eventBus.emit(renderEvents.RENDER_GRID_START)
     this.drawBackground()
+    console.log('GridRender:render', this.drawGridLines)
     if (this.drawGridLines) {
       this.gridLinesRender.render()
     } else {
@@ -189,88 +190,15 @@ class GridRender {
     this.render()
   }
 
-  // private resizeSvg() {
-  //   const histogramHeight = this.horizontalHistogram.getHistogramHeight()
-  //   const width = this.margin.left + this.leftTextWidth + this.width + histogramHeight + this.verticalDescriptionBlock.height + this.margin.right
-  //   const height = this.margin.top + 10 + histogramHeight + 10 + this.height + this.horizontalDescriptionBlock.height + this.margin.bottom
-  //
-  //   this.svg
-  //     .attr('width', width)
-  //     .attr('height', height)
-  //     .attr('viewBox', `0 0 ${width} ${height}`)
-  //
-  //   this.container
-  //     .attr('transform', 'translate(' +
-  //       (this.margin.left + this.leftTextWidth) + ',' +
-  //       (this.margin.top + histogramHeight + 10) +
-  //       ')')
-  // }
-
-  // /**
-  //  * Function that determines the y position of a mutation within a cell
-  //  */
-  // private getY({id, rowId, columnId}: IEntry): number {
-  //   const y = this.rowMap[rowId].y ?? 0
-  //   if (this.heatMap) {
-  //     return y
-  //   }
-  //   const obs = storage.lookupTable[columnId][rowId]
-  //   if (obs.length === 0) {
-  //     return y
-  //   }
-  //   return y + this.cellHeight / obs.length * obs.indexOf(id)
-  // }
-
-  // /**
-  //  * Function that determines the x position of a mutation
-  //  */
-  // private getCellX(entry: IEntry): number {
-  //   return storage.lookupTable[entry.columnId].x ?? 0
-  // }
-  //
-  // /**
-  //  * Returns the height of an entry cell.
-  //  * @returns {number}
-  //  */
-  // private getHeight({columnId, rowId}: IEntry): number {
-  //   const height = this.cellHeight ?? 0
-  //   if (this.heatMap) {
-  //     return height
-  //   }
-  //   const count = storage.lookupTable[columnId][rowId].length
-  //   if (count === 0) {
-  //     return height
-  //   }
-  //
-  //   return height / count
-  // }
-
-  // /**
-  //  * Returns the correct entry value based on the data type.
-  //  */
-  // private getValueByType(entry: IEntry) {
-  //   return entry.value ?? ''
-  // }
-
-  // /**
-  //  * Returns rectangular path based on cell dimensions
-  //  */
-  // private getRectangularPath(entry: IEntry) {
-  //   const x1 = this.getCellX(entry)
-  //   const y1 = this.getY(entry)
-  //   return 'M ' + x1 + ' ' + y1 + ' H ' + (x1 + this.cellWidth) + ' V ' + (y1 + this.getHeight(entry)) + ' H ' + x1 + 'Z'
-  // }
-
   public setHeatmap(active: boolean) {
     storage.heatMap = active
     this.render()
   }
 
   public setGridLines(active: boolean) {
+    console.log('GridRender', active)
     this.drawGridLines = active
 
-    // this.verticalDescriptionBlock.setGridLines(this.drawGridLines)
-    // this.horizontalDescriptionBlock.setGridLines(this.drawGridLines)
     this.render()
   }
 

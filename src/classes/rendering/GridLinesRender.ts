@@ -43,8 +43,6 @@ class GridLinesRender {
         this.columns.push(column)
       } else {
         column
-          // .attr('x1', i * storage.cellWidth)
-          // .attr('x2', i * storage.cellWidth)
           .attr('style', `transform:translateX(${i * storage.cellWidth}px)`)
           .attr('y2', this.height)
       }
@@ -94,6 +92,8 @@ class GridLinesRender {
   }
 
   destroy() {
+    this.columns = []
+    this.lines = []
     this.container.selectAll(`.${storage.prefix}gridlines__column`).remove()
     this.container.selectAll(`.${storage.prefix}gridlines__row`).remove()
   }

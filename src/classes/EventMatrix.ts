@@ -13,7 +13,6 @@ import TopHistogramRender from './rendering/histograms/top/TopHistogramRender'
 class EventMatrix extends EventEmitter {
   private container: Selection<HTMLDivElement, unknown, HTMLElement, unknown>
   private heatMapMode = false
-  private drawGridLines = false
   private crosshairMode = false
   private processing: Processing
   private gridRender: GridRender
@@ -95,21 +94,6 @@ class EventMatrix extends EventEmitter {
       this.sideDescriptionRender.render()
     })
 
-    // this.bottomDescriptionRender = new BottomDescriptionRender()
-    // this.rightDescriptionRender = new RightDescriptionRender()
-
-    // this.params = params
-    // this.width = params.width ?? 500
-    // this.height = params.height ?? 500
-    //
-    // if (this.height / this.processing.getRows().length < storage.minCellHeight) {
-    //   this.height = this.processing.getRows().length * storage.minCellHeight
-    // }
-    //
-    // params.wrapper = `.${storage.prefix}container`
-    //
-    // this.initCharts()
-
     eventBus.exposeEvents().forEach((eventName) => {
       eventBus.on(eventName, (eventData) => this.emit(eventName, eventData))
     })
@@ -157,12 +141,8 @@ class EventMatrix extends EventEmitter {
   }
 
   public setGridLines(active: boolean) {
-    this.drawGridLines = active
+    console.log('EventMatrix', active)
     this.gridRender.setGridLines(active)
-  }
-
-  public toggleGridLines() {
-    this.setGridLines(!this.drawGridLines)
   }
 
   public setCrosshair(active: boolean) {
