@@ -16,8 +16,6 @@ class EventMatrix extends EventEmitter {
   private crosshairMode = false
   private processing: Processing
   private gridRender: GridRender
-  // private bottomDescriptionRender: BottomDescriptionRender
-  // private rightDescriptionRender: RightDescriptionRender
   private topHistogramRender: TopHistogramRender
   private sideHistogramRender: SideHistogramRender
   private bottomDescriptionRender: BottomDescriptionRender

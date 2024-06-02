@@ -39,21 +39,28 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
 
 ## Options
 
-| Option                  | Default value                               | Example                                                                         | Description                                                                        |
-|-------------------------|---------------------------------------------|---------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| `element`               | -                                           | "#event-matrix"                                                                 | HTML selector for mounting the component                                           |
-| `columns`               | []                                          | [{ "id": "12" }]                                                                | Column data                                                                        |
-| `rows`                  | []                                          | [{ "id": "34" }]                                                                | Row data                                                                           |
-| `entries`               | []                                          | [{ "id": "56", "value": "good", "rowId": "34", "columnId": "12" }]              | "Events" or "Entries" - data defined by the intersection of a row and a column     |
-| `columnFields`          | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]                      | Fields describing column data. This block is located below the table               |
-| `rowFields`             | []                                          | [{ "id": "1234", "fieldName": "age", "name": "User age" }]                      | Fields describing row data. This block is located to the right of the table        |
-| `rowsAppearanceFunc`    | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the lower description block |
-| `columnsAppearanceFunc` | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the right description block |
-| `cellAppearanceFunc`    | () => { color: "black", opacity: 1 }        | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }   | Function that determines the cell color and opacity in the main grid               |
-| `fieldHeight`           | 10                                          | 20                                                                              | Row height in the description block                                                |
-| `width`                 | 500                                         | 1000                                                                            | Width of the main table                                                            |
-| `fieldLegendLabel`      | undefined                                   | "<i class='las la-question-circle'></i>"                                        | HTML icon next to the name of the parameter group in the description block         |
-| `margin`                | {top: 30, right: 100, bottom: 15, left: 80} | {top: 0, right: 0, bottom: 0, left: 0}                                          | Margins around the component                                                       |
+| Option                           | Possible / Default value                    | Example                                                                                | Description                                                                         |
+|----------------------------------|---------------------------------------------|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| `element`                        | -                                           | "#event-matrix"                                                                        | HTML selector for mounting the component                                            |
+| `columns`                        | Array / []                                  | [{ "id": "12" }]                                                                       | Column data                                                                         |
+| `rows`                           | Array / []                                  | [{ "id": "34" }]                                                                       | Row data                                                                            |
+| `entries`                        | Array / []                                  | [{ "id": "56", "rowId": "12", "columnId": "34" }]                                      | "Events" or "Entries" - data defined by the intersection of a row and a column      |
+| `grid`                           | Object / false / {}                         | { appearance: () => {}, width: 1000, minCellHeight: 15, minCellWidth: 30 }             | Options that describe main grid                                                     |
+| `grid.appearance`                | Function                                    | (val) => { color: (val.name === "red" ? "#FF0000" : "#00FF00"), opacity: .5 }          | Function that determines the cell color and opacity in the main grid                |
+| `grid.width`                     | Number / 1000                               | 555                                                                                    | You can specify here the main grid total width...                                   |
+| `grid.minCellWidth`              | Number / 30                                 | 33.3                                                                                   | ...or specify minimum cell width                                                    |
+| `grid.height`                    | Number / 500                                | 250                                                                                    | You can specify here the main grid total height...                                  |
+| `grid.minCellHeight`             | Number / 15                                 | 17                                                                                     | ...or specify minimum cell height                                                   |
+| `description`                    | Object / false / {}                         | { bottom: false, side: { fields: [] }}                                                 | Options for the bottom and side descriptions blocks                                 |
+| `description.side`               | Object / false / {}                         | { fields: [], appearance: () => {}, fieldHeight: 15 }                                  | Options for the side description block (same options for the side block)            |
+| `description.bottom`             | Object / false / {}                         | { fields: [], appearance: () => {}, fieldHeight: 15 }                                  | Options for the bottom description block (same options for the bottom block)        |
+| `description.bottom.fields`      | Array / []                                  | [{ "group": "Clinical Data", "name": "Age", "fieldName": "age", "type": "age"}]        | Column or row description fields (the param "group" allows divide fields by groups) |
+| `description.bottom.appearance`  | Function                                    | (trackCell) => { color: (trackCell.type === 'age' ? "#FF0000" : "#00FF00"), opacity: .5 } | Function that determines the cell color and opacity in this description block       |
+| `description.bottom.fieldHeight` | Number / 15                                 | 10                                                                                     | Description field height                                                            |
+| `histogram`                      | Object / false / {}                         | { top: false, side: { label: "AAAA" }}                                                 | Options that describe top and side histograms                                       |
+| `histogram.side`                 | Object / false / {}                         | { label: "Mutation freq." }                                                             | Options for the side histogram block (same options for the top block)               |
+| `histogram.top`                  | Object / false / {}                         | { label: "Mutation freq." }                                                             | Options for the top histogram block (same options for the side block)               |
+| `histogram.top.label`            | String / ""                                 | "Mutation freq."                                                               | The histogram's label                                                               |
 
 ## Events
 
@@ -89,9 +96,9 @@ parameter, function, and event names.
 - `observations` → `entries`
 - `donorTracks` → `columnFields`
 - `geneTracks` → `rowFields`
-- `donorOpacityFunc` + `donorFillFunc` → `columnsAppearanceFunc`
-- `geneOpacityFunc` + `geneFillFunc` → `rowsAppearanceFunc`
-- `colorMap` (Map) → `cellAppearanceFunc` (Function)
+- `donorOpacityFunc` + `donorFillFunc` → `description.bottom.appearance`
+- `geneOpacityFunc` + `geneFillFunc` → `description.side.appearance`
+- `colorMap` (Map) → `grid.appearance` (Function)
 - `trackLegendLabel` → `fieldLegendLabel`
 - `trackHeight` → `fieldHeight`
 
