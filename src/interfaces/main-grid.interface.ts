@@ -1,11 +1,8 @@
 import {BlockType, IColumn, IEntity, IEntry, IRow} from './base.interface'
 
 export interface ICustomFunctions {
-  // eslint-disable-next-line no-unused-vars
   [BlockType.Rows]: IAppearanceFunction
-  // eslint-disable-next-line no-unused-vars
   [BlockType.Columns]: IAppearanceFunction
-  // eslint-disable-next-line no-unused-vars
   [BlockType.Entries]: IAppearanceFunction
 }
 
@@ -36,7 +33,6 @@ export interface IFrame {
   z: [number, number],
 }
 
-// eslint-disable-next-line no-unused-vars
 export type IFilterFunction = (val: IEntity) => boolean
 export type IFilter = Record<string, string | IFilterFunction>
 
@@ -64,11 +60,8 @@ export interface IStorageOptions {
   minCellHeight?: number
   minCellWidth?: number
   prefix?: string
-  // eslint-disable-next-line no-unused-vars
   columnsAppearanceFunc?: IAppearanceFunction
-  // eslint-disable-next-line no-unused-vars
   rowsAppearanceFunc?: IAppearanceFunction
-  // eslint-disable-next-line no-unused-vars
   cellAppearanceFunc?: IAppearanceFunction
   columnsCount?: number
   rowsCount?: number
