@@ -1,7 +1,7 @@
 import {BaseType, Selection} from 'd3-selection'
-import {IMatrixColumn} from '../../interfaces/main-grid.interface'
-import {storage} from '../../utils/storage'
-import Processing from '../data/Processing'
+import {IMatrixColumn} from '../../../interfaces/main-grid.interface'
+import {storage} from '../../../utils/storage'
+import Processing from '../../data/Processing'
 import GridEntriesRender from './GridEntriesRender'
 
 class GridCellsRender {

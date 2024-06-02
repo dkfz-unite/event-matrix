@@ -1,11 +1,11 @@
 import {select, Selection} from 'd3-selection'
-import {IEnhancedEvent, IMatrix} from '../../interfaces/main-grid.interface'
-import {eventBus, innerEvents, publicEvents, renderEvents} from '../../utils/event-bus'
-import {storage} from '../../utils/storage'
-import Processing from '../data/Processing'
-import CrosshairRender from './CrosshairRender'
-import GridLinesRender from './GridLinesRender'
+import {IEnhancedEvent, IMatrix} from '../../../interfaces/main-grid.interface'
+import {eventBus, innerEvents, publicEvents, renderEvents} from '../../../utils/event-bus'
+import {storage} from '../../../utils/storage'
+import Processing from '../../data/Processing'
+import CrosshairRender from './crosshair/CrosshairRender'
 import GridRowsRender from './GridRowsRender'
+import GridLinesRender from './lines/GridLinesRender'
 
 class GridRender {
   private width = 500

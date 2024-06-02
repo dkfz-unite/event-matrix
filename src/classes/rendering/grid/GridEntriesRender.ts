@@ -1,8 +1,8 @@
 import {Selection} from 'd3-selection'
-import {BlockType} from '../../interfaces/base.interface'
-import {IMatrixEntry} from '../../interfaces/main-grid.interface'
-import {storage} from '../../utils/storage'
-import Processing from '../data/Processing'
+import {BlockType} from '../../../interfaces/base.interface'
+import {IMatrixEntry} from '../../../interfaces/main-grid.interface'
+import {storage} from '../../../utils/storage'
+import Processing from '../../data/Processing'
 
 class GridEntriesRender {
   container: Selection<SVGGElement, unknown, HTMLElement, unknown>

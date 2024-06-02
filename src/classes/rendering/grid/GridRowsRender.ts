@@ -1,8 +1,8 @@
 import {BaseType, select, Selection} from 'd3-selection'
-import {IEnhancedEvent, IMatrixRow} from '../../interfaces/main-grid.interface'
-import {eventBus, innerEvents, publicEvents} from '../../utils/event-bus'
-import {storage} from '../../utils/storage'
-import Processing from '../data/Processing'
+import {IEnhancedEvent, IMatrixRow} from '../../../interfaces/main-grid.interface'
+import {eventBus, innerEvents, publicEvents} from '../../../utils/event-bus'
+import {storage} from '../../../utils/storage'
+import Processing from '../../data/Processing'
 import GridCellsRender from './GridCellsRender'
 
 class GridRowsRender {

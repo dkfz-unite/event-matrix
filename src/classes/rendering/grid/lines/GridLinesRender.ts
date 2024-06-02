@@ -1,6 +1,6 @@
 import {Selection} from 'd3-selection'
-import {storage} from '../../utils/storage'
-import Processing from '../data/Processing'
+import {storage} from '../../../../utils/storage'
+import Processing from '../../../data/Processing'
 
 class GridLinesRender {
   container: Selection<SVGGElement, unknown, HTMLElement, unknown>

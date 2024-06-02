@@ -6,7 +6,7 @@ import {storage} from '../utils/storage'
 import Processing from './data/Processing'
 import BottomDescriptionRender from './rendering/descriptions/bottom/BottomDescriptionRender'
 import SideDescriptionRender from './rendering/descriptions/side/SideDescriptionRender'
-import GridRender from './rendering/GridRender'
+import GridRender from './rendering/grid/GridRender'
 import SideHistogramRender from './rendering/histograms/side/SideHistogramRender'
 import TopHistogramRender from './rendering/histograms/top/TopHistogramRender'
 
@@ -37,6 +37,7 @@ class EventMatrix extends EventEmitter {
       gridWidth: params.width,
       gridHeight: params.height,
     })
+
     this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.columnFields, params.rowFields)
     this.container = select(params.element || 'body')
       .append('div')
@@ -72,11 +73,6 @@ class EventMatrix extends EventEmitter {
       .append('div')
       .attr('id', `${storage.prefix}side-description-block`)
       .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--side`)
-    //
-    // const bottomContainer = this.container
-    //   .append('div')
-    //   .attr('id', `${storage.prefix}container-bottom`)
-    //   .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--bottom`)
 
     this.topHistogramRender = new TopHistogramRender(80, params.topHistogramLabel ?? '', {})
     this.sideHistogramRender = new SideHistogramRender(80, params.sideHistogramLabel ?? '', {})

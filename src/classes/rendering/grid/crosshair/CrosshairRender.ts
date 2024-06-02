@@ -1,8 +1,8 @@
 import {pointer, Selection} from 'd3-selection'
-import {IEnhancedEvent} from '../../interfaces/main-grid.interface'
-import {eventBus, innerEvents, publicEvents} from '../../utils/event-bus'
-import {storage} from '../../utils/storage'
-import Processing from '../data/Processing'
+import {IEnhancedEvent} from '../../../../interfaces/main-grid.interface'
+import {eventBus, innerEvents, publicEvents} from '../../../../utils/event-bus'
+import {storage} from '../../../../utils/storage'
+import Processing from '../../../data/Processing'
 
 class CrosshairRender {
   private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
