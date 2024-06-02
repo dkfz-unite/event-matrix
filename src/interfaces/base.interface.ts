@@ -12,7 +12,7 @@ export interface CssMarginProps {
   left: number
 }
 
-export interface IEntity {
+export interface IEntity extends Record<string, any> {
   id: string
 }
 

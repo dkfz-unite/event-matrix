@@ -1,5 +1,6 @@
 import {IColumn, IEntity, IEntry, IRow} from '../../interfaces/base.interface'
 import {
+  IDescriptionField,
   IFilter,
   IMatrix,
   IMatrixColumn,
@@ -21,7 +22,7 @@ class Processing {
   private entries: IEntry[] = []
   private entriesMap: Map<string, IEntry> = new Map()
   private matrix: IMatrix = []
-  private frame: Frame
+  private frame: Frame = new Frame(0, 0, 0)
   private filters = {
     entries: {},
     rows: {},
@@ -36,12 +37,15 @@ class Processing {
   private columnsPrevIndex?: string
   private columnsOrder?: ISortOrder
 
-  private descriptionFields = {
+  private descriptionFields: {
+    columns: IDescriptionField[]
+    rows: IDescriptionField[]
+  } = {
     columns: [],
     rows: [],
   }
 
-  constructor(rows: IRow[] = [], columns: IColumn[] = [], entries: IEntry[] = [], columnsFields: any[] = [], rowsFields: any[]) {
+  constructor(rows: IRow[] = [], columns: IColumn[] = [], entries: IEntry[] = [], columnsFields: IDescriptionField[] = [], rowsFields: IDescriptionField[]) {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
     this.entriesOriginal = entries
@@ -130,7 +134,7 @@ class Processing {
     const {x, y, z} = this.frame.getSizes()
     const croppedMatrix: IMatrix = []
 
-    const totalByColumn = {}
+    const totalByColumn: Record<string, number> = {}
     for (let i = y[0]; i <= y[1]; i++) {
       const row = this.matrix[i]
       const mRow: IMatrixRow = {
@@ -322,7 +326,10 @@ class Processing {
     for (const mRow of this.matrix) {
       const arrayCopy = [...mRow.columns]
       for (let i = 0; i < columnIndexOrders.length; i++) {
-        mRow.columns[i] = arrayCopy.find((col) => col.id === columnIndexOrders[i])
+        const col = arrayCopy.find((col) => col.id === columnIndexOrders[i])
+        if (col !== undefined) {
+          mRow.columns[i] = col
+        }
       }
     }
   }
@@ -357,7 +364,10 @@ class Processing {
     for (const mRow of this.matrix) {
       const arrayCopy = [...mRow.columns]
       for (let i = 0; i < columnIndexOrders.length; i++) {
-        mRow.columns[i] = arrayCopy.find((col) => col.id === columnIndexOrders[i])
+        const col = arrayCopy.find((col) => col.id === columnIndexOrders[i])
+        if (col !== undefined) {
+          mRow.columns[i] = col
+        }
       }
     }
   }
@@ -421,7 +431,7 @@ class Processing {
   }
 
   public getBottomDescriptionGroups(): IMatrixDescriptionGroup[] {
-    const groups = []
+    const groups: IMatrixDescriptionGroup[] = []
     let id = 0
     for (const columnField of this.descriptionFields.columns) {
       let existedGroup = groups.find((group) => group.label === columnField.group)
@@ -460,7 +470,7 @@ class Processing {
   }
 
   public getSideDescriptionGroups(): IMatrixDescriptionGroup[] {
-    const groups = []
+    const groups: IMatrixDescriptionGroup[] = []
     let id = 0
     for (const rowField of this.descriptionFields.rows) {
       let existedGroup = groups.find((group) => group.label === rowField.group)

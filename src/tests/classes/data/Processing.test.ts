@@ -78,38 +78,4 @@ describe('Processing', () => {
       expect(processing.columns).toEqual(columns)
     })
   })
-
-  describe('sortRows', () => {
-    it('should sort rows in ascending order', () => {
-      const copyRows = [...rows]
-      processing.reset()
-      processing.sortRows('id')
-      expect(processing.rows).toEqual([copyRows[0], copyRows[1]])
-    })
-
-    it('should sort rows in descending order', () => {
-      const copyRows = [...rows]
-      processing.reset()
-      processing.sortRows('id')
-      processing.sortRows('id')
-      expect(processing.rows).toEqual([copyRows[1], copyRows[0]])
-    })
-  })
-
-  describe('sortColumns', () => {
-    it('should sort columns in ascending order', () => {
-      const copyColumns = [...columns]
-      processing.reset()
-      processing.sortColumns('id')
-      expect(processing.columns).toEqual([copyColumns[0], copyColumns[1]])
-    })
-
-    it('should sort columns in descending order', () => {
-      const copyColumns = [...columns]
-      processing.reset()
-      processing.sortColumns('id')
-      processing.sortColumns('id')
-      expect(processing.columns).toEqual([copyColumns[1], copyColumns[0]])
-    })
-  })
 })

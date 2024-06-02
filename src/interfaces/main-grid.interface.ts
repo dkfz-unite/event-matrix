@@ -1,12 +1,14 @@
 import {BlockType, IColumn, IEntity, IEntry, IRow} from './base.interface'
+import {IMatrixDescriptionCell} from './matrix.interface'
 
 export interface ICustomFunctions {
   [BlockType.Rows]: IAppearanceFunction
   [BlockType.Columns]: IAppearanceFunction
-  [BlockType.Entries]: IAppearanceFunction
+  [BlockType.Entries]: IAppearanceGridFunction
 }
 
-export type IAppearanceFunction = (fieldData: IPreparedFieldData | IEntry) => { color: string, opacity: number }
+export type IAppearanceFunction = (fieldData: IMatrixDescriptionCell) => { color: string, opacity: number }
+export type IAppearanceGridFunction = (fieldData: IEntry) => { color: string, opacity: number }
 
 export type IMatrix = IMatrixRow[]
 
@@ -62,11 +64,12 @@ export interface IStorageOptions {
   prefix?: string
   columnsAppearanceFunc?: IAppearanceFunction
   rowsAppearanceFunc?: IAppearanceFunction
-  cellAppearanceFunc?: IAppearanceFunction
+  cellAppearanceFunc?: IAppearanceGridFunction
   columnsCount?: number
   rowsCount?: number
   gridWidth?: number
   gridHeight?: number
+  heatMap?: boolean
 }
 
 export type EventMatrixParams = {

@@ -41,8 +41,7 @@ export class Storage {
     minCellHeight,
     minCellWidth,
     prefix,
-    heatMapColor = this.heatMapColor,
-    heatMap = this.heatMap,
+    heatMap,
     columnsAppearanceFunc,
     rowsAppearanceFunc,
     cellAppearanceFunc,
@@ -54,8 +53,7 @@ export class Storage {
     this.minCellHeight = minCellHeight ?? this.minCellHeight
     this.minCellWidth = minCellWidth ?? this.minCellWidth
     this.prefix = prefix ?? this.prefix
-    this.heatMapColor = heatMapColor
-    this.heatMap = heatMap
+    this.heatMap = heatMap ?? this.heatMap
 
     if (rowsAppearanceFunc !== undefined) {
       this.customFunctions[BlockType.Rows] = rowsAppearanceFunc
@@ -66,10 +64,9 @@ export class Storage {
     if (cellAppearanceFunc !== undefined) {
       this.customFunctions[BlockType.Entries] = cellAppearanceFunc
     }
-    this.gridHeight = gridHeight ?? (rowsCount * this.minCellHeight)
-    this.gridWidth = gridWidth ?? (columnsCount * this.minCellWidth)
+    this.gridHeight = gridHeight ?? ((rowsCount ?? 0) * this.minCellHeight)
+    this.gridWidth = gridWidth ?? ((columnsCount ?? 0) * this.minCellWidth)
   }
-
 
   public reset() {
   }
