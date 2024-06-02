@@ -84,11 +84,23 @@ class EventMatrix extends EventEmitter {
       const matrix = this.processing.getCroppedMatrix()
       storage.setCellDimensions(storage.gridWidth / (matrix[0]?.columns ?? []).length, storage.gridHeight / matrix.length)
 
-      this.topHistogramRender.render()
-      this.sideHistogramRender.render()
+      if (params.histogram !== false) {
+        if (params.histogram?.top !== false) {
+          this.topHistogramRender.render()
+        }
+        if (params.histogram?.side !== false) {
+          this.sideHistogramRender.render()
+        }
+      }
       this.gridRender.render()
-      this.bottomDescriptionRender.render()
-      this.sideDescriptionRender.render()
+      if (params.description !== false) {
+        if (params.description?.bottom !== false) {
+          this.bottomDescriptionRender.render()
+        }
+        if (params.description?.side !== false) {
+          this.sideDescriptionRender.render()
+        }
+      }
     })
 
     eventBus.exposeEvents().forEach((eventName) => {
