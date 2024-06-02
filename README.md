@@ -30,7 +30,8 @@ displaying any three-dimensional (and potentially four-dimensional) data matrice
       columns, // Columns of your data grid
       rows, // Rows of your data grid
       entries, // Entries/events that occur in a specific cell
-      width: 1000, // Table width
+      width: 1000, // You can specify the table width...
+      minCellWidth: 30, // ...or you can specify the min cell width
     });
     eventMatrix.setGridLines(this.showGridLines);
     eventMatrix.render();

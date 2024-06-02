@@ -38,9 +38,9 @@ export class Storage {
   }
 
   public setOptions({
-    minCellHeight = this.minCellHeight,
-    minCellWidth = this.minCellWidth,
-    prefix = this.prefix,
+    minCellHeight,
+    minCellWidth,
+    prefix,
     heatMapColor = this.heatMapColor,
     heatMap = this.heatMap,
     columnsAppearanceFunc,
@@ -51,9 +51,9 @@ export class Storage {
     gridHeight,
     gridWidth,
   }: IStorageOptions) {
-    this.minCellHeight = minCellHeight
-    this.minCellWidth = minCellWidth
-    this.prefix = prefix
+    this.minCellHeight = minCellHeight ?? this.minCellHeight
+    this.minCellWidth = minCellWidth ?? this.minCellWidth
+    this.prefix = prefix ?? this.prefix
     this.heatMapColor = heatMapColor
     this.heatMap = heatMap
 
@@ -66,8 +66,8 @@ export class Storage {
     if (cellAppearanceFunc !== undefined) {
       this.customFunctions[BlockType.Entries] = cellAppearanceFunc
     }
-    this.gridHeight = gridHeight ?? (rowsCount * minCellHeight)
-    this.gridWidth = gridWidth ?? (columnsCount * minCellWidth)
+    this.gridHeight = gridHeight ?? (rowsCount * this.minCellHeight)
+    this.gridWidth = gridWidth ?? (columnsCount * this.minCellWidth)
   }
 
 

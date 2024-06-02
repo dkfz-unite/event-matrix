@@ -26,19 +26,19 @@ class EventMatrix extends EventEmitter {
   constructor(params: EventMatrixParams) {
     super()
     storage.setOptions({
-      minCellHeight: params.minCellHeight,
-      minCellWidth: params.minCellWidth,
+      minCellHeight: params.grid?.minCellHeight,
+      minCellWidth: params.grid?.minCellWidth,
       prefix: params.prefix,
-      columnsAppearanceFunc: params.columnsAppearanceFunc,
-      rowsAppearanceFunc: params.rowsAppearanceFunc,
-      cellAppearanceFunc: params.cellAppearanceFunc,
+      columnsAppearanceFunc: params.description?.bottom?.appearance,
+      rowsAppearanceFunc: params.description?.side?.appearance,
+      cellAppearanceFunc: params.grid?.appearance,
       columnsCount: params.columns.length,
       rowsCount: params.rows.length,
-      gridWidth: params.width,
-      gridHeight: params.height,
+      gridWidth: params.grid?.width,
+      gridHeight: params.grid?.height,
     })
 
-    this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.columnFields, params.rowFields)
+    this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.description?.bottom?.fields, params.description?.side?.fields)
     this.container = select(params.element || 'body')
       .append('div')
       .attr('class', `${storage.prefix}container`)
@@ -74,8 +74,8 @@ class EventMatrix extends EventEmitter {
       .attr('id', `${storage.prefix}side-description-block`)
       .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--side`)
 
-    this.topHistogramRender = new TopHistogramRender(80, params.topHistogramLabel ?? '', {})
-    this.sideHistogramRender = new SideHistogramRender(80, params.sideHistogramLabel ?? '', {})
+    this.topHistogramRender = new TopHistogramRender(80, params.histogram?.top?.label ?? '', {})
+    this.sideHistogramRender = new SideHistogramRender(80, params.histogram?.side?.label ?? '', {})
     this.gridRender = new GridRender({})
     this.bottomDescriptionRender = new BottomDescriptionRender({})
     this.sideDescriptionRender = new SideDescriptionRender({})
