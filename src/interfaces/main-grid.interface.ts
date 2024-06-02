@@ -1,96 +1,92 @@
-import {BlockType, CssMarginProps} from './base.interface'
-import {IColumn, IEntry, IRow} from './bioinformatics.interface'
+import {BlockType, IColumn, IEntity, IEntry, IRow} from './base.interface'
+import {IMatrixDescriptionCell} from './matrix.interface'
 
 export interface ICustomFunctions {
-  // eslint-disable-next-line no-unused-vars
-  [BlockType.Rows]: (fieldData: IPreparedFieldData) => { color: string, opacity: number },
-  // eslint-disable-next-line no-unused-vars
-  [BlockType.Columns]: (fieldData: IPreparedFieldData) => { color: string, opacity: number },
-  // eslint-disable-next-line no-unused-vars
-  [BlockType.Entries]: (entry: IEntry) => { color: string, opacity: number }
+  [BlockType.Rows]: IAppearanceFunction
+  [BlockType.Columns]: IAppearanceFunction
+  [BlockType.Entries]: IAppearanceGridFunction
 }
 
+export type IAppearanceFunction = (fieldData: IMatrixDescriptionCell) => { color: string, opacity: number }
+export type IAppearanceGridFunction = (fieldData: IEntry) => { color: string, opacity: number }
+
+export type IMatrix = IMatrixRow[]
+
+export type IMatrixRow = {
+  id: string
+  data: IRow
+  columns: IMatrixColumn[]
+}
+export type IMatrixColumn = {
+  id: string
+  data: IColumn
+  entries: IMatrixEntry[]
+}
+export type IMatrixEntry = {
+  id: string
+  data: IEntry
+}
+
+export type ISortOrder = 'ASC' | 'DESC'
+
+export interface IFrame {
+  x: [number, number],
+  y: [number, number],
+  z: [number, number],
+}
+
+export type IFilterFunction = (val: IEntity) => boolean
+export type IFilter = Record<string, string | IFilterFunction>
+
 export type MainGridParams = {
-  leftTextWidth?: number
-  columns: IColumn[]
-  rows: IRow[]
-  wrapper: string
-  width?: number
-  height?: number
-  margin?: CssMarginProps
-  heatMap?: boolean
-  grid?: boolean
-  heatMapColor?: string,
+  appearance: IAppearanceFunction
+  width: number
+  height: number
+  minCellHeight: number
+  minCellWidth: number
+}
 
-  columnFields?: IDescriptionField[]
-  rowFields?: IDescriptionField[]
+export interface IHistogramParams {
+  label: string
+}
 
-  // eslint-disable-next-line no-unused-vars
-  columnsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
-  // eslint-disable-next-line no-unused-vars
-  rowsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
-  // eslint-disable-next-line no-unused-vars
-  cellAppearanceFunc?: (entry: IEntry) => { color: string, opacity: number }
-
-  trackPadding?: number
-  offset: number
-  fieldLegendLabel: string
-  fieldHeight?: number
-  nullSentinel?: number
-  expandableGroups?: string[]
-} & HistogramParams
-
-export interface HistogramParams {
-  histogramBorderPadding?: {
-    left?: number
-    bottom?: number
-  }
-  type?: string
-  rows?: IRow[]
-  columns?: IColumn[]
-  margin?: CssMarginProps
-  width?: number
-  height?: number
-  wrapper?: string
+export interface IDescriptionParams {
+  fields: IDescriptionField[]
+  appearance: IAppearanceFunction
+  fieldHeight: number
 }
 
 export type IDomainEntity = IRow & IColumn
 
 export interface IStorageOptions {
-  rows: IRow[]
-  columns: IColumn[]
-  entries: IEntry[]
   minCellHeight?: number
+  minCellWidth?: number
   prefix?: string
-  // eslint-disable-next-line no-unused-vars
-  columnsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
-  // eslint-disable-next-line no-unused-vars
-  rowsAppearanceFunc?: (fieldData: IPreparedFieldData) => { color: string, opacity: number }
-  // eslint-disable-next-line no-unused-vars
-  cellAppearanceFunc?: (entry: IEntry) => { color: string, opacity: number }
+  columnsAppearanceFunc?: IAppearanceFunction
+  rowsAppearanceFunc?: IAppearanceFunction
+  cellAppearanceFunc?: IAppearanceGridFunction
+  columnsCount?: number
+  rowsCount?: number
+  gridWidth?: number
+  gridHeight?: number
+  heatMap?: boolean
 }
 
 export type EventMatrixParams = {
   prefix: string
-  minCellHeight?: number
   element: string
+  columns: IColumn[]
+  rows: IRow[]
   entries: IEntry[]
-} & MainGridParams
-
-export interface IDescriptionBlockParams {
-  padding?: number
-  offset: number
-  label: string
-  margin?: CssMarginProps
-  rows?: IRow[]
-  columns?: IColumn[]
-  width?: number
-  height?: number
-  parentHeight?: number
-  nullSentinel?: number
-  grid?: boolean
-  wrapper: string
-  expandableGroups?: string[]
+  grid?: MainGridParams
+  histogram?: {
+    side?: IHistogramParams
+    top?: IHistogramParams
+  }
+  description?: {
+    side?: IDescriptionParams
+    bottom?: IDescriptionParams
+  }
 }
 
 export interface IDescriptionField {
@@ -118,17 +114,6 @@ export interface IPreparedFieldData {
   displayName: string
   fieldName: string
   type: string | null
-}
-
-export interface IDescriptionFieldsGroupParams {
-  expandable: boolean
-  cellHeight: number
-  width: number
-  nullSentinel?: number
-  grid: boolean
-  domain: IDomainEntity[]
-  wrapper: string
-  label: string
 }
 
 export type ILookupTable = {
