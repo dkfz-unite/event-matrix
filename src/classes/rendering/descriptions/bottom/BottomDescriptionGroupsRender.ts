@@ -64,7 +64,8 @@ class BottomDescriptionGroupsRender {
 
     groupElement
       .attr('height', group.fields.length * 16 + 10 + 16)
-      .attr('style', `transform:translateY(${heightOffset}px)`)
+      // .attr('style', `transform:translateY(${heightOffset}px)`)
+      .attr('y', heightOffset)
 
     const render = this.getChildrenRender(group.id, groupElement)
     render.draw(group.fields)
