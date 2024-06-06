@@ -67,7 +67,8 @@ class SideDescriptionGroupsRender {
     groupElement
       .attr('width', group.fields.length * 16 + 10 + 16)
       .attr('height', this.height + 80 + 6 + 6)
-      .attr('style', `transform:translateX(${heightOffset}px)`)
+      .attr('x', heightOffset)
+    // .attr('style', `transform:translateX(${heightOffset}px)`)
 
     const render = this.getChildrenRender(group.id, groupElement)
     render.draw(group.fields)

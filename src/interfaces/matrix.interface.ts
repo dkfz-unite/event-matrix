@@ -1,5 +1,5 @@
 export interface IMatrixDescriptionGroup {
-  id: string | number,
+  id: string,
   label: string,
   fields: IMatrixDescriptionField[],
 }
