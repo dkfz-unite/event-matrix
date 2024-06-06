@@ -98,7 +98,8 @@ class SideDescriptionFieldsRender {
     }
     fieldElement
       .attr('width', fixedCellHeight)
-      .attr('style', `transform:translateX(${index * fixedCellHeight + 16}px)`)
+      // .attr('style', `transform:translateX(${index * fixedCellHeight + 16}px)`)
+      .attr('x', index * fixedCellHeight + 16)
 
     const render = this.getChildrenRender(field.id, fieldElement)
     render.draw(field.cells)

@@ -437,7 +437,7 @@ class Processing {
       let existedGroup = groups.find((group) => group.label === columnField.group)
       if (!existedGroup) {
         existedGroup = {
-          id: ++id,
+          id: (++id).toString(),
           label: columnField.group,
           fields: [],
         }
@@ -476,7 +476,7 @@ class Processing {
       let existedGroup = groups.find((group) => group.label === rowField.group)
       if (!existedGroup) {
         existedGroup = {
-          id: ++id,
+          id: (++id).toString(),
           label: rowField.group,
           fields: [],
         }

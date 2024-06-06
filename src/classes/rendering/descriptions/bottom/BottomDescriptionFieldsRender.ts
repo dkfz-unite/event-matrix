@@ -104,7 +104,8 @@ class BottomDescriptionFieldsRender {
     }
     fieldElement
       .attr('height', fixedCellHeight)
-      .attr('style', `transform:translateY(${index * fixedCellHeight + 16}px)`)
+      // .attr('style', `transform:translateY(${index * fixedCellHeight + 16}px)`)
+      .attr('y', index * fixedCellHeight + 16)
 
     const render = this.getChildrenRender(field.id, fieldElement)
     render.draw(field.cells)
