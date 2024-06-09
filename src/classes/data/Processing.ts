@@ -95,6 +95,27 @@ class Processing {
     this.applySort()
   }
 
+  public removeFilter(type: 'rows' | 'columns' | 'entries' | null = null) {
+    if (type === null) {
+      this.filters = {
+        entries: {},
+        rows: {},
+        columns: {},
+      }
+
+      this.rows = [...this.rowsOriginal]
+      this.columns = [...this.columnsOriginal]
+      this.entries = [...this.entriesOriginal]
+      this.applyFilters()
+      this.makeCalculations()
+      this.generateMatrix()
+      this.applySort()
+      return
+    } else {
+      this.setFilter(type, {})
+    }
+  }
+
   private makeCalculations() {
     this.rows.forEach((row) => {
       row.total = 0
@@ -223,6 +244,14 @@ class Processing {
 
   public setFrame(frame: Frame) {
     this.frame = frame
+  }
+
+  public getMatrix() {
+    return this.matrix
+  }
+
+  public getFilter(type: 'rows' | 'columns' | 'entries') {
+    return this.filters[type]
   }
 
   private generateMatrix() {
