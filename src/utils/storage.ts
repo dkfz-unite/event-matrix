@@ -68,6 +68,52 @@ export class Storage {
     this.gridWidth = gridWidth ?? ((columnsCount ?? 0) * this.minCellWidth)
   }
 
+  public updateOptions({
+    minCellHeight,
+    minCellWidth,
+    prefix,
+    heatMap,
+    columnsAppearanceFunc,
+    rowsAppearanceFunc,
+    cellAppearanceFunc,
+    columnsCount,
+    rowsCount,
+    gridHeight,
+    gridWidth,
+  }: Partial<IStorageOptions>) {
+    if (minCellHeight !== undefined) {
+      this.minCellHeight = minCellHeight
+    }
+    if (minCellWidth !== undefined) {
+      this.minCellWidth = minCellWidth
+    }
+    if (prefix !== undefined) {
+      this.prefix = prefix
+    }
+    if (heatMap !== undefined) {
+      this.heatMap = heatMap
+    }
+    if (rowsAppearanceFunc !== undefined) {
+      this.customFunctions[BlockType.Rows] = rowsAppearanceFunc
+    }
+    if (columnsAppearanceFunc !== undefined) {
+      this.customFunctions[BlockType.Columns] = columnsAppearanceFunc
+    }
+    if (cellAppearanceFunc !== undefined) {
+      this.customFunctions[BlockType.Entries] = cellAppearanceFunc
+    }
+    if (gridWidth !== undefined) {
+      this.gridWidth = gridWidth
+    } else if (columnsCount !== undefined) {
+      this.gridWidth = columnsCount * this.minCellWidth
+    }
+    if (gridHeight !== undefined) {
+      this.gridHeight = gridHeight
+    } else if (rowsCount !== undefined) {
+      this.gridHeight = rowsCount * this.minCellHeight
+    }
+  }
+
   public reset() {
   }
 
