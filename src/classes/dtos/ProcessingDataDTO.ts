@@ -13,7 +13,7 @@ export class ProcessingDataDTO {
       rows: this.data.rows ?? this.data.genes ?? this.data.y ?? [],
       entries: this.data.entries ?? this.data.observations ?? [],
       columnsFields: [],
-      rowsFields: []
+      rowsFields: [],
     }
   }
 }

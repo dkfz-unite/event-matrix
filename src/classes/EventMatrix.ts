@@ -115,7 +115,7 @@ class EventMatrix extends EventEmitter {
     const processingData = (new ProcessingDataDTO(rawData)).getProcessingData()
     storage.updateOptions({
       columnsCount: processingData.columns.length,
-      rowsCount: processingData.rows.length
+      rowsCount: processingData.rows.length,
     })
     this.processing.updateData(processingData)
     this.gridRender.updateDimensions()
