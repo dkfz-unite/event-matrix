@@ -19,7 +19,7 @@ class TopHistogramRender {
   private axisRender: TopHistogramAxisRender
 
   constructor(height: number, label: string, options: any) {
-    this.width = storage.gridWidth
+    this.updateDimensions()
     this.height = height
     this.processing = Processing.getInstance()
     this.axisRender = new TopHistogramAxisRender(height, label, {})
@@ -36,6 +36,10 @@ class TopHistogramRender {
     this.draw()
     this.addEvents()
     eventBus.emit(renderEvents.RENDER_X_HISTOGRAM_END)
+  }
+
+  public updateDimensions() {
+    this.width = storage.gridWidth
   }
 
   private prepareContainer() {

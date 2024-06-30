@@ -118,6 +118,11 @@ class EventMatrix extends EventEmitter {
       rowsCount: processingData.rows.length
     })
     this.processing.updateData(processingData)
+    this.gridRender.updateDimensions()
+    this.topHistogramRender.updateDimensions()
+    this.sideHistogramRender.updateDimensions()
+    this.bottomDescriptionRender.updateDimensions()
+    this.sideDescriptionRender.updateDimensions()
     this.render()
   }
 
