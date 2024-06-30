@@ -6,6 +6,7 @@ import {
   IMatrixColumn,
   IMatrixEntry,
   IMatrixRow,
+  IProcessingParams,
   ISortOrder
 } from '../../interfaces/main-grid.interface'
 import {IMatrixDescriptionGroup} from '../../interfaces/matrix.interface'
@@ -537,6 +538,16 @@ class Processing {
     // console.log(croppedRows)
     // console.log(groups)
     return groups
+  }
+
+  public updateData({columns, rows, entries}: IProcessingParams) {
+    this.rowsOriginal = rows
+    this.columnsOriginal = columns
+    this.entriesOriginal = entries
+    // this.descriptionFields.columns = columnsFields
+    // this.descriptionFields.rows = rowsFields
+
+    this.reset()
   }
 
   public static getInstance(): Processing {

@@ -38,8 +38,22 @@ export interface IFrame {
 export type IFilterFunction = (val: IEntity) => boolean
 export type IFilter = Record<string, string | IFilterFunction>
 
+export type IRowsLikeData = { rows: IRow[] } | { genes: IRow[] } | { y: IRow[] }
+export type IColumnLikeData = { columns: IColumn[] } | { donors: IColumn[] } | { x: IColumn[] }
+export type IEntriesLikeData = { entries: IEntry[] } | { observations: IEntry[] }
+
+export type IRawProcessingParams = IRowsLikeData & IColumnLikeData & IEntriesLikeData
+
+export type IProcessingParams = {
+  rows: IRow[]
+  columns: IColumn[]
+  entries: IEntry[]
+  columnsFields: IDescriptionField[]
+  rowsFields: IDescriptionField[]
+}
+
 export type MainGridParams = {
-  appearance: IAppearanceFunction
+  appearance: IAppearanceGridFunction
   width: number
   height: number
   minCellHeight: number

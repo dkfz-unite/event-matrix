@@ -14,7 +14,7 @@ class SideDescriptionRender {
   private groupsRenderer: SideDescriptionGroupsRender
 
   constructor(options: any) {
-    this.height = storage.gridHeight
+    this.updateDimensions()
 
     this.groupsRenderer = new SideDescriptionGroupsRender({})
     this.processing = Processing.getInstance()
@@ -27,6 +27,10 @@ class SideDescriptionRender {
     this.processing = Processing.getInstance()
 
     this.wrapper = select(`#${storage.prefix}side-description-block`)
+  }
+
+  public updateDimensions() {
+    this.height = storage.gridHeight
   }
 
   public render() {

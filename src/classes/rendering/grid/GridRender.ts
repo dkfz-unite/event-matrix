@@ -28,11 +28,15 @@ class GridRender {
   constructor(options: any) {
     this.processing = Processing.getInstance()
 
-    this.initDimensions(storage.gridWidth, storage.gridHeight)
+    this.updateDimensions()
     this.gridLinesRender = new GridLinesRender()
     this.crosshairRender = new CrosshairRender()
     this.gridRowsRender = new GridRowsRender({})
     this.wrapper = select(`#${storage.prefix}grid-container`)
+  }
+
+  public updateDimensions() {
+    this.initDimensions(storage.gridWidth, storage.gridHeight)
   }
 
   public render() {
