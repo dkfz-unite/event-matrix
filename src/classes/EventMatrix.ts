@@ -1,9 +1,10 @@
 import {select, Selection} from 'd3-selection'
 import EventEmitter from 'eventemitter3'
-import {EventMatrixParams} from '../interfaces/main-grid.interface'
+import {EventMatrixParams, IRawProcessingParams} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import Processing from './data/Processing'
+import {ProcessingDataDTO} from './dtos/ProcessingDataDTO'
 import BottomDescriptionRender from './rendering/descriptions/bottom/BottomDescriptionRender'
 import SideDescriptionRender from './rendering/descriptions/side/SideDescriptionRender'
 import GridRender from './rendering/grid/GridRender'
@@ -108,6 +109,21 @@ class EventMatrix extends EventEmitter {
 
   public static create(params: EventMatrixParams) {
     return new EventMatrix(params)
+  }
+
+  public updateData(rawData: IRawProcessingParams) {
+    const processingData = (new ProcessingDataDTO(rawData)).getProcessingData()
+    storage.updateOptions({
+      columnsCount: processingData.columns.length,
+      rowsCount: processingData.rows.length,
+    })
+    this.processing.updateData(processingData)
+    this.gridRender.updateDimensions()
+    this.topHistogramRender.updateDimensions()
+    this.sideHistogramRender.updateDimensions()
+    this.bottomDescriptionRender.updateDimensions()
+    this.sideDescriptionRender.updateDimensions()
+    this.render()
   }
 
   public setFilter(type: 'rows' | 'columns' | 'entries', filter: Record<string, any>) {

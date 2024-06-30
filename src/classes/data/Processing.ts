@@ -6,6 +6,7 @@ import {
   IMatrixColumn,
   IMatrixEntry,
   IMatrixRow,
+  IProcessingParams,
   ISortOrder
 } from '../../interfaces/main-grid.interface'
 import {IMatrixDescriptionGroup} from '../../interfaces/matrix.interface'
@@ -93,6 +94,27 @@ class Processing {
     this.makeCalculations()
     this.generateMatrix()
     this.applySort()
+  }
+
+  public removeFilter(type: 'rows' | 'columns' | 'entries' | null = null) {
+    if (type === null) {
+      this.filters = {
+        entries: {},
+        rows: {},
+        columns: {},
+      }
+
+      this.rows = [...this.rowsOriginal]
+      this.columns = [...this.columnsOriginal]
+      this.entries = [...this.entriesOriginal]
+      this.applyFilters()
+      this.makeCalculations()
+      this.generateMatrix()
+      this.applySort()
+      return
+    } else {
+      this.setFilter(type, {})
+    }
   }
 
   private makeCalculations() {
@@ -223,6 +245,14 @@ class Processing {
 
   public setFrame(frame: Frame) {
     this.frame = frame
+  }
+
+  public getMatrix() {
+    return this.matrix
+  }
+
+  public getFilter(type: 'rows' | 'columns' | 'entries') {
+    return this.filters[type]
   }
 
   private generateMatrix() {
@@ -508,6 +538,16 @@ class Processing {
     // console.log(croppedRows)
     // console.log(groups)
     return groups
+  }
+
+  public updateData({columns, rows, entries}: IProcessingParams) {
+    this.rowsOriginal = rows
+    this.columnsOriginal = columns
+    this.entriesOriginal = entries
+    // this.descriptionFields.columns = columnsFields
+    // this.descriptionFields.rows = rowsFields
+
+    this.reset()
   }
 
   public static getInstance(): Processing {

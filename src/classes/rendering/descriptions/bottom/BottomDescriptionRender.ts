@@ -14,7 +14,7 @@ class BottomDescriptionRender {
   private groupsRenderer: BottomDescriptionGroupsRender
 
   constructor(options: any) {
-    this.width = storage.gridWidth
+    this.updateDimensions()
 
     this.groupsRenderer = new BottomDescriptionGroupsRender({})
     this.processing = Processing.getInstance()
@@ -27,6 +27,10 @@ class BottomDescriptionRender {
     this.processing = Processing.getInstance()
 
     this.wrapper = select(`#${storage.prefix}bottom-description-block`)
+  }
+
+  public updateDimensions() {
+    this.width = storage.gridWidth
   }
 
   public render() {

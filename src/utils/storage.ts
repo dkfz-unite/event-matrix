@@ -68,6 +68,60 @@ export class Storage {
     this.gridWidth = gridWidth ?? ((columnsCount ?? 0) * this.minCellWidth)
   }
 
+  public updateOptions({
+    minCellHeight,
+    minCellWidth,
+    prefix,
+    heatMap,
+    columnsAppearanceFunc,
+    rowsAppearanceFunc,
+    cellAppearanceFunc,
+    columnsCount,
+    rowsCount,
+    gridHeight,
+    gridWidth,
+  }: Partial<IStorageOptions>) {
+    if (minCellHeight !== undefined) {
+      console.log(`minCellHeight changed from ${this.minCellHeight} to ${minCellHeight}`)
+      this.minCellHeight = minCellHeight
+    }
+    if (minCellWidth !== undefined) {
+      console.log(`minCellWidth changed from ${this.minCellWidth} to ${minCellWidth}`)
+      this.minCellWidth = minCellWidth
+    }
+    if (prefix !== undefined) {
+      console.log(`prefix changed from ${this.prefix} to ${prefix}`)
+      this.prefix = prefix
+    }
+    if (heatMap !== undefined) {
+      console.log(`heatMap changed from ${this.heatMap} to ${heatMap}`)
+      this.heatMap = heatMap
+    }
+    if (rowsAppearanceFunc !== undefined) {
+      this.customFunctions[BlockType.Rows] = rowsAppearanceFunc
+    }
+    if (columnsAppearanceFunc !== undefined) {
+      this.customFunctions[BlockType.Columns] = columnsAppearanceFunc
+    }
+    if (cellAppearanceFunc !== undefined) {
+      this.customFunctions[BlockType.Entries] = cellAppearanceFunc
+    }
+    if (gridWidth !== undefined) {
+      console.log(`gridWidth changed from ${this.gridWidth} to ${gridWidth} by direct option`)
+      this.gridWidth = gridWidth
+    } else if (columnsCount !== undefined) {
+      console.log(`gridWidth changed from ${this.gridWidth} to ${columnsCount * this.cellWidth} by ${columnsCount} * ${this.cellWidth} calculation`)
+      this.gridWidth = columnsCount * this.cellWidth
+    }
+    if (gridHeight !== undefined) {
+      console.log(`gridHeight changed from ${this.gridHeight} to ${gridHeight} by direct option`)
+      this.gridHeight = gridHeight
+    } else if (rowsCount !== undefined) {
+      console.log(`gridHeight changed from ${this.gridHeight} to ${rowsCount * this.cellHeight} by ${rowsCount} * ${this.cellHeight} calculation`)
+      this.gridHeight = rowsCount * this.cellHeight
+    }
+  }
+
   public reset() {
   }
 

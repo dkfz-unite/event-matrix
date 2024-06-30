@@ -20,11 +20,15 @@ class SideHistogramRender {
 
   constructor(width: number, label: string, options: any) {
     this.width = width
-    this.height = storage.gridHeight
+    this.updateDimensions()
     this.processing = Processing.getInstance()
     this.axisRender = new SideHistogramAxisRender(width, label, {})
 
     this.wrapper = select(`#${storage.prefix}histogram-container-side`)
+  }
+
+  public updateDimensions() {
+    this.height = storage.gridHeight
   }
 
   public render() {
