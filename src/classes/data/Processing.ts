@@ -1,15 +1,15 @@
 import {IColumn, IEntity, IEntry, IRow} from '../../interfaces/base.interface'
 import {
-  IDescriptionField,
   IFilter,
   IMatrix,
   IMatrixColumn,
   IMatrixEntry,
   IMatrixRow,
   IProcessingParams,
-  ISortOrder
+  ISortOrder,
+  ITracksField
 } from '../../interfaces/main-grid.interface'
-import {IMatrixDescriptionGroup} from '../../interfaces/matrix.interface'
+import {IMatrixTracksGroup} from '../../interfaces/matrix.interface'
 import Frame from './Frame'
 
 class Processing {
@@ -38,20 +38,20 @@ class Processing {
   private columnsPrevIndex?: string
   private columnsOrder?: ISortOrder
 
-  private descriptionFields: {
-    columns: IDescriptionField[]
-    rows: IDescriptionField[]
+  private tracksFields: {
+    columns: ITracksField[]
+    rows: ITracksField[]
   } = {
     columns: [],
     rows: [],
   }
 
-  constructor(rows: IRow[] = [], columns: IColumn[] = [], entries: IEntry[] = [], columnsFields: IDescriptionField[] = [], rowsFields: IDescriptionField[]) {
+  constructor(rows: IRow[] = [], columns: IColumn[] = [], entries: IEntry[] = [], columnsFields: ITracksField[] = [], rowsFields: ITracksField[]) {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
     this.entriesOriginal = entries
-    this.descriptionFields.columns = columnsFields
-    this.descriptionFields.rows = rowsFields
+    this.tracksFields.columns = columnsFields
+    this.tracksFields.rows = rowsFields
 
     this.reset()
   }
@@ -460,10 +460,10 @@ class Processing {
     return croppedRows
   }
 
-  public getBottomDescriptionGroups(): IMatrixDescriptionGroup[] {
-    const groups: IMatrixDescriptionGroup[] = []
+  public getBottomTracksGroups(): IMatrixTracksGroup[] {
+    const groups: IMatrixTracksGroup[] = []
     let id = 0
-    for (const columnField of this.descriptionFields.columns) {
+    for (const columnField of this.tracksFields.columns) {
       let existedGroup = groups.find((group) => group.label === columnField.group)
       if (!existedGroup) {
         existedGroup = {
@@ -499,10 +499,10 @@ class Processing {
     return groups
   }
 
-  public getSideDescriptionGroups(): IMatrixDescriptionGroup[] {
-    const groups: IMatrixDescriptionGroup[] = []
+  public getSideTracksGroups(): IMatrixTracksGroup[] {
+    const groups: IMatrixTracksGroup[] = []
     let id = 0
-    for (const rowField of this.descriptionFields.rows) {
+    for (const rowField of this.tracksFields.rows) {
       let existedGroup = groups.find((group) => group.label === rowField.group)
       if (!existedGroup) {
         existedGroup = {
@@ -540,12 +540,12 @@ class Processing {
     return groups
   }
 
-  public updateData({columns, rows, entries}: IProcessingParams) {
+  public updateData({columns, rows, entries, columnsFields, rowsFields}: IProcessingParams) {
     this.rowsOriginal = rows
     this.columnsOriginal = columns
     this.entriesOriginal = entries
-    // this.descriptionFields.columns = columnsFields
-    // this.descriptionFields.rows = rowsFields
+    this.tracksFields.columns = columnsFields
+    this.tracksFields.rows = rowsFields
 
     this.reset()
   }

@@ -1,9 +1,9 @@
 import {BaseType, Selection} from 'd3-selection'
 import {BlockType} from '../../../../interfaces/base.interface'
-import {IMatrixDescriptionCell} from '../../../../interfaces/matrix.interface'
+import {IMatrixTracksCell} from '../../../../interfaces/matrix.interface'
 import {storage} from '../../../../utils/storage'
 
-class BottomDescriptionCellsRender {
+class SideTracksCellsRender {
   container: Selection<SVGGElement, unknown, HTMLElement, unknown>
   parentId: string
   cells: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
@@ -13,20 +13,20 @@ class BottomDescriptionCellsRender {
     this.container = container
   }
 
-  public draw(cells: IMatrixDescriptionCell[]) {
+  public draw(cells: IMatrixTracksCell[]) {
     for (let j = 0; j < cells.length; j++) {
       const cell = cells[j]
       this.drawCell(cell, j)
     }
   }
 
-  public drawCell(cell: IMatrixDescriptionCell, index: number) {
+  public drawCell(cell: IMatrixTracksCell, index: number) {
     const cellId = cell.id
     let cellElement = this.cells.get(cellId)
 
     const fixedCellHeight = 15
     if (!cellElement) {
-      const {color, opacity} = (storage.customFunctions[BlockType.Columns])({
+      const {color, opacity} = (storage.customFunctions[BlockType.Rows])({
         type: this.parentId,
         ...cell,
       })
@@ -36,12 +36,12 @@ class BottomDescriptionCellsRender {
         .attr('y', 0)
         .attr('fill', color)
         .attr('opacity', opacity)
-        .attr('width', storage.cellWidth)
+        .attr('width', fixedCellHeight)
         .attr('height', fixedCellHeight)
         .attr('data-track-data-index', index)
         .attr('class', [
           `${storage.prefix}track-data`,
-          `${storage.prefix}description-cell__${cell.id}`,
+          `${storage.prefix}tracks-cell__${cell.id}`,
           `${storage.prefix}${cell.id}-cell`,
         ].join(' '))
 
@@ -49,8 +49,8 @@ class BottomDescriptionCellsRender {
     }
 
     cellElement
-      .attr('width', storage.cellWidth)
-      .attr('style', `transform:translateX(${80 + index * storage.cellWidth}px)`)
+      .attr('height', storage.cellHeight)
+      .attr('style', `transform:translateY(${index * storage.cellHeight + 80 + 6 + 6}px)`)
 
     return cellElement
   }
@@ -74,4 +74,4 @@ class BottomDescriptionCellsRender {
   }
 }
 
-export default BottomDescriptionCellsRender
+export default SideTracksCellsRender

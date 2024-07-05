@@ -2,31 +2,31 @@ import {select, Selection} from 'd3-selection'
 import {eventBus, renderEvents} from '../../../../utils/event-bus'
 import {storage} from '../../../../utils/storage'
 import Processing from '../../../data/Processing'
-import BottomDescriptionGroupsRender from './BottomDescriptionGroupsRender'
+import BottomTracksGroupsRender from './BottomTracksGroupsRender'
 
-class BottomDescriptionRender {
+class BottomTracksRender {
   private width = 0
   private height = 0
   private processing: Processing
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
-  private groupsRenderer: BottomDescriptionGroupsRender
+  private groupsRenderer: BottomTracksGroupsRender
 
   constructor(options: any) {
     this.updateDimensions()
 
-    this.groupsRenderer = new BottomDescriptionGroupsRender({})
+    this.groupsRenderer = new BottomTracksGroupsRender({})
     this.processing = Processing.getInstance()
     // Initial height calculates approximately
-    const groups = this.processing.getBottomDescriptionGroups()
+    const groups = this.processing.getBottomTracksGroups()
     this.height = groups.reduce((sum, group) => {
       return sum + group.fields.length * 16 + 10
     }, 0)
 
     this.processing = Processing.getInstance()
 
-    this.wrapper = select(`#${storage.prefix}bottom-description-block`)
+    this.wrapper = select(`#${storage.prefix}bottom-tracks-block`)
   }
 
   public updateDimensions() {
@@ -53,8 +53,8 @@ class BottomDescriptionRender {
     if (!this.container) {
       this.container = this.wrapper.append('svg')
         .attr('version', '2.0')
-        .attr('class', `${storage.prefix}description-block ${storage.prefix}description-block--bottom`)
-        .attr('id', `${storage.prefix}description-block-bottom`)
+        .attr('class', `${storage.prefix}tracks-block ${storage.prefix}tracks-block--bottom`)
+        .attr('id', `${storage.prefix}tracks-block-bottom`)
 
       this.groupsRenderer.setContainer(this.container)
     }
@@ -66,7 +66,7 @@ class BottomDescriptionRender {
   }
 
   private draw() {
-    const groups = this.processing.getBottomDescriptionGroups()
+    const groups = this.processing.getBottomTracksGroups()
     // console.log(groups)
     this.groupsRenderer.draw(groups)
   }
@@ -77,4 +77,4 @@ class BottomDescriptionRender {
   }
 }
 
-export default BottomDescriptionRender
+export default BottomTracksRender

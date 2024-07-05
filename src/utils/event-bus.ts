@@ -13,12 +13,12 @@ export enum publicEvents {
   HISTOGRAM_HOVER = 'histogram:hover',
   HISTOGRAM_CLICK = 'histogram:click',
   HISTOGRAM_OUT = 'histogram:out',
-  DESCRIPTION_LEGEND_HOVER = 'description:legend:hover',
-  DESCRIPTION_LEGEND_OUT = 'description:legend:out',
-  DESCRIPTION_BUTTONS_ADD_CLICK = 'description:buttons:add:click',
-  DESCRIPTION_FIELD_CLICK = 'description:cell:click',
-  DESCRIPTION_CELL_HOVER = 'description:cell:hover',
-  DESCRIPTION_CELL_OUT = 'description:cell:out',
+  TRACKS_LEGEND_HOVER = 'tracks:legend:hover',
+  TRACKS_LEGEND_OUT = 'tracks:legend:out',
+  TRACKS_BUTTONS_ADD_CLICK = 'tracks:buttons:add:click',
+  TRACKS_FIELD_CLICK = 'tracks:cell:click',
+  TRACKS_CELL_HOVER = 'tracks:cell:hover',
+  TRACKS_CELL_OUT = 'tracks:cell:out',
 }
 
 export enum innerEvents {
@@ -37,10 +37,10 @@ export enum renderEvents {
   RENDER_X_HISTOGRAM_END = 'render:x-histogram:end',
   RENDER_Y_HISTOGRAM_START = 'render:y-histogram:start',
   RENDER_Y_HISTOGRAM_END = 'render:y-histogram:end',
-  RENDER_X_DESCRIPTION_BLOCK_START = 'render:x-description-block:start',
-  RENDER_X_DESCRIPTION_BLOCK_END = 'render:x-description-block:end',
-  RENDER_Y_DESCRIPTION_BLOCK_START = 'render:y-description-block:start',
-  RENDER_Y_DESCRIPTION_BLOCK_END = 'render:y-description-block:end',
+  RENDER_X_TRACKS_BLOCK_START = 'render:x-tracks-block:start',
+  RENDER_X_TRACKS_BLOCK_END = 'render:x-tracks-block:end',
+  RENDER_Y_TRACKS_BLOCK_START = 'render:y-tracks-block:start',
+  RENDER_Y_TRACKS_BLOCK_END = 'render:y-tracks-block:end',
 }
 
 class EventBus extends EventEmitter {
