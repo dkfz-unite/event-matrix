@@ -12,8 +12,8 @@ export class ProcessingDataDTO {
       columns: this.data.columns ?? this.data.donors ?? this.data.x ?? [],
       rows: this.data.rows ?? this.data.genes ?? this.data.y ?? [],
       entries: this.data.entries ?? this.data.observations ?? [],
-      columnsFields: [],
-      rowsFields: [],
+      columnsFields: this.data.tracks?.bottom?.fields ?? [],
+      rowsFields: this.data.tracks?.side?.fields ?? [],
     }
   }
 }

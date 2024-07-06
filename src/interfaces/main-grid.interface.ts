@@ -41,8 +41,18 @@ export type IFilter = Record<string, string | IFilterFunction>
 export type IRowsLikeData = { rows: IRow[] } | { genes: IRow[] } | { y: IRow[] }
 export type IColumnLikeData = { columns: IColumn[] } | { donors: IColumn[] } | { x: IColumn[] }
 export type IEntriesLikeData = { entries: IEntry[] } | { observations: IEntry[] }
+export type ITracksLikeData = {
+  tracks: {
+    side: {
+      fields: ITracksField[]
+    },
+    bottom: {
+      fields: ITracksField[]
+    }
+  }
+}
 
-export type IRawProcessingParams = IRowsLikeData & IColumnLikeData & IEntriesLikeData
+export type IRawProcessingParams = IRowsLikeData & IColumnLikeData & IEntriesLikeData & ITracksLikeData
 
 export type IProcessingParams = {
   rows: IRow[]
