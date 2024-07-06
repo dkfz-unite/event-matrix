@@ -5,11 +5,11 @@ import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import Processing from './data/Processing'
 import {ProcessingDataDTO} from './dtos/ProcessingDataDTO'
-import BottomDescriptionRender from './rendering/descriptions/bottom/BottomDescriptionRender'
-import SideDescriptionRender from './rendering/descriptions/side/SideDescriptionRender'
 import GridRender from './rendering/grid/GridRender'
 import SideHistogramRender from './rendering/histograms/side/SideHistogramRender'
 import TopHistogramRender from './rendering/histograms/top/TopHistogramRender'
+import BottomTracksRender from './rendering/tracks/bottom/BottomTracksRender'
+import SideTracksRender from './rendering/tracks/side/SideTracksRender'
 
 class EventMatrix extends EventEmitter {
   private container: Selection<HTMLDivElement, unknown, HTMLElement, unknown>
@@ -19,8 +19,8 @@ class EventMatrix extends EventEmitter {
   private gridRender: GridRender
   private topHistogramRender: TopHistogramRender
   private sideHistogramRender: SideHistogramRender
-  private bottomDescriptionRender: BottomDescriptionRender
-  private sideDescriptionRender: SideDescriptionRender
+  private bottomTracksRender: BottomTracksRender
+  private sideTracksRender: SideTracksRender
 
   constructor(params: EventMatrixParams) {
     super()
@@ -28,8 +28,8 @@ class EventMatrix extends EventEmitter {
       minCellHeight: params.grid?.minCellHeight,
       minCellWidth: params.grid?.minCellWidth,
       prefix: params.prefix,
-      columnsAppearanceFunc: params.description?.bottom?.appearance,
-      rowsAppearanceFunc: params.description?.side?.appearance,
+      columnsAppearanceFunc: params.tracks?.bottom?.appearance,
+      rowsAppearanceFunc: params.tracks?.side?.appearance,
       cellAppearanceFunc: params.grid?.appearance,
       columnsCount: params.columns.length,
       rowsCount: params.rows.length,
@@ -37,7 +37,7 @@ class EventMatrix extends EventEmitter {
       gridHeight: params.grid?.height,
     })
 
-    this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.description?.bottom?.fields, params.description?.side?.fields)
+    this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.tracks?.bottom?.fields, params.tracks?.side?.fields)
     this.container = select(params.element || 'body')
       .append('div')
       .attr('class', `${storage.prefix}container`)
@@ -59,7 +59,7 @@ class EventMatrix extends EventEmitter {
       .attr('id', `${storage.prefix}grid-container`)
     mainContainer
       .append('div')
-      .attr('id', `${storage.prefix}bottom-description-block`)
+      .attr('id', `${storage.prefix}bottom-tracks-block`)
 
     const sideContainer = mainWrapper
       .append('div')
@@ -70,14 +70,14 @@ class EventMatrix extends EventEmitter {
       .attr('id', `${storage.prefix}histogram-container-side`)
     sideContainer
       .append('div')
-      .attr('id', `${storage.prefix}side-description-block`)
+      .attr('id', `${storage.prefix}side-tracks-block`)
       .attr('class', `${storage.prefix}container__content ${storage.prefix}container__content--side`)
 
     this.topHistogramRender = new TopHistogramRender(80, params.histogram?.top?.label ?? '', {})
     this.sideHistogramRender = new SideHistogramRender(80, params.histogram?.side?.label ?? '', {})
     this.gridRender = new GridRender({})
-    this.bottomDescriptionRender = new BottomDescriptionRender({})
-    this.sideDescriptionRender = new SideDescriptionRender({})
+    this.bottomTracksRender = new BottomTracksRender({})
+    this.sideTracksRender = new SideTracksRender({})
 
     eventBus.on(innerEvents.INNER_UPDATE, () => {
       const matrix = this.processing.getCroppedMatrix()
@@ -92,12 +92,12 @@ class EventMatrix extends EventEmitter {
         }
       }
       this.gridRender.render()
-      if (params.description !== false) {
-        if (params.description?.bottom !== false) {
-          this.bottomDescriptionRender.render()
+      if (params.tracks !== false) {
+        if (params.tracks?.bottom !== false) {
+          this.bottomTracksRender.render()
         }
-        if (params.description?.side !== false) {
-          this.sideDescriptionRender.render()
+        if (params.tracks?.side !== false) {
+          this.sideTracksRender.render()
         }
       }
     })
@@ -121,8 +121,8 @@ class EventMatrix extends EventEmitter {
     this.gridRender.updateDimensions()
     this.topHistogramRender.updateDimensions()
     this.sideHistogramRender.updateDimensions()
-    this.bottomDescriptionRender.updateDimensions()
-    this.sideDescriptionRender.updateDimensions()
+    this.bottomTracksRender.updateDimensions()
+    this.sideTracksRender.updateDimensions()
     this.render()
   }
 
@@ -197,8 +197,8 @@ class EventMatrix extends EventEmitter {
    *  Cleanup function to ensure the svg and any bindings are removed from the dom.
    */
   public destroy() {
-    this.sideDescriptionRender.destroy()
-    this.bottomDescriptionRender.destroy()
+    this.sideTracksRender.destroy()
+    this.bottomTracksRender.destroy()
     this.gridRender.destroy()
     this.sideHistogramRender.destroy()
     this.topHistogramRender.destroy()

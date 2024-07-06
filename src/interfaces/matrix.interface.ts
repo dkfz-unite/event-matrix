@@ -1,18 +1,18 @@
-export interface IMatrixDescriptionGroup {
+export interface IMatrixTracksGroup {
   id: string,
   label: string,
-  fields: IMatrixDescriptionField[],
+  fields: IMatrixTracksField[],
 }
 
-export interface IMatrixDescriptionField {
+export interface IMatrixTracksField {
   id: string,
   field: string,
   type: string | null,
   label: string,
-  cells: IMatrixDescriptionCell[],
+  cells: IMatrixTracksCell[],
 }
 
-export interface IMatrixDescriptionCell {
+export interface IMatrixTracksCell {
   value: string | number | null,
   displayValue: string,
   id: string,

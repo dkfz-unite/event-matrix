@@ -1,5 +1,5 @@
 import {BlockType, IColumn, IEntity, IEntry, IRow} from './base.interface'
-import {IMatrixDescriptionCell} from './matrix.interface'
+import {IMatrixTracksCell} from './matrix.interface'
 
 export interface ICustomFunctions {
   [BlockType.Rows]: IAppearanceFunction
@@ -7,7 +7,7 @@ export interface ICustomFunctions {
   [BlockType.Entries]: IAppearanceGridFunction
 }
 
-export type IAppearanceFunction = (fieldData: IMatrixDescriptionCell) => { color: string, opacity: number }
+export type IAppearanceFunction = (fieldData: IMatrixTracksCell) => { color: string, opacity: number }
 export type IAppearanceGridFunction = (fieldData: IEntry) => { color: string, opacity: number }
 
 export type IMatrix = IMatrixRow[]
@@ -41,15 +41,25 @@ export type IFilter = Record<string, string | IFilterFunction>
 export type IRowsLikeData = { rows: IRow[] } | { genes: IRow[] } | { y: IRow[] }
 export type IColumnLikeData = { columns: IColumn[] } | { donors: IColumn[] } | { x: IColumn[] }
 export type IEntriesLikeData = { entries: IEntry[] } | { observations: IEntry[] }
+export type ITracksLikeData = {
+  tracks: {
+    side: {
+      fields: ITracksField[]
+    },
+    bottom: {
+      fields: ITracksField[]
+    }
+  }
+}
 
-export type IRawProcessingParams = IRowsLikeData & IColumnLikeData & IEntriesLikeData
+export type IRawProcessingParams = IRowsLikeData & IColumnLikeData & IEntriesLikeData & ITracksLikeData
 
 export type IProcessingParams = {
   rows: IRow[]
   columns: IColumn[]
   entries: IEntry[]
-  columnsFields: IDescriptionField[]
-  rowsFields: IDescriptionField[]
+  columnsFields: ITracksField[]
+  rowsFields: ITracksField[]
 }
 
 export type MainGridParams = {
@@ -64,8 +74,8 @@ export interface IHistogramParams {
   label: string
 }
 
-export interface IDescriptionParams {
-  fields: IDescriptionField[]
+export interface ITracksParams {
+  fields: ITracksField[]
   appearance: IAppearanceFunction
   fieldHeight: number
 }
@@ -97,13 +107,13 @@ export type EventMatrixParams = {
     side?: IHistogramParams
     top?: IHistogramParams
   }
-  description?: {
-    side?: IDescriptionParams
-    bottom?: IDescriptionParams
+  tracks?: {
+    side?: ITracksParams
+    bottom?: ITracksParams
   }
 }
 
-export interface IDescriptionField {
+export interface ITracksField {
   name: string
   fieldName: string
   type: string | null
