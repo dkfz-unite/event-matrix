@@ -17,9 +17,17 @@ class CrosshairRender {
   private selectionRegion: Selection<SVGRectElement, unknown, HTMLElement, unknown>
 
   constructor() {
-    this.width = storage.gridWidth
-    this.height = storage.gridHeight
+    this.initDimensions(storage.gridWidth, storage.gridHeight)
     this.processing = Processing.getInstance()
+  }
+
+  public updateDimensions() {
+    this.initDimensions(storage.gridWidth, storage.gridHeight)
+  }
+
+  private initDimensions(width: number, height: number) {
+    this.width = width
+    this.height = height
   }
 
   public setContainer(container: Selection<SVGGElement, unknown, HTMLElement, unknown>) {

@@ -7,17 +7,25 @@ class GridLinesRender {
   processing: Processing
   lines: Selection<SVGLineElement, unknown, HTMLElement, unknown>[] = []
   columns: Selection<SVGLineElement, unknown, HTMLElement, unknown>[] = []
-  width: number
-  height: number
+  width: number = 0
+  height: number = 0
 
   constructor() {
-    this.width = storage.gridWidth
-    this.height = storage.gridHeight
+    this.initDimensions(storage.gridWidth, storage.gridHeight)
     this.processing = Processing.getInstance()
   }
 
   public setContainer(container: Selection<SVGGElement, unknown, HTMLElement, unknown>) {
     this.container = container
+  }
+
+  public updateDimensions() {
+    this.initDimensions(storage.gridWidth, storage.gridHeight)
+  }
+
+  private initDimensions(width: number, height: number) {
+    this.width = width
+    this.height = height
   }
 
   public render() {

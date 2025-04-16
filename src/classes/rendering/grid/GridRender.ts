@@ -37,6 +37,12 @@ class GridRender {
 
   public updateDimensions() {
     this.initDimensions(storage.gridWidth, storage.gridHeight)
+    if (this.gridLinesRender) {
+      this.gridLinesRender.updateDimensions()
+    }
+    if (this.crosshairRender) {
+      this.crosshairRender.updateDimensions()
+    }
   }
 
   public render() {

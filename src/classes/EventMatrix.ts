@@ -1,6 +1,6 @@
 import {select, Selection} from 'd3-selection'
 import EventEmitter from 'eventemitter3'
-import {EventMatrixParams, IRawProcessingParams} from '../interfaces/main-grid.interface'
+import {EventMatrixParams, IRawProcessingParams, IStorageOptions} from '../interfaces/main-grid.interface'
 import {eventBus, innerEvents, renderEvents} from '../utils/event-bus'
 import {storage} from '../utils/storage'
 import Processing from './data/Processing'
@@ -191,6 +191,32 @@ class EventMatrix extends EventEmitter {
   public zoomIn(step: number) {
     this.processing.getFrame().decrementFrameSize(step)
     eventBus.emit(innerEvents.INNER_UPDATE, true)
+  }
+
+  /**
+   * Recalculates the size of the component and redraws it.
+   * Used when the window size or container size changes.
+   * @param width New width of the component
+   * @param height New height of the component
+   */
+  public resize(width?: number, height?: number): void {
+    if (width || height) {
+      const optionsToUpdate: Partial<IStorageOptions> = {}
+      if (width) {
+        optionsToUpdate.gridWidth = width
+      }
+      if (height) {
+        optionsToUpdate.gridHeight = height
+      }
+      storage.updateOptions(optionsToUpdate)
+    }
+
+    this.gridRender.updateDimensions()
+    this.topHistogramRender.updateDimensions()
+    this.sideHistogramRender.updateDimensions()
+    this.bottomTracksRender.updateDimensions()
+    this.sideTracksRender.updateDimensions()
+    this.render()
   }
 
   /**
