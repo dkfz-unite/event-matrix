@@ -37,7 +37,7 @@ class EventMatrix extends EventEmitter {
       gridHeight: params.grid?.height,
     })
 
-    this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.tracks?.bottom?.fields, params.tracks?.side?.fields)
+    this.processing = Processing.createInstance(params.rows, params.columns, params.entries, params.tracks?.bottom?.fields ?? [], params.tracks?.side?.fields ?? [])
     this.container = select(params.element || 'body')
       .append('div')
       .attr('class', `${storage.prefix}container`)
@@ -83,7 +83,7 @@ class EventMatrix extends EventEmitter {
       const matrix = this.processing.getCroppedMatrix()
       storage.setCellDimensions(storage.gridWidth / (matrix[0]?.columns ?? []).length, storage.gridHeight / matrix.length)
 
-      if (params.histogram !== false) {
+      if (!params.histogram !== false) {
         if (params.histogram?.top !== false) {
           this.topHistogramRender.render()
         }

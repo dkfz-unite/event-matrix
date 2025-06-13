@@ -419,7 +419,7 @@ class Processing {
     this.sortMatrixColumns(fieldName)
   }
 
-  public static createInstance(rows: IRow[], columns: IColumn[], entries: IEntry[], columnsFields = [], rowsFields = []): Processing {
+  public static createInstance(rows: IRow[], columns: IColumn[], entries: IEntry[], columnsFields: ITracksField[] = [], rowsFields: ITracksField[] = []): Processing {
     if (!this.instance) {
       this.instance = new this(rows, columns, entries, columnsFields, rowsFields)
     }

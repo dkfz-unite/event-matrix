@@ -5,16 +5,16 @@ import {storage} from '../../../../utils/storage'
 import Processing from '../../../data/Processing'
 
 class CrosshairRender {
-  private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private container!: Selection<SVGGElement, unknown, HTMLElement, unknown>
   private processing: Processing
 
   private width: number
   private height: number
-  private visible: boolean
+  private visible: boolean = false
 
-  private verticalCross: Selection<SVGLineElement, unknown, HTMLElement, unknown>
-  private horizontalCross: Selection<SVGLineElement, unknown, HTMLElement, unknown>
-  private selectionRegion: Selection<SVGRectElement, unknown, HTMLElement, unknown>
+  private verticalCross!: Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private horizontalCross!: Selection<SVGLineElement, unknown, HTMLElement, unknown>
+  private selectionRegion!: Selection<SVGRectElement, unknown, HTMLElement, unknown>
 
   constructor() {
     this.width = storage.gridWidth

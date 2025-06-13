@@ -9,8 +9,8 @@ export class ProcessingDataDTO {
 
   public getProcessingData(): IProcessingParams {
     return {
-      columns: this.data.columns ?? this.data.donors ?? this.data.x ?? [],
-      rows: this.data.rows ?? this.data.genes ?? this.data.y ?? [],
+      columns: 'columns' in this.data ? this.data.columns : 'x' in this.data ? this.data.x : [],
+      rows: 'rows' in this.data ? this.data.rows : 'y' in this.data ? this.data.y : [],
       entries: this.data.entries ?? this.data.observations ?? [],
       columnsFields: this.data.tracks?.bottom?.fields ?? [],
       rowsFields: this.data.tracks?.side?.fields ?? [],

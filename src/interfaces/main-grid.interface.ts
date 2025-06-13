@@ -38,8 +38,8 @@ export interface IFrame {
 export type IFilterFunction = (val: IEntity) => boolean
 export type IFilter = Record<string, string | IFilterFunction>
 
-export type IRowsLikeData = { rows: IRow[] } | { genes: IRow[] } | { y: IRow[] }
-export type IColumnLikeData = { columns: IColumn[] } | { donors: IColumn[] } | { x: IColumn[] }
+export type IRowsLikeData = { rows: IRow[] } | { y: IRow[] }
+export type IColumnLikeData = { columns: IColumn[] } | { x: IColumn[] }
 export type IEntriesLikeData = { entries: IEntry[] } | { observations: IEntry[] }
 export type ITracksLikeData = {
   tracks: {
@@ -52,7 +52,23 @@ export type ITracksLikeData = {
   }
 }
 
-export type IRawProcessingParams = IRowsLikeData & IColumnLikeData & IEntriesLikeData & ITracksLikeData
+export type IRawProcessingParams = (
+  | { rows: IRow[]; columns: IColumn[] }
+  | { rows: IRow[]; x: IColumn[] }
+  | { y: IRow[]; columns: IColumn[] }
+  | { y: IRow[]; x: IColumn[] }
+) & {
+  entries?: IEntry[]
+  observations?: IEntry[]
+  tracks?: {
+    side?: {
+      fields: ITracksField[]
+    }
+    bottom?: {
+      fields: ITracksField[]
+    }
+  }
+}
 
 export type IProcessingParams = {
   rows: IRow[]
