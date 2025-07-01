@@ -1,30 +1,29 @@
 import {BaseType, Selection} from 'd3-selection'
-import {IMatrixDescriptionGroup} from '../../../../interfaces/matrix.interface'
+import {IMatrixTracksGroup} from '../../../../interfaces/matrix.interface'
 import {storage} from '../../../../utils/storage'
-import BottomDescriptionFieldsRender from './BottomDescriptionFieldsRender'
+import SideTracksFieldsRender from './SideTracksFieldsRender'
 
-class BottomDescriptionGroupsRender {
-  private width: number
-  private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
+class SideTracksGroupsRender {
+  private height: number
   private groups: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
   private groupLegends: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
-  private fieldsRenders: Map<string, BottomDescriptionFieldsRender> = new Map()
+  private fieldsRenders: Map<string, SideTracksFieldsRender> = new Map()
 
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
 
   constructor(options: any) {
-    this.width = storage.gridWidth
+    this.height = storage.gridHeight
   }
 
   public setContainer(container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>) {
     this.container = container
   }
 
-  public calcHeight() {
-    return Array.from(this.fieldsRenders.values()).reduce((sum, fieldsRenderer) => (sum + fieldsRenderer.calcHeight()), 0)
+  public calcWidth() {
+    return Array.from(this.fieldsRenders.values()).reduce((sum, fieldsRenderer) => (sum + fieldsRenderer.calcWidth()), 0)
   }
 
-  public draw(groups: IMatrixDescriptionGroup[]) {
+  public draw(groups: IMatrixTracksGroup[]) {
     let height = 0
     for (const item of groups) {
       this.drawGroup(item, height)
@@ -33,26 +32,29 @@ class BottomDescriptionGroupsRender {
     this.cleanOldGroups(groups.map((group) => group.id))
   }
 
-  private drawGroup(group: IMatrixDescriptionGroup, heightOffset: number) {
+  private drawGroup(group: IMatrixTracksGroup, heightOffset: number) {
     let groupElement = this.groups.get(group.id)
 
     if (!groupElement) {
       groupElement = this.container
         .append('svg')
-        .attr('id', `${storage.prefix}description-group-${group.id}`)
-        .attr('class', `${storage.prefix}description-group ${storage.prefix}description-group--bottom`)
+        .attr('id', `${storage.prefix}tracks-group-${group.id}`)
+        .attr('class', `${storage.prefix}tracks-group ${storage.prefix}tracks-group--side`)
+        .attr('x', 0)
+        .attr('y', 0)
 
       groupElement.append('text')
-        .attr('x', 72)
-        .attr('y', 0)
+        .attr('x', 0)
+        .attr('y', 80 + 6 + 6 - 6)
         .attr('dy', '1em')
-        .attr('text-anchor', 'end')
-        .attr('class', `${storage.prefix}track-group-label ${storage.prefix}description-group__label`)
+        .attr('transform', `rotate(-90, 0, ${80 + 6 + 6 - 6})`)
+        .attr('text-anchor', 'start')
+        .attr('class', `${storage.prefix}track-group-label ${storage.prefix}tracks-group__label`)
         .text(group.label)
 
       const legend = groupElement
         .append('svg:foreignObject')
-        .attr('class', `${storage.prefix}description-group__legend-icon`)
+        .attr('class', `${storage.prefix}tracks-group__legend-icon`)
         .attr('width', 20)
         .attr('height', 20)
         .attr('x', 80)
@@ -63,9 +65,10 @@ class BottomDescriptionGroupsRender {
     }
 
     groupElement
-      .attr('height', group.fields.length * 16 + 10 + 16)
-      // .attr('style', `transform:translateY(${heightOffset}px)`)
-      .attr('y', heightOffset)
+      .attr('width', group.fields.length * 16 + 10 + 16)
+      .attr('height', this.height + 80 + 6 + 6)
+      .attr('x', heightOffset)
+    // .attr('style', `transform:translateX(${heightOffset}px)`)
 
     const render = this.getChildrenRender(group.id, groupElement)
     render.draw(group.fields)
@@ -76,7 +79,7 @@ class BottomDescriptionGroupsRender {
   private getChildrenRender(parentId: string, container) {
     let render = this.fieldsRenders.get(parentId)
     if (!render) {
-      render = new BottomDescriptionFieldsRender(parentId, container, {})
+      render = new SideTracksFieldsRender(parentId, container, {})
       this.fieldsRenders.set(parentId, render)
     }
     return render
@@ -98,4 +101,4 @@ class BottomDescriptionGroupsRender {
   }
 }
 
-export default BottomDescriptionGroupsRender
+export default SideTracksGroupsRender

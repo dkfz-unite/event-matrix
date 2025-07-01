@@ -1,16 +1,16 @@
 import {BaseType, Selection} from 'd3-selection'
 import {IEnhancedEvent} from '../../../../interfaces/main-grid.interface'
-import {IMatrixDescriptionField} from '../../../../interfaces/matrix.interface'
+import {IMatrixTracksField} from '../../../../interfaces/matrix.interface'
 import {eventBus, innerEvents, publicEvents} from '../../../../utils/event-bus'
 import {storage} from '../../../../utils/storage'
 import Processing from '../../../data/Processing'
-import SideDescriptionCellsRender from './SideDescriptionCellsRender'
+import SideTracksCellsRender from './SideTracksCellsRender'
 
-class SideDescriptionFieldsRender {
+class SideTracksFieldsRender {
   private parentId
   private processing: Processing
   private fields: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
-  private cellsRenders: Map<string, SideDescriptionCellsRender> = new Map()
+  private cellsRenders: Map<string, SideTracksCellsRender> = new Map()
 
   // TODO: check this legacy options
   private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
@@ -25,14 +25,14 @@ class SideDescriptionFieldsRender {
     return this.fields.size * 16 + 16 + 10
   }
 
-  public draw(fields: IMatrixDescriptionField[]) {
+  public draw(fields: IMatrixTracksField[]) {
     for (let i = 0; i < fields.length; i++) {
       this.drawField(fields[i], i)
     }
     this.cleanOldFields(fields.map((field) => field.id))
   }
 
-  private drawField(field: IMatrixDescriptionField, index: number) {
+  private drawField(field: IMatrixTracksField, index: number) {
     let fieldElement = this.fields.get(field.id)
 
     const fixedCellHeight = 15
@@ -40,7 +40,7 @@ class SideDescriptionFieldsRender {
       fieldElement = this.container
         .append('svg')
         .attr('version', '2.0')
-        .attr('class', `${storage.prefix}description-group__field ${storage.prefix}description-field`)
+        .attr('class', `${storage.prefix}tracks-group__field ${storage.prefix}tracks-field`)
 
       this.fields.set(field.id, fieldElement)
 
@@ -111,7 +111,7 @@ class SideDescriptionFieldsRender {
   private getChildrenRender(parentId: string, container) {
     let render = this.cellsRenders.get(parentId)
     if (!render) {
-      render = new SideDescriptionCellsRender(parentId, container, {})
+      render = new SideTracksCellsRender(parentId, container, {})
       this.cellsRenders.set(parentId, render)
     }
     return render
@@ -133,4 +133,4 @@ class SideDescriptionFieldsRender {
   }
 }
 
-export default SideDescriptionFieldsRender
+export default SideTracksFieldsRender

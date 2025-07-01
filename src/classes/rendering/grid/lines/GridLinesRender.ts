@@ -3,7 +3,7 @@ import {storage} from '../../../../utils/storage'
 import Processing from '../../../data/Processing'
 
 class GridLinesRender {
-  container: Selection<SVGGElement, unknown, HTMLElement, unknown>
+  container!: Selection<SVGGElement, unknown, HTMLElement, unknown>
   processing: Processing
   lines: Selection<SVGLineElement, unknown, HTMLElement, unknown>[] = []
   columns: Selection<SVGLineElement, unknown, HTMLElement, unknown>[] = []

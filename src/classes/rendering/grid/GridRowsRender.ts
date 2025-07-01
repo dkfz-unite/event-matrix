@@ -7,7 +7,7 @@ import GridCellsRender from './GridCellsRender'
 
 class GridRowsRender {
   container: Selection<BaseType, unknown, HTMLElement, unknown>
-  rows: Map<string, Selection<BaseType, unknown, HTMLElement, unknown>> = new Map()
+  rows: Map<string, Selection<SVGGElement, unknown, HTMLElement, unknown>> = new Map()
   processing: Processing
   gridCellsRenders: Map<string, GridCellsRender>
 
@@ -21,7 +21,7 @@ class GridRowsRender {
     this.container = container
   }
 
-  private getChildrenRender(parentId: string, container) {
+  private getChildrenRender(parentId: string, container: Selection<SVGGElement, unknown, HTMLElement, unknown>) {
     let render = this.gridCellsRenders.get(parentId)
     if (!render) {
       render = new GridCellsRender(parentId, container, {})
@@ -128,9 +128,9 @@ class GridRowsRender {
     const oldRows = Array.from(this.rows.keys())
     for (const rowId of oldRows) {
       if (!activeRowIds.includes(rowId)) {
-        this.gridCellsRenders.get(rowId).destroy()
+        this.gridCellsRenders.get(rowId)?.destroy()
         this.gridCellsRenders.delete(rowId)
-        this.rows.get(rowId).remove()
+        this.rows.get(rowId)?.remove()
         this.rows.delete(rowId)
       }
     }
@@ -139,9 +139,9 @@ class GridRowsRender {
   destroy() {
     const rowIds = Array.from(this.rows.keys())
     for (const rowId of rowIds) {
-      this.gridCellsRenders.get(rowId).destroy()
+      this.gridCellsRenders.get(rowId)?.destroy()
       this.gridCellsRenders.delete(rowId)
-      this.rows.get(rowId).remove()
+      this.rows.get(rowId)?.remove()
       this.rows.delete(rowId)
     }
   }

@@ -19,11 +19,11 @@ class GridRender {
   // TODO: check this legacy options
   private drawGridLines = true
   private crosshair = false
-  private matrix: IMatrix
-  private svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
-  private container: Selection<SVGGElement, unknown, HTMLElement, unknown>
-  private background: Selection<SVGRectElement, unknown, HTMLElement, unknown>
-  private gridContainer: Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private matrix!: IMatrix
+  private svg!: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
+  private container!: Selection<SVGGElement, unknown, HTMLElement, unknown>
+  private background!: Selection<SVGRectElement, unknown, HTMLElement, unknown>
+  private gridContainer!: Selection<SVGGElement, unknown, HTMLElement, unknown>
 
   constructor(options: any) {
     this.processing = Processing.getInstance()
@@ -119,11 +119,11 @@ class GridRender {
       const rowId = target.dataset.row
       const columnId = target.dataset.column
       const row = this.matrix.find((mRow) => mRow.id === rowId)
-      const column = row.columns.find((mCol) => mCol.id === columnId)
+      const column = row?.columns.find((mCol) => mCol.id === columnId)
 
       eventBus.emit(publicEvents.GRID_CELL_HOVER, {
         target: target,
-        entryIds: column.entries.map((entry) => entry.id),
+        entryIds: column?.entries.map((entry) => entry.id) ?? [],
         entryId,
         columnId,
         rowId,
