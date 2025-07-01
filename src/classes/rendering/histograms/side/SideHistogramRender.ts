@@ -13,9 +13,9 @@ class SideHistogramRender {
   private wrapper: Selection<HTMLElement, unknown, HTMLElement, unknown>
   private bars: Map<string, Selection<SVGRectElement, unknown, HTMLElement, unknown>> = new Map()
 
-  private matrix: IMatrix
-  private container: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
-  private containerInsides: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
+  private matrix!: IMatrix
+  private container!: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
+  private containerInsides!: Selection<SVGSVGElement, unknown, HTMLElement, unknown>
   private axisRender: SideHistogramAxisRender
 
   constructor(width: number, label: string, options: any) {
@@ -139,7 +139,7 @@ class SideHistogramRender {
     const oldBars = Array.from(this.bars.keys())
     for (const rowId of oldBars) {
       if (!activeRowIds.includes(rowId)) {
-        this.bars.get(rowId).remove()
+        this.bars.get(rowId)?.remove()
         this.bars.delete(rowId)
       }
     }
