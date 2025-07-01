@@ -83,7 +83,7 @@ class EventMatrix extends EventEmitter {
       const matrix = this.processing.getCroppedMatrix()
       storage.setCellDimensions(storage.gridWidth / (matrix[0]?.columns ?? []).length, storage.gridHeight / matrix.length)
 
-      if (!params.histogram !== false) {
+      if (params.histogram !== false) {
         if (params.histogram?.top !== false) {
           this.topHistogramRender.render()
         }

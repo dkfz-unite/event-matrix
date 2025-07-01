@@ -42,6 +42,7 @@ class SideTracksRender {
     this.calcWidth()
   }
 
+  // TODO: Create the dimensions service for all calculations
   public calcWidth() {
     this.width = this.groupsRenderer.calcWidth()
     this.container
